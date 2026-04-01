@@ -2,7 +2,7 @@
     <div class="card-header bg-white border-0 p-4 d-flex justify-content-between align-items-center">
         <div>
             <h6 class="fw-bold m-0">Draft Management</h6>
-            <p class="text-slate-600 small m-0 fw-medium">View and recover user draft applications</p>
+            <p class="text-slate-600 small m-0 fw-medium">View user draft applications</p>
         </div>
     </div>
     <div class="card-body p-0">
@@ -39,7 +39,7 @@
                             </div>
                         </td>
                         <td class="text-end pe-4">
-                            <button class="btn btn-sm btn-slate-100 border text-slate-600 py-1 px-3 rounded-pill fw-bold">Recover</button>
+                            <a href="{{ route('staff.it.application.overview', $draft) }}" class="btn btn-sm btn-slate-100 border text-slate-600 py-1 px-3 rounded-pill fw-bold">Review</a>
                         </td>
                     </tr>
                     @empty

@@ -64,10 +64,10 @@
                     <td class="label">Payment Status:</td>
                     <td><span class="badge badge-success">Paid</span></td>
                 </tr>
-                @if($application->paynow_reference)
+                @if($reference !== 'N/A')
                 <tr>
-                    <td class="label">PayNow Reference:</td>
-                    <td>{{ $application->paynow_reference }}</td>
+                    <td class="label">Payment Reference:</td>
+                    <td>{{ $reference }}</td>
                 </tr>
                 @endif
             </table>
@@ -75,8 +75,8 @@
 
         <div class="amount-box">
             <div class="total-label">Amount Paid</div>
-            <div class="total-value">USD/ZIG (Confirmed)</div>
-            <div style="font-size: 11px; color: #94a3b8; margin-top: 5px;">* This receipt is valid only for the specified application.</div>
+            <div class="total-value">{{ $currency }} {{ number_format($amount, 2) }}</div>
+            <div style="font-size: 11px; color: #94a3b8; margin-top: 5px;">* This receipt is valid only for the specified application once payment is confirmed.</div>
         </div>
 
         <div class="footer">

@@ -11,6 +11,72 @@
   <div class="alert alert-success">{{ session('success') }}</div>
 @endif
 
+{{-- Filters --}}
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <form method="GET" class="row g-2 align-items-end">
+
+      <div class="col-12 col-md-3">
+        <label class="form-label small fw-bold">Search</label>
+        <input type="text" name="q" value="{{ request('q') }}" class="form-control" placeholder="Ref / name / email" />
+      </div>
+
+      <div class="col-12 col-md-3">
+        <label class="form-label small fw-bold">Application Type</label>
+        <select class="form-select" name="application_type">
+          <option value="">All</option>
+          <option value="accreditation" @selected(request('application_type')==='accreditation')>Accreditation</option>
+          <option value="registration" @selected(request('application_type')==='registration')>Registration</option>
+        </select>
+      </div>
+
+      <div class="col-12 col-md-2">
+        <label class="form-label small fw-bold">Request Type</label>
+        <select class="form-select" name="request_type">
+          <option value="">All</option>
+          <option value="new" @selected(request('request_type')==='new')>New</option>
+          <option value="renewal" @selected(request('request_type')==='renewal')>Renewal</option>
+          <option value="replacement" @selected(request('request_type')==='replacement')>Replacement</option>
+        </select>
+      </div>
+
+      <div class="col-12 col-md-2">
+        <label class="form-label small fw-bold">Scope</label>
+        <select class="form-select" name="scope">
+          <option value="">Both</option>
+          <option value="local" @selected(request('scope')==='local')>Local</option>
+          <option value="foreign" @selected(request('scope')==='foreign')>Foreign</option>
+        </select>
+      </div>
+
+      <div class="col-6 col-md-2">
+        <label class="form-label small fw-bold">Month</label>
+        <select name="month" class="form-select">
+          <option value="">All</option>
+          @foreach(range(1,12) as $m)
+            <option value="{{ $m }}" @selected(request('month') == $m)>{{ date('F', mktime(0,0,0,$m,1)) }}</option>
+          @endforeach
+        </select>
+      </div>
+
+      <div class="col-6 col-md-2">
+        <label class="form-label small fw-bold">Year</label>
+        <select name="year" class="form-select">
+          <option value="">All</option>
+          @foreach(range(date('Y'), date('Y')-5) as $y)
+            <option value="{{ $y }}" @selected(request('year') == $y)>{{ $y }}</option>
+          @endforeach
+        </select>
+      </div>
+
+      <div class="col-12 col-md-2 d-flex gap-2">
+        <button class="btn btn-dark w-100"><i class="ri-filter-3-line me-1"></i>Apply</button>
+        <a class="btn btn-outline-secondary w-100" href="{{ url()->current() }}">Reset</a>
+      </div>
+    </form>
+  </div>
+</div>
+
 <div class="card">
   <div class="card-header fw-bold">Payment Verified — Ready for Production</div>
   <div class="card-body p-0">

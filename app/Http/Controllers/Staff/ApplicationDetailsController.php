@@ -76,6 +76,29 @@ class ApplicationDetailsController extends Controller
             ];
         })->values();
 
+        // Payment details for accounts dashboard
+        $paymentDetails = [
+            'payment_status' => $application->payment_status,
+            'payment_proof_path' => $application->payment_proof_path,
+            'payment_proof_uploaded_at' => $application->payment_proof_uploaded_at,
+            'proof_status' => $application->proof_status,
+            'proof_reviewed_by' => $application->proof_reviewed_by,
+            'proof_reviewed_at' => $application->proof_reviewed_at,
+            'proof_review_notes' => $application->proof_review_notes,
+            'proof_payer_first_name' => $application->proof_payer_first_name,
+            'proof_payer_last_name' => $application->proof_payer_last_name,
+            'proof_payment_date' => $application->proof_payment_date,
+            'proof_amount_paid' => $application->proof_amount_paid,
+            'proof_bank_name' => $application->proof_bank_name,
+            'paynow_reference' => $application->paynow_reference,
+            'paynow_confirmed_at' => $application->paynow_confirmed_at,
+            'waiver_path' => $application->waiver_path,
+            'waiver_status' => $application->waiver_status,
+            'waiver_reviewed_by' => $application->waiver_reviewed_by,
+            'waiver_reviewed_at' => $application->waiver_reviewed_at,
+            'waiver_review_notes' => $application->waiver_review_notes,
+        ];
+
         return response()->json([
             'ok' => true,
             'application' => $app,
@@ -83,6 +106,7 @@ class ApplicationDetailsController extends Controller
             'directors' => $directors,
             'managers' => $managers,
             'documents' => $documents,
+            'payment_details' => $paymentDetails,
         ]);
     }
 

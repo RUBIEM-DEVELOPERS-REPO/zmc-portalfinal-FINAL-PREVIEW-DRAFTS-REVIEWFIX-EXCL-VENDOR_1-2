@@ -16,10 +16,31 @@ class ComplaintsController extends Controller
 
     public function index(Request $request)
     {
-        abort_unless(auth()->user()->can('receive_complaints_appeals') || auth()->user()->can('manage_complaints_appeals'), 403);
+        $user = auth()->user();
+        $isSuper = $user->hasRole('super_admin');
+        $isCompliance = $user->hasRole('public_info_compliance');
+        $isResearch = $user->hasRole('research_training_standards');
+        $isDirector = $user->hasRole('director');
+        $isChiefAccountant = $user->hasRole('chief_accountant');
+
+        // General entry check
+        abort_unless($isSuper || $isCompliance || $isResearch || $isDirector || $isChiefAccountant || $user->can('receive_complaints_appeals'), 403);
 
         $type = $request->get('type');
         $status = $request->get('status');
+
+        // Segregation:
+        // Research/Director see ONLY complaints (unless type=appeal is explicitly denied or filtered)
+        // Compliance/ChiefAccountant see ONLY appeals
+        if (!$isSuper) {
+            if ($isResearch || $isDirector) {
+                if ($type === 'appeal') abort(403, 'Unauthorized to view appeals.');
+                $type = 'complaint';
+            } elseif ($isCompliance || $isChiefAccountant) {
+                if ($type === 'complaint') abort(403, 'Unauthorized to view complaints.');
+                $type = 'appeal';
+            }
+        }
 
         $q = Complaint::query()->orderByDesc('id');
         if (in_array($type, ['complaint','appeal'], true)) $q->where('type',$type);
@@ -31,7 +52,17 @@ class ComplaintsController extends Controller
 
     public function update(Request $request, Complaint $complaint)
     {
-        abort_unless(auth()->user()->can('manage_complaints_appeals'), 403);
+        $user = auth()->user();
+        $isSuper = $user->hasRole('super_admin');
+        
+        // Check update permission specifically for the type
+        if (!$isSuper) {
+            if ($complaint->type === 'complaint') {
+                abort_unless($user->hasAnyRole(['research_training_standards','director']), 403);
+            } else {
+                abort_unless($user->hasAnyRole(['public_info_compliance','chief_accountant']), 403);
+            }
+        }
 
         $data = $request->validate([
             'status' => ['required','in:open,in_progress,resolved,closed'],

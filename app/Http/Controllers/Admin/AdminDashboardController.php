@@ -81,7 +81,7 @@ class AdminDashboardController extends Controller
         $avgTurnaroundHours = (float) Application::query()
             ->where('status', Application::ISSUED)
             ->where('updated_at', '>=', Carbon::now()->subDays(30))
-            ->selectRaw('AVG(EXTRACT(EPOCH FROM (updated_at - created_at)) / 3600) as avg_hours')
+            ->selectRaw('AVG((julianday(updated_at) - julianday(created_at)) * 24) as avg_hours')
             ->value('avg_hours');
 
         // System health quick stats

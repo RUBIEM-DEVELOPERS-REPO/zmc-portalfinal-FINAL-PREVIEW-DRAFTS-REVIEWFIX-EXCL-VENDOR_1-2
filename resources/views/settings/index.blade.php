@@ -3,10 +3,10 @@
 @section('title', 'Settings')
 
 @section('content')
-<div class="zmc-dashboard-wrapper" style="font-family:'Roboto', sans-serif; color:#334155;">
+<div class="zmc-dashboard-wrapper">
   <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
     <div>
-      <h4 class="fw-bold m-0" style="font-size:22px; color:#1e293b;">Settings</h4>
+      <h4 class="fw-bold m-0" style="font-size:22px;">Settings</h4>
       <div class="text-muted mt-1" style="font-size:13px;">Manage your account, security and preferences.</div>
     </div>
     <a href="{{ url()->previous() }}" class="btn btn-sm btn-outline-dark"><i class="ri-arrow-left-line me-1"></i> Back</a>
@@ -60,7 +60,7 @@
 
         <div class="tab-pane fade show active" id="tab-profile" role="tabpanel">
           <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white border-0 py-3">
+            <div class="card-header border-0 py-3">
               <div class="fw-bold">Profile Information</div>
               <div class="text-muted" style="font-size:12px;">Full personal details for your ZMC account.</div>
             </div>
@@ -100,8 +100,28 @@
                         <input name="profile[national_id]" class="form-control" value="{{ old('profile.national_id', $user->profile_data['national_id'] ?? '') }}">
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label fw-bold">Date of Birth</label>
-                        <input name="profile[dob]" type="date" class="form-control" value="{{ old('profile.dob', $user->profile_data['dob'] ?? '') }}">
+                        <label class="form-label fw-bold d-block">Date of Birth</label>
+                        @php 
+                            $dob = old('profile.dob', $user->profile_data['dob'] ?? '');
+                            $d_y = $dob ? date('Y', strtotime($dob)) : '';
+                            $d_m = $dob ? date('m', strtotime($dob)) : '';
+                            $d_d = $dob ? date('d', strtotime($dob)) : '';
+                        @endphp
+                        <div class="d-flex gap-2">
+                          <select class="form-control px-1" id="settings_dob_date">
+                            <option value="">DD</option>
+                            @for($i=1; $i<=31; $i++) <option value="{{ sprintf('%02d', $i) }}" @selected($d_d == sprintf('%02d', $i))>{{ sprintf('%02d', $i) }}</option> @endfor
+                          </select>
+                          <select class="form-control px-1" id="settings_dob_month">
+                            <option value="">MM</option>
+                            @for($i=1; $i<=12; $i++) <option value="{{ sprintf('%02d', $i) }}" @selected($d_m == sprintf('%02d', $i))>{{ date('M', mktime(0, 0, 0, $i, 1)) }}</option> @endfor
+                          </select>
+                          <select class="form-control px-1" id="settings_dob_year">
+                            <option value="">YYYY</option>
+                            @for($i=date('Y'); $i>=1920; $i--) <option value="{{ $i }}" @selected($d_y == $i)>{{ $i }}</option> @endfor
+                          </select>
+                        </div>
+                        <input type="hidden" name="profile[dob]" id="settings_real_dob" value="{{ $dob }}">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label fw-bold">Gender</label>
@@ -134,7 +154,7 @@
 
         <div class="tab-pane fade" id="tab-security" role="tabpanel">
           <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-white border-0 py-3">
+            <div class="card-header border-0 py-3">
               <div class="fw-bold">Password</div>
               <div class="text-muted" style="font-size:12px;">Change your login password.</div>
             </div>
@@ -159,7 +179,7 @@
           </div>
 
           <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-white border-0 py-3">
+            <div class="card-header border-0 py-3">
               <div class="fw-bold">Two-Factor Authentication</div>
               <div class="text-muted" style="font-size:12px;">Secure your account with OTP via Email/SMS.</div>
             </div>
@@ -177,14 +197,14 @@
           </div>
 
           <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white border-0 py-3">
+            <div class="card-header border-0 py-3">
               <div class="fw-bold">Login Activity History</div>
               <div class="text-muted" style="font-size:12px;">Your recent sign-ins.</div>
             </div>
             <div class="card-body p-0">
                <div class="table-responsive">
                     <table class="table table-sm table-hover mb-0" style="font-size:12px;">
-                        <thead class="bg-light">
+                        <thead>
                             <tr>
                                 <th>Date & Time</th>
                                 <th>IP Address</th>
@@ -210,7 +230,7 @@
 
         <div class="tab-pane fade" id="tab-appearance" role="tabpanel">
           <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white border-0 py-3">
+            <div class="card-header border-0 py-3">
               <div class="fw-bold">Appearance</div>
               <div class="text-muted" style="font-size:12px;">Choose light or dark theme.</div>
             </div>
@@ -230,7 +250,7 @@
 
         <div class="tab-pane fade" id="tab-notifications" role="tabpanel">
           <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white border-0 py-3">
+            <div class="card-header border-0 py-3">
               <div class="fw-bold">Notification Preferences</div>
               <div class="text-muted" style="font-size:12px;">Configure how you receive updates and alerts.</div>
             </div>
@@ -291,4 +311,22 @@
     </div>
   </div>
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const updateSettingsDob = () => {
+        const d = document.getElementById('settings_dob_date').value;
+        const m = document.getElementById('settings_dob_month').value;
+        const y = document.getElementById('settings_dob_year').value;
+        document.getElementById('settings_real_dob').value = (d && m && y) ? `${y}-${m}-${d}` : '';
+    };
+    ['settings_dob_date', 'settings_dob_month', 'settings_dob_year'].forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.addEventListener('change', updateSettingsDob);
+    });
+});
+</script>
+@endpush
+
 @endsection

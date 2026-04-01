@@ -80,6 +80,7 @@ class ApplicationWorkflow
                 Application::PAYMENT_VERIFIED,
                 Application::PAYMENT_REJECTED,
                 Application::RETURNED_TO_ACCOUNTS,
+                Application::PAID_CONFIRMED,
             ],
 
             // Payment verified → Production
@@ -105,6 +106,7 @@ class ApplicationWorkflow
             Application::PENDING_ACCOUNTS_FROM_REGISTRAR => [
                 Application::PAYMENT_VERIFIED,
                 Application::PAYMENT_REJECTED,
+                Application::PAID_CONFIRMED,
             ],
 
             // Registrar fix request → back to Officer
@@ -137,6 +139,7 @@ class ApplicationWorkflow
             // Registrar approved → pending registration fee
             Application::REGISTRAR_APPROVED_PENDING_REG_FEE => [
                 Application::AWAITING_ACCOUNTS_VERIFICATION,
+                Application::PAID_CONFIRMED,
             ],
 
             // Registrar approved (final) → Production or Accounts

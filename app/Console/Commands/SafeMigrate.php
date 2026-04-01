@@ -61,9 +61,16 @@ class SafeMigrate extends Command
                 return 0;
             }
 
-            $existingTables = collect(DB::select("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'"))
-                ->pluck('table_name')
-                ->toArray();
+            $existingTables = [];
+            if (DB::getDriverName() === 'sqlite') {
+                $existingTables = collect(DB::select("SELECT name FROM sqlite_master WHERE type='table'"))
+                    ->pluck('name')
+                    ->toArray();
+            } else {
+                $existingTables = collect(DB::select("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'"))
+                    ->pluck('table_name')
+                    ->toArray();
+            }
 
             if (count($existingTables) <= 1) {
                 $this->info('  - Empty database, running fresh migrate...');

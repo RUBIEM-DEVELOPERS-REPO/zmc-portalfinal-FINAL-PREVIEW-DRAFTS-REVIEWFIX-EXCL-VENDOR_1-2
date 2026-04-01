@@ -26,8 +26,8 @@
             <tr>
                 <th>Month</th>
                 <th>Submitted</th>
-                <th>Approved</th>
-                <th>Rejected</th>
+                <th>Issued/Reviewed</th>
+                <th>Returned for Correction</th>
             </tr>
         </thead>
         <tbody>

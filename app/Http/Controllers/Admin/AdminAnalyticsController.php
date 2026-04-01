@@ -10,6 +10,11 @@ use Illuminate\Support\Facades\DB;
 
 class AdminAnalyticsController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['auth', 'role:super_admin|it_admin|director|pr_officer|research_training_standards']);
+    }
+
     public function index()
     {
         // Last 30 days daily counts

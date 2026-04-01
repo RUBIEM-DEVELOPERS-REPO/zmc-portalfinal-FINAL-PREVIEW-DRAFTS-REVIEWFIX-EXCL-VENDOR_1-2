@@ -8,7 +8,7 @@
   </a>
   <div>
     <h4 class="fw-bold mb-1">{{ $application->reference }}</h4>
-    <div class="text-muted">{{ strtoupper($application->application_type) }} • {{ str_replace('_',' ', $application->status) }}</div>
+    <div class="text-muted">{{ strtoupper($application->application_type) }} • {{ str_replace('_',' ', in_array($application->status, ['officer_rejected','registrar_rejected','payment_rejected'], true) ? 'returned_for_correction' : $application->status) }}</div>
   </div>
   <div class="d-flex align-items-center gap-2">
     <form action="{{ route('staff.accounts.applications.unlock', $application) }}" method="POST" class="d-inline">
@@ -164,7 +164,7 @@
                       @endphp
                       <span class="badge bg-{{ $pReqBadge }}">{{ ucfirst($pReqType) }}</span>
                     </td>
-                    <td><span class="badge bg-secondary">{{ ucwords(str_replace('_', ' ', $prevApp->status)) }}</span></td>
+                    <td><span class="badge bg-secondary">{{ ucwords(str_replace('_', ' ', in_array($prevApp->status, ['officer_rejected','registrar_rejected','payment_rejected'], true) ? 'returned_for_correction' : $prevApp->status)) }}</span></td>
                     <td class="small text-muted">{{ $prevApp->created_at?->format('d M Y') ?? '—' }}</td>
                   </tr>
                 @endforeach
@@ -241,7 +241,7 @@
             @csrf
             <label class="form-label fw-semibold">Rejection / Return reason</label>
             <textarea class="form-control mb-2" name="decision_notes" rows="3" required placeholder="Explain why payment/waiver is rejected"></textarea>
-            <button class="btn btn-outline-danger w-100"><i class="ri-close-line me-1"></i>Return to Officer / Reject</button>
+            <button class="btn btn-outline-danger w-100"><i class="ri-close-line me-1"></i>Return for Correction</button>
           </form>
         @else
           <div class="alert alert-info mb-0">

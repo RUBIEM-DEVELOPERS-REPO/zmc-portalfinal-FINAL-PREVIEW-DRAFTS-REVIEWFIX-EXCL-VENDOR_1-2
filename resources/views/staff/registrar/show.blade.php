@@ -274,56 +274,65 @@
                 </div>
             </div>
 
-            {{-- E) Approval Controls --}}
-            <div class="card border-0 shadow-sm">
+            {{-- E) Supervisory Controls --}}
+            <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-white fw-bold">
-                    <i class="ri-settings-3-line me-1"></i> Registrar Actions
+                    <i class="ri-shield-check-line me-1" style="color:var(--zmc-accent)"></i> Registrar Oversight
                 </div>
                 <div class="card-body">
-                    @if(in_array($application->status, ['registrar_review']))
-                        @if($application->payment_status !== 'paid' && !$application->registrar_reviewed_at)
-                            <div class="mb-4">
-                                <label class="form-label small fw-bold text-primary">Stage 1: Approval for Payment</label>
-                                <button type="button" class="btn btn-primary w-100 shadow-sm" data-bs-toggle="modal" data-bs-target="#approveForPaymentModal">
-                                    <i class="ri-money-dollar-circle-line me-1"></i> Approve for Payment
-                                </button>
-                                <div class="form-text smaller mt-1">This forwards the application to Accounts.</div>
+
+                    {{-- Reviewed Toggle --}}
+                    <div class="mb-3 p-3 rounded" style="background:#f0fdf4;">
+                        <label class="form-label small fw-bold text-success d-block mb-1">
+                            <i class="ri-checkbox-circle-line me-1"></i> Reviewed Status
+                        </label>
+                        @if($application->registrar_reviewed_at)
+                            <div class="small text-success mb-2">
+                                ✅ Reviewed by {{ $application->registrarReviewedBy?->name ?? 'Registrar' }}
+                                on {{ \Carbon\Carbon::parse($application->registrar_reviewed_at)->format('d M Y H:i') }}
                             </div>
-                            <hr>
                         @endif
-                    @endif
-
-                    @if(in_array($application->status, ['paid_confirmed', 'registrar_review']))
-                        <form method="POST" action="{{ route('staff.registrar.applications.approve', $application) }}" class="mb-3">
+                        <form method="POST" action="{{ route('staff.registrar.applications.toggle-reviewed', $application) }}">
                             @csrf
-                            <input type="hidden" name="category_code" value="{{ $application->accreditation_category_code ?? $application->media_house_category_code }}">
-                            <label class="form-label small fw-bold">Internal Notes (Optional)</label>
-                            <textarea class="form-control mb-2" name="decision_notes" rows="3" placeholder="Add any notes..."></textarea>
-                            <button class="btn btn-success w-100 shadow-sm" {{ $application->status !== 'paid_confirmed' ? 'disabled' : '' }}>
-                                <i class="ri-check-line me-1"></i> Final Approval
+                            <button type="submit" class="btn btn-sm w-100 {{ $application->registrar_reviewed_at ? 'btn-outline-secondary' : 'btn-success' }}">
+                                {{ $application->registrar_reviewed_at ? 'Unmark Reviewed' : 'Mark as Reviewed' }}
                             </button>
-                            @if($application->status !== 'paid_confirmed')
-                                <div class="form-text smaller text-danger">Final approval requires confirmed payment.</div>
-                            @endif
                         </form>
+                    </div>
 
-                        <div class="row g-2">
-                            <div class="col-6">
-                                <button type="button" class="btn btn-outline-warning w-100 btn-sm" data-bs-toggle="modal" data-bs-target="#returnModal">
-                                    <i class="ri-arrow-go-back-line"></i> Return
-                                </button>
-                            </div>
-                            <div class="col-6">
-                                <button type="button" class="btn btn-outline-danger w-100 btn-sm" data-bs-toggle="modal" data-bs-target="#rejectModal">
-                                    <i class="ri-close-line"></i> Reject
-                                </button>
-                            </div>
-                        </div>
-                    @else
-                        <div class="alert alert-info small mb-0 text-center">
-                            <i class="ri-information-line me-1"></i> No pending actions for Registrar.
-                        </div>
+                    {{-- Flag Anomaly --}}
+                    <div class="mb-3 p-3 rounded {{ $application->is_flagged ? 'bg-danger-subtle' : 'bg-light' }}">
+                        <label class="form-label small fw-bold {{ $application->is_flagged ? 'text-danger' : 'text-muted' }} d-block mb-1">
+                            <i class="ri-error-warning-line me-1"></i>
+                            {{ $application->is_flagged ? 'Anomaly Flagged' : 'Flag Anomaly' }}
+                        </label>
+                        @if($application->is_flagged && $application->flag_notes)
+                            <div class="small text-danger fst-italic mb-2">{{ $application->flag_notes }}</div>
+                        @endif
+                        <button type="button" class="btn btn-sm w-100 {{ $application->is_flagged ? 'btn-outline-danger' : 'btn-danger' }}"
+                                data-bs-toggle="modal" data-bs-target="#flagModalShow">
+                            <i class="ri-flag-2-line me-1"></i> {{ $application->is_flagged ? 'Update Flag' : 'Flag this Application' }}
+                        </button>
+                    </div>
+
+                    {{-- Message Officer --}}
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-sm btn-outline-primary w-100"
+                                data-bs-toggle="modal" data-bs-target="#messageModalShow">
+                            <i class="ri-message-2-line me-1"></i> Message Accreditation Officer
+                        </button>
+                    </div>
+
+                    {{-- Reassign to Officer --}}
+                    @if(isset($officers) && $officers->count())
+                    <div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary w-100"
+                                data-bs-toggle="modal" data-bs-target="#reassignOfficerModalShow">
+                            <i class="ri-user-received-line me-1"></i> Reassign to Officer
+                        </button>
+                    </div>
                     @endif
+
                 </div>
             </div>
         </div>
@@ -332,113 +341,97 @@
 
 {{-- MODALS --}}
 
-{{-- Approve For Payment Modal --}}
-<div class="modal fade" id="approveForPaymentModal" tabindex="-1">
+{{-- Flag Anomaly Modal --}}
+<div class="modal fade" id="flagModalShow" tabindex="-1">
     <div class="modal-dialog">
-        <form class="modal-content" method="POST" action="{{ route('staff.registrar.applications.approve-for-payment', $application) }}">
+        <form class="modal-content" method="POST" action="{{ route('staff.registrar.applications.flag-anomaly', $application) }}">
             @csrf
-            <div class="modal-header">
-                <h5 class="modal-title">Approve for Payment</h5>
+            <div class="modal-header border-danger">
+                <h5 class="modal-title text-danger"><i class="ri-error-warning-line me-1"></i> Flag Anomaly</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p>This will forward the application to the Accounts department for payment verification. The applicant will be notified to proceed with payment.</p>
+                <p class="small text-muted">Flagging will alert the Accreditation Officer and mark this application for special attention.</p>
                 <div class="mb-3">
-                    <label class="form-label small fw-bold">Internal Notes for Accounts</label>
-                    <textarea name="decision_notes" class="form-control" rows="3" placeholder="Optional notes..."></textarea>
+                    <label class="form-label small fw-bold">Nature of Anomaly / Concern</label>
+                    <textarea name="flag_notes" class="form-control border-danger" rows="4" required
+                        placeholder="Describe the issue clearly…">{{ $application->flag_notes }}</textarea>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" class="btn btn-primary">Forward to Accounts</button>
+                <button type="submit" class="btn btn-danger">
+                    <i class="ri-flag-2-line me-1"></i> Submit Flag
+                </button>
             </div>
         </form>
     </div>
 </div>
 
-{{-- Reassign Category Modal --}}
-<div class="modal fade" id="reassignModal" tabindex="-1">
+{{-- Message Officer Modal --}}
+<div class="modal fade" id="messageModalShow" tabindex="-1">
+    <div class="modal-dialog">
+        <form class="modal-content" method="POST" action="{{ route('staff.registrar.applications.message-officer', $application) }}">
+            @csrf
+            <div class="modal-header border-primary">
+                <h5 class="modal-title text-primary"><i class="ri-message-2-line me-1"></i> Message Accreditation Officer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="small text-muted">Regarding: <strong>{{ $application->reference }}</strong></p>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Message / Guidance</label>
+                    <textarea name="message" class="form-control" rows="4" required
+                        placeholder="Provide guidance or request clarification from the Officer…"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="ri-send-plane-line me-1"></i> Send Message
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- Reassign to Officer Modal --}}
+@if(isset($officers) && $officers->count())
+<div class="modal fade" id="reassignOfficerModalShow" tabindex="-1">
     <div class="modal-dialog">
         <form class="modal-content" method="POST" action="{{ route('staff.registrar.applications.reassign-category', $application) }}">
             @csrf
             <div class="modal-header">
-                <h5 class="modal-title">Reassign Category</h5>
+                <h5 class="modal-title"><i class="ri-user-received-line me-1"></i> Reassign to Accreditation Officer</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                @php
-                    $isRegistration = $application->application_type === 'registration';
-                    $cats = $isRegistration ? \App\Models\Application::massMediaCategories() : \App\Models\Application::accreditationCategories();
-                @endphp
                 <div class="mb-3">
-                    <label class="form-label small fw-bold">Select New Category</label>
-                    <select name="category_code" class="form-select" required>
-                        @foreach($cats as $code => $name)
-                            <option value="{{ $code }}" {{ ($application->accreditation_category_code ?? $application->media_house_category_code) == $code ? 'selected' : '' }}>
-                                {{ $code }} - {{ $name }}
+                    <label class="form-label small fw-bold">Select Officer</label>
+                    <select name="officer_id" class="form-select" required>
+                        <option value="">— Choose Officer —</option>
+                        @foreach($officers as $off)
+                            <option value="{{ $off->id }}" {{ $application->assigned_officer_id == $off->id ? 'selected' : '' }}>
+                                {{ $off->name }}
                             </option>
                         @endforeach
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label small fw-bold">Reason for Reassignment</label>
-                    <textarea name="reason" class="form-control" rows="3" required placeholder="State why the category is being changed..."></textarea>
+                    <label class="form-label small fw-bold">Reason (Optional)</label>
+                    <textarea name="reason" class="form-control" rows="3" placeholder="Why is this being reassigned?"></textarea>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" class="btn btn-warning">Reassign & Update</button>
+                <button type="submit" class="btn btn-dark">
+                    <i class="ri-user-received-line me-1"></i> Reassign
+                </button>
             </div>
         </form>
     </div>
 </div>
-
-{{-- Return Modal --}}
-<div class="modal fade" id="returnModal" tabindex="-1">
-    <div class="modal-dialog">
-        <form class="modal-content" method="POST" action="{{ route('staff.registrar.applications.return', $application) }}">
-            @csrf
-            <div class="modal-header">
-                <h5 class="modal-title">Return to Accreditation Officer</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p class="small text-muted">This will send the application back to the Accreditation Officer for correction.</p>
-                <div class="mb-3">
-                    <label class="form-label small fw-bold">Notes / Required Fixes</label>
-                    <textarea name="decision_notes" class="form-control" rows="4" required placeholder="Specify what needs to be fixed..."></textarea>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" class="btn btn-warning">Send Back</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-{{-- Reject Modal --}}
-<div class="modal fade" id="rejectModal" tabindex="-1">
-    <div class="modal-dialog">
-        <form class="modal-content" method="POST" action="{{ route('staff.registrar.applications.reject', $application) }}">
-            @csrf
-            <div class="modal-header">
-                <h5 class="modal-title">Reject Application</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label class="form-label small fw-bold">Rejection Reason</label>
-                    <textarea name="decision_notes" class="form-control" rows="4" required placeholder="Provide a clear reason for the applicant..."></textarea>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" class="btn btn-danger">Confirm Reject</button>
-            </div>
-        </form>
-    </div>
-</div>
+@endif
 
 @endsection
 

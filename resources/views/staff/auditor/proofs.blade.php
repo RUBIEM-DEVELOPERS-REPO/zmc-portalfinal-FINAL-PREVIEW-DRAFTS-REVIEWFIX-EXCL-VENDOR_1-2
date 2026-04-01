@@ -33,7 +33,7 @@
           <option value="">All</option>
           <option value="submitted" @selected(request('status')==='submitted')>Submitted</option>
           <option value="approved" @selected(request('status')==='approved')>Approved</option>
-          <option value="rejected" @selected(request('status')==='rejected')>Rejected</option>
+          <option value="rejected" @selected(request('status')==='rejected')>Returned for Correction</option>
         </select>
       </div>
       <div class="col-md-3">
@@ -77,7 +77,7 @@
                 <div class="fw-semibold">{{ $a->applicant->name ?? '—' }}</div>
                 <div class="small text-muted">{{ $a->applicant->email ?? '—' }}</div>
               </td>
-              <td class="small fw-bold">{{ $a->proof_status ?? '—' }}</td>
+              <td class="small fw-bold">{{ $a->proof_status === 'rejected' ? 'Returned for Correction' : ($a->proof_status ?? '—') }}</td>
               <td class="small">{{ $a->payment_proof_uploaded_at ? $a->payment_proof_uploaded_at->format('d M Y H:i') : '—' }}</td>
               <td class="small">
                 @if($a->payment_proof_path)

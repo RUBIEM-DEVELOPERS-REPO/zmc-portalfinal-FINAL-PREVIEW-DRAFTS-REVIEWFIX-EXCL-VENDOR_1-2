@@ -18,65 +18,43 @@
         </div>
     </div>
 
-    <div class="row g-4 mb-4">
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="rounded-circle bg-primary bg-opacity-10 p-3 me-3">
-                            <i class="ri-user-line text-primary fs-4"></i>
-                        </div>
-                        <div>
-                            <h3 class="mb-0 fw-bold">{{ $stats['total_users'] ?? 0 }}</h3>
-                            <small class="text-muted">Total Users</small>
-                        </div>
-                    </div>
-                </div>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="zmc-card shadow-sm border-0 p-3 h-100">
+                <div class="text-muted small">Total Users</div>
+                <div class="fw-bold" style="font-size:26px;">{{ number_format($stats['total_users'] ?? 0) }}</div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="rounded-circle bg-success bg-opacity-10 p-3 me-3">
-                            <i class="ri-shield-user-line text-success fs-4"></i>
-                        </div>
-                        <div>
-                            <h3 class="mb-0 fw-bold">{{ $stats['staff_users'] ?? 0 }}</h3>
-                            <small class="text-muted">Staff Members</small>
-                        </div>
-                    </div>
-                </div>
+        <div class="col-md-4">
+            <div class="zmc-card shadow-sm border-0 p-3 h-100">
+                <div class="text-muted small">Staff Members</div>
+                <div class="fw-bold" style="font-size:26px;">{{ number_format($stats['staff_users'] ?? 0) }}</div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="rounded-circle bg-warning bg-opacity-10 p-3 me-3">
-                            <i class="ri-user-add-line text-warning fs-4"></i>
-                        </div>
-                        <div>
-                            <h3 class="mb-0 fw-bold">{{ $stats['new_users_today'] ?? 0 }}</h3>
-                            <small class="text-muted">New Today</small>
-                        </div>
-                    </div>
-                </div>
+        <div class="col-md-4">
+            <div class="zmc-card shadow-sm border-0 p-3 h-100">
+                <div class="text-muted small">New Today</div>
+                <div class="fw-bold" style="font-size:26px;">{{ number_format($stats['new_users_today'] ?? 0) }}</div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="rounded-circle bg-info bg-opacity-10 p-3 me-3">
-                            <i class="ri-history-line text-info fs-4"></i>
-                        </div>
-                        <div>
-                            <h3 class="mb-0 fw-bold">{{ $stats['audit_entries'] ?? 0 }}</h3>
-                            <small class="text-muted">Audit Logs</small>
-                        </div>
-                    </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="zmc-card shadow-sm border-0 p-3 h-100">
+                <div class="text-muted small">Audit Logs</div>
+                <div class="fw-bold" style="font-size:26px;">{{ number_format($stats['audit_entries'] ?? 0) }}</div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="zmc-card shadow-sm border-0 p-3 h-100 d-flex align-items-center justify-content-between" style="background: linear-gradient(90deg, #f8fafc 0%, #f1f5f9 100%); border-left: 4px solid #0f172a !important;">
+                <div>
+                    <div class="text-muted small fw-bold">SECURITY OVERSIGHT</div>
+                    <div class="small text-muted">Monitor system alerts, unauthorized access attempts, and critical flags.</div>
                 </div>
+                <a href="{{ route('staff.auditor.security') }}" class="btn btn-dark btn-sm px-4">
+                    <i class="ri-shield-key-line me-1"></i> Open Console
+                </a>
             </div>
         </div>
     </div>

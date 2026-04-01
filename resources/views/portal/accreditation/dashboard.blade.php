@@ -92,7 +92,7 @@
       <div class="zmc-card h-100">
         <div class="d-flex justify-content-between align-items-center mb-2">
           <h6 class="fw-bold m-0"><i class="ri-megaphone-line me-2" style="color:var(--zmc-accent)"></i>Notices</h6>
-          <a href="{{ url('/portal/notices-events') }}" class="btn btn-sm btn-outline-dark">View all</a>
+          <a href="{{ route('accreditation.notices') }}" class="btn btn-sm btn-outline-dark">View all</a>
         </div>
 
         <div class="small text-muted">
@@ -115,7 +115,7 @@
       <div class="zmc-card h-100">
         <div class="d-flex justify-content-between align-items-center mb-2">
           <h6 class="fw-bold m-0"><i class="ri-calendar-event-line me-2" style="color:var(--zmc-accent)"></i>Events</h6>
-          <a href="{{ url('/portal/notices-events') }}" class="btn btn-sm btn-outline-dark">View all</a>
+          <a href="{{ route('accreditation.notices') }}" class="btn btn-sm btn-outline-dark">View all</a>
         </div>
 
         <div class="small text-muted">
@@ -138,111 +138,216 @@
   </div>
 
   <div class="zmc-card p-0 shadow-sm border-0">
-    <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
-      <h6 class="fw-bold m-0"><i class="ri-list-check-2 me-2" style="color:var(--zmc-accent)"></i>Recent applications</h6>
+    <div class="p-3 border-bottom">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h6 class="fw-bold m-0"><i class="ri-list-check-2 me-2" style="color:var(--zmc-accent)"></i>My Applications</h6>
+        
+        <ul class="nav nav-pills" role="tablist" style="font-size: 13px;">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active px-3 py-1" id="all-tab" data-bs-toggle="tab" data-bs-target="#all-pane" type="button" role="tab">
+              <i class="ri-folders-line me-1"></i> All
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link px-3 py-1" id="drafts-tab" data-bs-toggle="tab" data-bs-target="#drafts-pane" type="button" role="tab">
+              <i class="ri-draft-line me-1"></i> Drafts <span class="badge bg-secondary ms-1">{{ $stats['drafts'] ?? 0 }}</span>
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link px-3 py-1" id="submitted-tab" data-bs-toggle="tab" data-bs-target="#submitted-pane" type="button" role="tab">
+              <i class="ri-send-plane-line me-1"></i> Submitted
+            </button>
+          </li>
+        </ul>
+      </div>
     </div>
 
-    <div class="table-responsive">
-      <table class="table table-hover align-middle mb-0 zmc-mini-table">
-        <thead>
-          <tr>
-            <th><i class="ri-hashtag me-1"></i> Ref</th>
-            <th><i class="ri-file-text-line me-1"></i> Type</th>
-            <th><i class="ri-calendar-line me-1"></i> Date</th>
-            <th><i class="ri-flag-line me-1"></i> Status</th>
-            <th class="text-end" style="min-width:140px;">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          @forelse($apps as $app)
-            @php
-              $status = strtolower((string)($app->status ?? ''));
-              $badge = match(true) {
-                (bool)($app->is_draft) => 'secondary',
-                in_array($status, ['payment_rejected'], true) => 'danger',
-                str_contains($status, 'rejected') => 'danger',
-                in_array($status, ['approved_awaiting_payment','registrar_approved_pending_reg_fee'], true) => 'warning',
-                in_array($status, ['awaiting_accounts_verification'], true) => 'info',
-                in_array($status, ['payment_verified'], true) => 'success',
-                str_contains($status, 'approved') || $status === 'issued' => 'success',
-                in_array($status, ['needs_correction','correction_requested'], true) => 'warning',
-                in_array($status, ['submitted','officer_review','registrar_review','accounts_review'], true) => 'info',
-                default => 'warning',
-              };
+    <div class="tab-content">
+      {{-- ALL APPLICATIONS TAB --}}
+      <div class="tab-pane fade show active" id="all-pane" role="tabpanel">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0 zmc-mini-table">
+            <thead>
+              <tr>
+                <th><i class="ri-hashtag me-1"></i> Ref</th>
+                <th><i class="ri-file-text-line me-1"></i> Type</th>
+                <th><i class="ri-calendar-line me-1"></i> Date</th>
+                <th><i class="ri-flag-line me-1"></i> Status</th>
+                <th class="text-end" style="min-width:140px;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              @forelse($apps as $app)
+                @php
+                  $status = strtolower((string)($app->status ?? ''));
+                  $badge = match(true) {
+                    (bool)($app->is_draft) => 'secondary',
+                    in_array($status, ['payment_rejected'], true) => 'danger',
+                    str_contains($status, 'rejected') => 'danger',
+                    in_array($status, ['approved_awaiting_payment','registrar_approved_pending_reg_fee'], true) => 'warning',
+                    in_array($status, ['awaiting_accounts_verification'], true) => 'info',
+                    in_array($status, ['payment_verified'], true) => 'success',
+                    str_contains($status, 'approved') || $status === 'issued' => 'success',
+                    in_array($status, ['needs_correction','correction_requested'], true) => 'warning',
+                    in_array($status, ['submitted','officer_review','registrar_review','accounts_review'], true) => 'info',
+                    default => 'warning',
+                  };
 
-              $date = $app->is_draft
-                ? 'Draft'
-                : (($app->submitted_at?->format('d M Y')) ?? ($app->created_at?->format('d M Y') ?? '—'));
+                  $date = $app->is_draft
+                    ? 'Draft'
+                    : (($app->submitted_at?->format('d M Y')) ?? ($app->created_at?->format('d M Y') ?? '—'));
 
-              $typeLabel = $app->request_type === 'new'
-                ? 'New Accreditation'
-                : ($app->request_type === 'renewal' ? 'Renewal' : 'Replacement');
-            @endphp
+                  $typeLabel = $app->request_type === 'new'
+                    ? 'New Accreditation'
+                    : ($app->request_type === 'renewal' ? 'Renewal' : 'Replacement');
+                @endphp
 
-            <tr>
-              <td class="fw-bold text-dark">{{ $app->reference ?? ('APP-' . $app->id) }}</td>
-              <td>{{ $typeLabel }}</td>
-              <td class="small text-muted">{{ $date }}</td>
-              <td>
-                <span class="badge rounded-pill bg-{{ $badge }} px-3">
-                  {{ ucwords(str_replace('_',' ', $status ?: ($app->is_draft ? 'draft' : 'processing'))) }}
-                </span>
-              </td>
-              <td class="text-end">
-                <div class="zmc-action-strip">
-                  @if($app->is_draft)
-                    <a class="btn btn-sm zmc-icon-btn btn-outline-secondary" href="{{ route('accreditation.new') }}" title="Continue">
-                      <i class="fa-regular fa-pen-to-square"></i>
-                    </a>
-                    <button type="button" class="btn btn-sm zmc-icon-btn btn-outline-danger js-delete-draft" data-app-id="{{ $app->id }}" title="Delete Draft">
-                      <i class="fa-regular fa-trash-can"></i>
-                    </button>
-                  @else
-                    <button type="button" class="btn btn-sm zmc-icon-btn btn-outline-primary js-view-more" data-app-id="{{ $app->id }}" title="View">
-                      <i class="fa-regular fa-eye"></i>
-                    </button>
-                    @if($status === 'correction_requested')
-                      <a href="{{ route('accreditation.applications.edit', $app) }}" class="btn btn-sm btn-warning fw-bold" title="Edit & Resubmit">
-                        <i class="ri-edit-2-line me-1"></i> Edit
+                <tr>
+                  <td class="fw-bold text-dark">{{ $app->reference ?? ('APP-' . $app->id) }}</td>
+                  <td>{{ $typeLabel }}</td>
+                  <td class="small text-muted">{{ $date }}</td>
+                  <td>
+                    <span class="badge rounded-pill bg-{{ $badge }} px-3">
+                      {{ ucwords(str_replace('_',' ', $status ?: ($app->is_draft ? 'draft' : 'processing'))) }}
+                    </span>
+                  </td>
+                  <td class="text-end">
+                    @include('portal.partials.application_actions', ['app' => $app, 'status' => $status])
+                  </td>
+                </tr>
+              @empty
+                <tr>
+                  <td colspan="5" class="text-center py-5 text-muted">No applications found.</td>
+                </tr>
+              @endforelse
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {{-- DRAFTS TAB --}}
+      <div class="tab-pane fade" id="drafts-pane" role="tabpanel">
+        <div class="alert alert-info border-0 shadow-sm mx-3 mt-3 mb-2" style="border-left: 4px solid #0ea5e9 !important;">
+          <div class="d-flex align-items-center">
+            <i class="ri-information-line fs-4 me-3 text-info"></i>
+            <div>
+              <div class="fw-bold text-dark" style="font-size:14px;">Draft Expiry Policy</div>
+              <div class="small text-slate-600">Applications in draft status are automatically deleted after <strong>14 days</strong> of inactivity. Please ensure you submit your application within this period to avoid losing your progress.</div>
+            </div>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0 zmc-mini-table">
+            <thead>
+              <tr>
+                <th><i class="ri-hashtag me-1"></i> Ref</th>
+                <th><i class="ri-file-text-line me-1"></i> Type</th>
+                <th><i class="ri-calendar-line me-1"></i> Last Updated</th>
+                <th class="text-end" style="min-width:140px;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              @php
+                $drafts = collect($apps)->filter(fn($app) => $app->is_draft);
+              @endphp
+              @forelse($drafts as $app)
+                @php
+                  $typeLabel = $app->request_type === 'new'
+                    ? 'New Accreditation'
+                    : ($app->request_type === 'renewal' ? 'Renewal' : 'Replacement');
+                @endphp
+
+                <tr>
+                  <td class="fw-bold text-dark">{{ $app->reference ?? ('APP-' . $app->id) }}</td>
+                  <td>{{ $typeLabel }}</td>
+                  <td class="small text-muted">{{ $app->updated_at?->format('d M Y, H:i') ?? '—' }}</td>
+                  <td class="text-end">
+                    <div class="zmc-action-strip">
+                      <a class="btn btn-sm btn-primary" href="{{ route('accreditation.new') }}" title="Continue Editing">
+                        <i class="ri-edit-line me-1"></i> Continue
                       </a>
-                    @endif
-                    @if(in_array($status, ['accounts_review','approved_awaiting_payment','registrar_approved_pending_reg_fee']))
-                      <button type="button" class="btn btn-sm btn-success fw-bold js-pay-now" 
-                              data-app-id="{{ $app->id }}" 
-                              data-app-ref="{{ $app->reference }}"
-                              data-payment-stage="{{ $status === 'registrar_approved_pending_reg_fee' ? 'registration_fee' : 'accreditation_fee' }}"
-                              title="Pay Now">
-                        <i class="ri-bank-card-line me-1"></i> Pay
+                      <button type="button" class="btn btn-sm zmc-icon-btn btn-outline-danger js-delete-draft" data-app-id="{{ $app->id }}" title="Delete Draft">
+                        <i class="fa-regular fa-trash-can"></i>
                       </button>
-                    @endif
-                    @if($status === 'payment_rejected')
-                      <button type="button" class="btn btn-sm btn-danger fw-bold js-pay-now" 
-                              data-app-id="{{ $app->id }}" 
-                              data-app-ref="{{ $app->reference }}"
-                              data-rejection-reason="{{ $app->proof_review_notes ?? $app->rejection_reason ?? '' }}"
-                              title="Resubmit Payment">
-                        <i class="ri-error-warning-line me-1"></i> Resubmit Payment
-                      </button>
-                    @endif
-                    @if($status === 'awaiting_accounts_verification')
-                      <span class="badge bg-info px-2"><i class="ri-time-line me-1"></i>Verifying Payment</span>
-                    @endif
-                    @if(in_array($status, ['submitted','officer_review','registrar_review','accounts_review']))
-                      <button type="button" class="btn btn-sm zmc-icon-btn btn-outline-danger js-withdraw-app" data-app-id="{{ $app->id }}" title="Withdraw Application">
-                        <i class="ri-arrow-go-back-line"></i>
-                      </button>
-                    @endif
-                  @endif
-                </div>
-              </td>
-            </tr>
-          @empty
-            <tr>
-              <td colspan="5" class="text-center py-5 text-muted">No applications found.</td>
-            </tr>
-          @endforelse
-        </tbody>
-      </table>
+                    </div>
+                  </td>
+                </tr>
+              @empty
+                <tr>
+                  <td colspan="4" class="text-center py-5 text-muted">
+                    <i class="ri-draft-line" style="font-size: 3rem; opacity: 0.3;"></i>
+                    <div class="mt-2">No drafts found.</div>
+                    <div class="small">Start a new application to create a draft.</div>
+                  </td>
+                </tr>
+              @endforelse
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {{-- SUBMITTED TAB --}}
+      <div class="tab-pane fade" id="submitted-pane" role="tabpanel">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0 zmc-mini-table">
+            <thead>
+              <tr>
+                <th><i class="ri-hashtag me-1"></i> Ref</th>
+                <th><i class="ri-file-text-line me-1"></i> Type</th>
+                <th><i class="ri-calendar-line me-1"></i> Submitted</th>
+                <th><i class="ri-flag-line me-1"></i> Status</th>
+                <th class="text-end" style="min-width:140px;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              @php
+                $submitted = collect($apps)->filter(fn($app) => !$app->is_draft);
+              @endphp
+              @forelse($submitted as $app)
+                @php
+                  $status = strtolower((string)($app->status ?? ''));
+                  $badge = match(true) {
+                    in_array($status, ['payment_rejected'], true) => 'danger',
+                    str_contains($status, 'rejected') => 'danger',
+                    in_array($status, ['approved_awaiting_payment','registrar_approved_pending_reg_fee'], true) => 'warning',
+                    in_array($status, ['awaiting_accounts_verification'], true) => 'info',
+                    in_array($status, ['payment_verified'], true) => 'success',
+                    str_contains($status, 'approved') || $status === 'issued' => 'success',
+                    in_array($status, ['needs_correction','correction_requested'], true) => 'warning',
+                    in_array($status, ['submitted','officer_review','registrar_review','accounts_review'], true) => 'info',
+                    default => 'warning',
+                  };
+
+                  $typeLabel = $app->request_type === 'new'
+                    ? 'New Accreditation'
+                    : ($app->request_type === 'renewal' ? 'Renewal' : 'Replacement');
+                @endphp
+
+                <tr>
+                  <td class="fw-bold text-dark">{{ $app->reference ?? ('APP-' . $app->id) }}</td>
+                  <td>{{ $typeLabel }}</td>
+                  <td class="small text-muted">{{ $app->submitted_at?->format('d M Y') ?? '—' }}</td>
+                  <td>
+                    <span class="badge rounded-pill bg-{{ $badge }} px-3">
+                      {{ ucwords(str_replace('_',' ', $status ?: 'processing')) }}
+                    </span>
+                  </td>
+                  <td class="text-end">
+                    @include('portal.partials.application_actions', ['app' => $app, 'status' => $status])
+                  </td>
+                </tr>
+              @empty
+                <tr>
+                  <td colspan="5" class="text-center py-5 text-muted">
+                    <i class="ri-send-plane-line" style="font-size: 3rem; opacity: 0.3;"></i>
+                    <div class="mt-2">No submitted applications found.</div>
+                  </td>
+                </tr>
+              @endforelse
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 

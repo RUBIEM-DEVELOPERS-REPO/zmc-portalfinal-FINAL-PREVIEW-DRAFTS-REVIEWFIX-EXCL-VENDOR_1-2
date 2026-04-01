@@ -25,7 +25,7 @@ class MonthlyAccreditationExport implements FromCollection, WithHeadings, WithTi
                 'Month' => $trend->month,
                 'Submitted' => $trend->total_submitted,
                 'Approved' => $trend->total_approved,
-                'Rejected' => $trend->total_rejected,
+                'Returned for Correction' => $trend->total_rejected,
             ]);
         }
         
@@ -34,7 +34,7 @@ class MonthlyAccreditationExport implements FromCollection, WithHeadings, WithTi
 
     public function headings(): array
     {
-        return ['Month', 'Submitted', 'Approved', 'Rejected'];
+        return ['Month', 'Submitted', 'Approved', 'Returned for Correction'];
     }
 
     public function title(): string

@@ -4,7 +4,7 @@
 @section('content')
 <div class="zmc-dashboard-wrapper" style="font-family:'Roboto', sans-serif; color:#334155;">
     <div class="mb-4">
-        <a href="{{ route('staff.director.dashboard') }}" class="btn btn-sm btn-link p-0 text-muted mb-2 text-decoration-none">
+        <a href="{{ auth()->user()->hasRole('director') ? route('staff.director.dashboard') : (auth()->user()->hasRole('registrar') ? route('staff.registrar.dashboard') : url()->previous()) }}" class="btn btn-sm btn-link p-0 text-muted mb-2 text-decoration-none">
             <i class="ri-arrow-left-line"></i> Back to Overview
         </a>
         <h4 class="fw-bold m-0" style="font-size:22px; color:#1e293b;">Accreditation & Operational Performance</h4>
@@ -34,7 +34,7 @@
                     </div>
                     <div>
                         <div class="d-flex justify-content-between mb-1">
-                            <span class="small">Registrar Approval</span>
+                            <span class="small">Registrar Reviews</span>
                             <span class="fw-bold">{{ round($efficiency['registrar'], 1) }}h</span>
                         </div>
                         <div class="progress" style="height: 8px;">
@@ -90,8 +90,8 @@
                             <tr class="smaller text-muted">
                                 <th>Month</th>
                                 <th>Submitted</th>
-                                <th>Approved</th>
-                                <th>Rejected</th>
+                                <th>Issued/Reviewed</th>
+                                <th>Returned for Correction</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -100,7 +100,7 @@
                                 <td class="fw-bold">{{ $trend->month }}</td>
                                 <td>{{ $trend->total_submitted }}</td>
                                 <td class="text-success">{{ $trend->total_approved }}</td>
-                                <td class="text-danger">{{ $trend->total_rejected }}</td>
+                                <td class="text-danger">{{ $trend->total_returned }}</td>
                             </tr>
                             @endforeach
                         </tbody>
@@ -133,9 +133,9 @@
         
         console.log('Months:', months);
         console.log('Accreditation Submitted:', accreditationSubmitted);
-        console.log('Accreditation Approved:', accreditationApproved);
+        console.log('Accreditation Issued/Reviewed:', accreditationApproved);
         console.log('Registration Submitted:', registrationSubmitted);
-        console.log('Registration Approved:', registrationApproved);
+        console.log('Registration Issued/Reviewed:', registrationApproved);
         
         // Check if canvas exists
         const trendsCanvas = document.getElementById('trendsChart');
@@ -157,7 +157,7 @@
                                 fill: true
                             },
                             {
-                                label: 'Accreditations (Approved)',
+                                label: 'Accreditations (Issued/Reviewed)',
                                 data: accreditationApproved,
                                 borderColor: '#10b981',
                                 backgroundColor: 'rgba(16, 185, 129, 0.1)',
@@ -174,7 +174,7 @@
                                 borderDash: [5, 5]
                             },
                             {
-                                label: 'Registrations (Approved)',
+                                label: 'Registrations (Issued/Reviewed)',
                                 data: registrationApproved,
                                 borderColor: '#8b5cf6',
                                 backgroundColor: 'rgba(139, 92, 246, 0.1)',

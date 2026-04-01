@@ -28,8 +28,10 @@ class DirectorController extends Controller
         private RiskIndicatorService $riskService,
         private ReportGenerationService $reportService
     ) {
-        // Ensure view-only access
-        $this->middleware(['auth', 'role:director']);
+        $this->middleware('auth');
+        // Director can see everything; Registrar can see accreditation performance
+        $this->middleware('role:director')->except(['accreditationPerformance']);
+        $this->middleware('role:director,registrar')->only(['accreditationPerformance']);
     }
     /**
      * Executive Overview Dashboard
@@ -71,7 +73,7 @@ class DirectorController extends Controller
                 'month' => $month,
                 'submitted' => $data->total_submitted ?? 0,
                 'approved' => $data->total_approved ?? 0,
-                'rejected' => $data->total_rejected ?? 0,
+                'returned' => $data->total_returned ?? 0,
             ];
         });
 
@@ -163,6 +165,39 @@ class DirectorController extends Controller
         $applicationsProcessed = $staffPerformance; // for backward compatibility if needed
         $averageReviewTime = $this->staffService->getAverageReviewTimePerRegistrar();
         $approvalDistribution = $this->staffService->getApprovalDistributionPerOfficer();
+ 
+        // Trend Analytics (Simplified for Director Overview)
+        $trendRange = request()->get('trend_range', '12_months');
+        $trendCutoff = now()->subMonths(12);
+        $currentRangeLabel = 'Last 12 Months';
+
+        switch ($trendRange) {
+            case '30_days': $trendCutoff = now()->subDays(30); $currentRangeLabel = 'Last 30 Days'; break;
+            case '90_days': $trendCutoff = now()->subDays(90); $currentRangeLabel = 'Last 90 Days'; break;
+            case '6_months': $trendCutoff = now()->subMonths(6); $currentRangeLabel = 'Last 6 Months'; break;
+            case 'this_year': $trendCutoff = now()->startOfYear(); $currentRangeLabel = 'This Year (' . date('Y') . ')'; break;
+            case 'all_time': $trendCutoff = now()->subYears(10); $currentRangeLabel = 'All Time'; break;
+        }
+
+        $accreditationTrends = [];
+        $registrationTrends = [];
+        $trendLabels = [];
+
+        try {
+            $trends = Application::selectRaw("strftime('%Y-%m', created_at) as month, 
+                SUM(CASE WHEN application_type = 'accreditation' THEN 1 ELSE 0 END) as acc_count,
+                SUM(CASE WHEN application_type = 'registration' THEN 1 ELSE 0 END) as reg_count")
+                ->where('created_at', '>=', $trendCutoff)
+                ->groupBy('month')
+                ->orderBy('month')
+                ->get();
+
+            foreach ($trends as $t) {
+                $trendLabels[] = date('M Y', strtotime($t->month . '-01'));
+                $accreditationTrends[] = (int) $t->acc_count;
+                $registrationTrends[] = (int) $t->reg_count;
+            }
+        } catch (\Exception $e) {}
 
         return view('staff.director.dashboard', compact(
             'kpis',
@@ -194,7 +229,9 @@ class DirectorController extends Controller
             'staffPerformance',
             'applicationsProcessed',
             'averageReviewTime',
-            'approvalDistribution'
+            'approvalDistribution',
+            // Trends
+            'trendLabels', 'accreditationTrends', 'registrationTrends', 'currentRangeLabel'
         ));
     }
 
@@ -215,8 +252,10 @@ class DirectorController extends Controller
             $months->push(now()->subMonths($i)->format('Y-m'));
         }
         
+        $monthFormat = DB::getDriverName() === 'pgsql' ? "TO_CHAR(created_at, 'YYYY-MM')" : "strftime('%Y-%m', created_at)";
+
         // Accreditation trends (excluding registrations)
-        $accreditationData = Application::selectRaw("TO_CHAR(created_at, 'YYYY-MM') as month")
+        $accreditationData = Application::selectRaw("$monthFormat as month")
             ->selectRaw('COUNT(*) as total_submitted')
             ->selectRaw("SUM(CASE WHEN status = 'issued' THEN 1 ELSE 0 END) as total_approved")
             ->where('application_type', '!=', 'registration')
@@ -227,7 +266,7 @@ class DirectorController extends Controller
             ->keyBy('month');
         
         // Registration trends
-        $registrationData = Application::selectRaw("TO_CHAR(created_at, 'YYYY-MM') as month")
+        $registrationData = Application::selectRaw("$monthFormat as month")
             ->selectRaw('COUNT(*) as total_submitted')
             ->selectRaw("SUM(CASE WHEN status = 'issued' THEN 1 ELSE 0 END) as total_approved")
             ->where('application_type', 'registration')

@@ -6,17 +6,24 @@
 
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    
+    <!-- Session Management -->
+    @auth
+    <meta name="user-authenticated" content="true">
+    <meta name="session-lifetime" content="{{ config('session.lifetime') * 60 }}">
+    @endauth
 
     <title>{{ config('app.name', 'Laravel') }}</title>
 
     <!-- Fonts -->
     <link rel="dns-prefetch" href="//fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=Nunito" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" rel="stylesheet">
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body>
+<body class="@auth authenticated @endauth">
     <div id="app">
         <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
             <div class="container">
@@ -76,5 +83,11 @@
             @yield('content')
         </main>
     </div>
+    
+    <!-- Session Timeout Management -->
+    @auth
+    <script src="{{ asset('js/session-timeout.js') }}"></script>
+    <script src="{{ asset('js/session-indicator.js') }}"></script>
+    @endauth
 </body>
 </html>

@@ -25,6 +25,13 @@
     </div>
   @endif
 
+  @if(session('error'))
+    <div class="alert alert-danger d-flex align-items-start gap-2">
+      <i class="ri-error-warning-line" style="font-size:18px;line-height:1;"></i>
+      <div>{{ session('error') }}</div>
+    </div>
+  @endif
+
   <div class="card border-0 shadow-sm mb-4">
     <div class="card-body d-flex flex-wrap gap-2 align-items-center">
       <div class="fw-bold me-2"><i class="ri-group-line me-1"></i> Lists</div>
@@ -115,6 +122,15 @@
                 <a class="btn btn-sm btn-outline-primary" href="{{ route('admin.users.access.edit', $u) }}">
                   <i class="ri-user-settings-line me-1"></i> Access
                 </a>
+                @if(auth()->user()->hasRole('super_admin') && !$u->hasRole('super_admin') && auth()->user()->id !== $u->id)
+                  <form method="POST" action="{{ route('admin.users.destroy', $u) }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this user? This action cannot be undone.')">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-sm btn-outline-danger ms-1">
+                      <i class="ri-delete-bin-line me-1"></i> Delete
+                    </button>
+                  </form>
+                @endif
               </td>
             </tr>
           @empty

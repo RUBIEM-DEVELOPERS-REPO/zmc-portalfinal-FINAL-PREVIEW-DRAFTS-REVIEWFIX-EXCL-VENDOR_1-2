@@ -50,7 +50,7 @@
                                 </div>
                             </td>
                             <td class="text-end pe-4 py-3">
-                                @if($application)
+                                @if($application && !auth()->user()->hasRole('it_admin'))
                                     <a href="{{ route('staff.it.application.download_batch', $application) }}" class="btn btn-sm btn-slate-200 text-slate-700 border-slate-300 fw-bold rounded-pill px-3">
                                         <i class="ri-folder-zip-line me-1"></i> Download All
                                     </a>
@@ -72,9 +72,10 @@
                                     @php
                                         // Attempting to get a valid URL for individual download
                                         $url = method_exists($file, 'getUrlAttribute') ? $file->url : '#';
+                                        $isIt = auth()->user()->hasRole('it_admin');
                                     @endphp
-                                    <a href="{{ $url }}" target="_blank" class="btn btn-sm btn-icon text-slate-400 hover-text-primary" title="Download">
-                                        <i class="ri-download-2-line"></i>
+                                    <a href="{{ $url }}" target="_blank" class="btn btn-sm btn-icon text-slate-400 hover-text-primary" title="{{ $isIt ? 'View' : 'Download' }}">
+                                        <i class="{{ $isIt ? 'ri-eye-line' : 'ri-download-2-line' }}"></i>
                                     </a>
                                 </td>
                             </tr>

@@ -107,9 +107,15 @@
                   @endif
 
                   <div class="col-12 mt-3">
+                    @if(session('active_staff_role') !== 'it_admin')
                     <button type="submit" class="btn btn-primary btn-sm w-100">
                       <i class="ri-download-cloud-2-line me-1"></i> Export to CSV
                     </button>
+                    @else
+                    <div class="alert alert-info small py-2 mb-0 border-0 shadow-none">
+                        <i class="ri-information-line me-1"></i> Download restricted (View Only)
+                    </div>
+                    @endif
                   </div>
                 </div>
               </form>

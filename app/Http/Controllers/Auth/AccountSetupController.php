@@ -31,12 +31,17 @@ class AccountSetupController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'password' => ['required', 'string', 'min:6', 'confirmed'],
+            'phone_country_code' => ['required', 'string', 'exists:countries,code'],
+            'phone_number' => ['required', 'string', 'min:6', 'max:20'],
         ]);
 
         $user->forceFill([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'phone_country_code' => $request->phone_country_code,
+            'phone_number' => $request->phone_number,
+            'country_code' => $request->phone_country_code,
             'setup_token' => null,
             'account_status' => 'active',
         ])->save();
@@ -46,6 +51,6 @@ class AccountSetupController extends Controller
             'new_name' => $request->name,
         ]);
 
-        return redirect()->route('login')->with('success', 'Account setup complete. You can now login with your new credentials.');
+        return redirect()->route('staff.login')->with('success', 'Account setup complete. You can now login with your new credentials.');
     }
 }

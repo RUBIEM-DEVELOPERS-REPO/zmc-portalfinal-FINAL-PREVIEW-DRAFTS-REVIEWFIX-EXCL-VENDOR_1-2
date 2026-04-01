@@ -4,11 +4,27 @@ namespace App\Observers;
 
 use App\Models\Application;
 use App\Notifications\ApplicationStatusChanged;
+use App\Services\ApplicationAssignmentService;
 
 class ApplicationObserver
 {
     public function updated(Application $application): void
     {
+        // Auto-assign officer when application is submitted
+        if ($application->wasChanged('status') && $application->status === Application::SUBMITTED) {
+            $assignmentService = new ApplicationAssignmentService();
+            $officer = $assignmentService->assign($application);
+            
+            if ($officer) {
+                // Log the assignment
+                \Log::info('Application assigned to officer', [
+                    'application_id' => $application->id,
+                    'officer_id' => $officer->id,
+                    'collection_region' => $application->collection_region
+                ]);
+            }
+        }
+
         $applicant = $application->applicant;
         if (!$applicant) {
             return;

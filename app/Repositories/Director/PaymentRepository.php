@@ -105,8 +105,10 @@ class PaymentRepository
     {
         $startDate = now()->subMonths($months)->startOfMonth();
         
+        $monthFormat = DB::getDriverName() === 'pgsql' ? "TO_CHAR(confirmed_at, 'YYYY-MM')" : "strftime('%Y-%m', confirmed_at)";
+
         return Payment::select(
-            DB::raw("TO_CHAR(confirmed_at, 'YYYY-MM') as month"),
+            DB::raw("$monthFormat as month"),
             DB::raw('SUM(amount) as total_revenue'),
             DB::raw('COUNT(*) as transaction_count')
         )

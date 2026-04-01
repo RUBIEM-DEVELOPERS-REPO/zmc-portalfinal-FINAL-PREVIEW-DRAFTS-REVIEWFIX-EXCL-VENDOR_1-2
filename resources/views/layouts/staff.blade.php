@@ -4,6 +4,15 @@
     <meta charset="utf-8">
     <title>@yield('title', 'ZMC Staff Portal')</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <!-- CSRF Token -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    
+    <!-- Session Management -->
+    @auth
+    <meta name="user-authenticated" content="true">
+    <meta name="session-lifetime" content="{{ config('session.lifetime') * 60 }}">
+    @endauth
 
     {{-- Bootstrap 5 (if you already load via Vite/app, remove these 2 lines) --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -159,5 +168,12 @@
   };
 })();
 </script>
+
+<!-- Session Timeout Management -->
+@auth
+<script src="{{ asset('js/session-timeout.js') }}"></script>
+<script src="{{ asset('js/session-indicator.js') }}"></script>
+@endauth
+
 </body>
 </html>

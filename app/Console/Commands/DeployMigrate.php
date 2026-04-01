@@ -30,11 +30,19 @@ class DeployMigrate extends Command
 
     private function ensureMigrationsTable(): void
     {
-        DB::statement("CREATE TABLE IF NOT EXISTS migrations (
-            id SERIAL PRIMARY KEY,
-            migration VARCHAR(255) NOT NULL,
-            batch INTEGER NOT NULL
-        )");
+        if (DB::getDriverName() === 'sqlite') {
+            DB::statement("CREATE TABLE IF NOT EXISTS migrations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                migration VARCHAR(255) NOT NULL,
+                batch INTEGER NOT NULL
+            )");
+        } else {
+            DB::statement("CREATE TABLE IF NOT EXISTS migrations (
+                id SERIAL PRIMARY KEY,
+                migration VARCHAR(255) NOT NULL,
+                batch INTEGER NOT NULL
+            )");
+        }
         $this->info('  - migrations table ensured');
     }
 
@@ -66,8 +74,13 @@ class DeployMigrate extends Command
     {
         $this->info('  - Applying idempotent schema...');
 
+        $isSqlite = DB::getDriverName() === 'sqlite';
+
+        $idType = $isSqlite ? 'INTEGER PRIMARY KEY AUTOINCREMENT' : 'BIGSERIAL PRIMARY KEY';
+        $jsonType = $isSqlite ? 'TEXT' : 'JSONB';
+
         DB::statement("CREATE TABLE IF NOT EXISTS users (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             name VARCHAR(255) NOT NULL,
             email VARCHAR(255) NOT NULL UNIQUE,
             email_verified_at TIMESTAMP NULL,
@@ -105,7 +118,7 @@ class DeployMigrate extends Command
         )");
 
         DB::statement("CREATE TABLE IF NOT EXISTS jobs (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             queue VARCHAR(255) NOT NULL,
             payload TEXT NOT NULL,
             attempts SMALLINT NOT NULL DEFAULT 0,
@@ -128,7 +141,7 @@ class DeployMigrate extends Command
         )");
 
         DB::statement("CREATE TABLE IF NOT EXISTS failed_jobs (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             uuid VARCHAR(255) NOT NULL UNIQUE,
             connection TEXT NOT NULL,
             queue TEXT NOT NULL,
@@ -138,7 +151,7 @@ class DeployMigrate extends Command
         )");
 
         DB::statement("CREATE TABLE IF NOT EXISTS permissions (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             name VARCHAR(255) NOT NULL,
             guard_name VARCHAR(255) NOT NULL,
             created_at TIMESTAMP NULL,
@@ -146,7 +159,7 @@ class DeployMigrate extends Command
         )");
 
         DB::statement("CREATE TABLE IF NOT EXISTS roles (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             name VARCHAR(255) NOT NULL,
             guard_name VARCHAR(255) NOT NULL,
             created_at TIMESTAMP NULL,
@@ -174,14 +187,14 @@ class DeployMigrate extends Command
         )");
 
         DB::statement("CREATE TABLE IF NOT EXISTS applications (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             reference VARCHAR(255) NULL UNIQUE,
             applicant_user_id BIGINT NULL,
             application_type VARCHAR(50) NULL,
             request_type VARCHAR(50) NULL DEFAULT 'new',
             journalist_scope VARCHAR(20) NULL,
             collection_region VARCHAR(100) NULL,
-            form_data JSONB NULL,
+            form_data {$jsonType} NULL,
             is_draft BOOLEAN NOT NULL DEFAULT true,
             submitted_at TIMESTAMP NULL,
             status VARCHAR(50) NOT NULL DEFAULT 'draft',
@@ -248,7 +261,7 @@ class DeployMigrate extends Command
         )");
 
         DB::statement("CREATE TABLE IF NOT EXISTS application_documents (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             application_id BIGINT NULL,
             doc_type VARCHAR(50) NULL,
             document_type VARCHAR(100) NULL,
@@ -260,7 +273,7 @@ class DeployMigrate extends Command
         )");
 
         DB::statement("CREATE TABLE IF NOT EXISTS application_messages (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             application_id BIGINT NULL,
             sender_id BIGINT NULL,
             message TEXT NULL,
@@ -270,7 +283,7 @@ class DeployMigrate extends Command
         )");
 
         DB::statement("CREATE TABLE IF NOT EXISTS officer_regions (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             user_id BIGINT NULL,
             region VARCHAR(100) NULL,
             created_at TIMESTAMP NULL,
@@ -278,20 +291,20 @@ class DeployMigrate extends Command
         )");
 
         DB::statement("CREATE TABLE IF NOT EXISTS activity_logs (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             application_id BIGINT NULL,
             user_id BIGINT NULL,
             action VARCHAR(100) NULL,
             from_status VARCHAR(50) NULL,
             to_status VARCHAR(50) NULL,
             notes TEXT NULL,
-            metadata JSONB NULL,
+            metadata {$jsonType} NULL,
             created_at TIMESTAMP NULL,
             updated_at TIMESTAMP NULL
         )");
 
         DB::statement("CREATE TABLE IF NOT EXISTS payments (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             application_id BIGINT NULL,
             user_id BIGINT NULL,
             amount DECIMAL(12,2) NULL,
@@ -301,7 +314,7 @@ class DeployMigrate extends Command
             reference VARCHAR(255) NULL,
             paynow_reference VARCHAR(255) NULL,
             poll_url VARCHAR(500) NULL,
-            metadata JSONB NULL,
+            metadata {$jsonType} NULL,
             paid_at TIMESTAMP NULL,
             created_at TIMESTAMP NULL,
             updated_at TIMESTAMP NULL,
@@ -314,13 +327,13 @@ class DeployMigrate extends Command
         )");
 
         DB::statement("CREATE TABLE IF NOT EXISTS audit_trails (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             user_id BIGINT NULL,
             action VARCHAR(255) NULL,
             model_type VARCHAR(255) NULL,
             model_id BIGINT NULL,
-            old_values JSONB NULL,
-            new_values JSONB NULL,
+            old_values {$jsonType} NULL,
+            new_values {$jsonType} NULL,
             ip_address VARCHAR(45) NULL,
             user_agent TEXT NULL,
             created_at TIMESTAMP NULL,
@@ -328,19 +341,19 @@ class DeployMigrate extends Command
         )");
 
         DB::statement("CREATE TABLE IF NOT EXISTS audit_logs (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             user_id BIGINT NULL,
             action VARCHAR(100) NULL,
             entity_type VARCHAR(100) NULL,
             entity_id BIGINT NULL,
-            details JSONB NULL,
+            details {$jsonType} NULL,
             ip_address VARCHAR(45) NULL,
             created_at TIMESTAMP NULL,
             updated_at TIMESTAMP NULL
         )");
 
         DB::statement("CREATE TABLE IF NOT EXISTS notices (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             title VARCHAR(255) NOT NULL,
             body TEXT NULL,
             image_path VARCHAR(500) NULL,
@@ -353,7 +366,7 @@ class DeployMigrate extends Command
         )");
 
         DB::statement("CREATE TABLE IF NOT EXISTS events (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             title VARCHAR(255) NOT NULL,
             description TEXT NULL,
             image_path VARCHAR(500) NULL,
@@ -380,7 +393,7 @@ class DeployMigrate extends Command
         )");
 
         DB::statement("CREATE TABLE IF NOT EXISTS news (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             title VARCHAR(255) NOT NULL,
             slug VARCHAR(255) NOT NULL UNIQUE,
             body TEXT NULL,
@@ -392,7 +405,7 @@ class DeployMigrate extends Command
         )");
 
         DB::statement("CREATE TABLE IF NOT EXISTS complaints (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             reference VARCHAR(255) NULL UNIQUE,
             complainant_user_id BIGINT NULL,
             respondent_media_house VARCHAR(255) NULL,
@@ -406,7 +419,7 @@ class DeployMigrate extends Command
         )");
 
         DB::statement("CREATE TABLE IF NOT EXISTS accreditation_records (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             user_id BIGINT NULL,
             application_id BIGINT NULL,
             accreditation_number VARCHAR(255) NULL UNIQUE,
@@ -420,7 +433,7 @@ class DeployMigrate extends Command
         )");
 
         DB::statement("CREATE TABLE IF NOT EXISTS system_configs (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             key VARCHAR(255) NOT NULL UNIQUE,
             value TEXT NULL,
             created_at TIMESTAMP NULL,
@@ -428,7 +441,7 @@ class DeployMigrate extends Command
         )");
 
         DB::statement("CREATE TABLE IF NOT EXISTS registration_records (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             user_id BIGINT NULL,
             application_id BIGINT NULL,
             registration_number VARCHAR(255) NULL UNIQUE,
@@ -441,7 +454,7 @@ class DeployMigrate extends Command
         )");
 
         DB::statement("CREATE TABLE IF NOT EXISTS officer_followups (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             application_id BIGINT NULL,
             officer_id BIGINT NULL,
             message TEXT NULL,
@@ -452,7 +465,7 @@ class DeployMigrate extends Command
         )");
 
         DB::statement("CREATE TABLE IF NOT EXISTS compliance_cases (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             reference VARCHAR(255) NULL UNIQUE,
             media_house_id BIGINT NULL,
             officer_id BIGINT NULL,
@@ -465,7 +478,7 @@ class DeployMigrate extends Command
         )");
 
         DB::statement("CREATE TABLE IF NOT EXISTS compliance_violations (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             case_id BIGINT NULL,
             violation_type VARCHAR(100) NULL,
             description TEXT NULL,
@@ -475,7 +488,7 @@ class DeployMigrate extends Command
         )");
 
         DB::statement("CREATE TABLE IF NOT EXISTS compliance_evidence_files (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             case_id BIGINT NULL,
             file_path VARCHAR(500) NULL,
             original_name VARCHAR(255) NULL,
@@ -485,7 +498,7 @@ class DeployMigrate extends Command
         )");
 
         DB::statement("CREATE TABLE IF NOT EXISTS audit_flags (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             flagged_by BIGINT NULL,
             entity_type VARCHAR(100) NULL,
             entity_id BIGINT NULL,
@@ -496,13 +509,13 @@ class DeployMigrate extends Command
             resolved_at TIMESTAMP NULL,
             resolution_notes TEXT NULL,
             priority VARCHAR(20) NULL DEFAULT 'medium',
-            metadata JSONB NULL,
+            metadata {$jsonType} NULL,
             created_at TIMESTAMP NULL,
             updated_at TIMESTAMP NULL
         )");
 
         DB::statement("CREATE TABLE IF NOT EXISTS media_house_staff (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             media_house_user_id BIGINT NULL,
             journalist_user_id BIGINT NULL,
             role VARCHAR(100) NULL DEFAULT 'staff',
@@ -512,7 +525,7 @@ class DeployMigrate extends Command
         )");
 
         DB::statement("CREATE TABLE IF NOT EXISTS regions (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             name VARCHAR(255) NOT NULL,
             code VARCHAR(10) NULL UNIQUE,
             is_active BOOLEAN NOT NULL DEFAULT true,
@@ -521,7 +534,7 @@ class DeployMigrate extends Command
         )");
 
         DB::statement("CREATE TABLE IF NOT EXISTS vacancies (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             title VARCHAR(255) NOT NULL,
             description TEXT NULL,
             department VARCHAR(100) NULL,
@@ -534,7 +547,7 @@ class DeployMigrate extends Command
         )");
 
         DB::statement("CREATE TABLE IF NOT EXISTS tenders (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             title VARCHAR(255) NOT NULL,
             reference_number VARCHAR(100) NULL,
             description TEXT NULL,
@@ -546,7 +559,7 @@ class DeployMigrate extends Command
         )");
 
         DB::statement("CREATE TABLE IF NOT EXISTS document_versions (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             application_id BIGINT NULL,
             document_id BIGINT NULL,
             version_number INTEGER NOT NULL DEFAULT 1,
@@ -559,7 +572,7 @@ class DeployMigrate extends Command
         )");
 
         DB::statement("CREATE TABLE IF NOT EXISTS print_logs (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             application_id BIGINT NULL,
             type VARCHAR(50) NULL,
             template_version VARCHAR(50) NULL,
@@ -573,17 +586,17 @@ class DeployMigrate extends Command
         )");
 
         DB::statement("CREATE TABLE IF NOT EXISTS payment_audit_logs (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             payment_id BIGINT NULL,
             action VARCHAR(100) NULL,
             performed_by BIGINT NULL,
-            details JSONB NULL,
+            details {$jsonType} NULL,
             created_at TIMESTAMP NULL,
             updated_at TIMESTAMP NULL
         )");
 
         DB::statement("CREATE TABLE IF NOT EXISTS receipt_sequences (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             prefix VARCHAR(20) NOT NULL,
             year INTEGER NOT NULL,
             last_number INTEGER NOT NULL DEFAULT 0,
@@ -592,12 +605,12 @@ class DeployMigrate extends Command
         )");
 
         DB::statement("CREATE TABLE IF NOT EXISTS card_templates (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             name VARCHAR(255) NOT NULL,
             type VARCHAR(50) NOT NULL DEFAULT 'card',
             year INTEGER NULL,
             background_path VARCHAR(500) NULL,
-            layout_config JSONB NULL,
+            layout_config {$jsonType} NULL,
             is_active BOOLEAN NOT NULL DEFAULT false,
             created_by BIGINT NULL,
             created_at TIMESTAMP NULL,
@@ -605,7 +618,7 @@ class DeployMigrate extends Command
         )");
 
         DB::statement("CREATE TABLE IF NOT EXISTS reminders (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             target_type VARCHAR(50) NOT NULL,
             target_id BIGINT NOT NULL,
             message TEXT NOT NULL,
@@ -617,7 +630,7 @@ class DeployMigrate extends Command
         )");
 
         DB::statement("CREATE TABLE IF NOT EXISTS files (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             name VARCHAR(255) NULL,
             path VARCHAR(500) NULL,
             mime_type VARCHAR(100) NULL,
@@ -628,7 +641,7 @@ class DeployMigrate extends Command
         )");
 
         DB::statement("CREATE TABLE IF NOT EXISTS refunds (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             payment_id BIGINT NULL,
             amount DECIMAL(12,2) NULL,
             reason TEXT NULL,
@@ -640,7 +653,7 @@ class DeployMigrate extends Command
         )");
 
         DB::statement("CREATE TABLE IF NOT EXISTS unaccredited_reports (
-            id BIGSERIAL PRIMARY KEY,
+            id {$idType},
             reported_by BIGINT NULL,
             name VARCHAR(255) NULL,
             description TEXT NULL,
@@ -698,6 +711,10 @@ class DeployMigrate extends Command
 
     private function replaceCheckConstraint(string $table, string $constraintName, string $check): void
     {
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
+
         try {
             DB::statement("ALTER TABLE {$table} DROP CONSTRAINT IF EXISTS {$constraintName}");
             DB::statement("ALTER TABLE {$table} ADD CONSTRAINT {$constraintName} CHECK ({$check})");
@@ -708,14 +725,11 @@ class DeployMigrate extends Command
 
     private function addColumnSafe(string $table, string $column, string $type): void
     {
-        $exists = DB::select("
-            SELECT 1 FROM information_schema.columns 
-            WHERE table_schema = 'public' AND table_name = ? AND column_name = ?
-        ", [$table, $column]);
-
-        if (empty($exists)) {
-            DB::statement("ALTER TABLE {$table} ADD COLUMN {$column} {$type}");
-            $this->info("    + Added {$table}.{$column}");
+        if (Schema::hasColumn($table, $column)) {
+            return;
         }
+
+        DB::statement("ALTER TABLE {$table} ADD COLUMN {$column} {$type}");
+        $this->info("    + Added {$table}.{$column}");
     }
 }

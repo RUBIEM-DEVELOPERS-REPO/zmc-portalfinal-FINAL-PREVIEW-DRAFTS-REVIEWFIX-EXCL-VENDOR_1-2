@@ -36,143 +36,16 @@
     $items = collect(method_exists($applications, 'items') ? $applications->items() : $applications);
     $summaryTotal = $kpis['total_applications'] ?? (method_exists($applications, 'total') ? $applications->total() : $items->count());
 
-    $summaryPending = $kpis['pending_applications'] ?? $items->filter(fn($x) => in_array(strtolower((string)($x->status ?? '')), [
-      'submitted', 'officer_review', 'under_officer_review', 'needs_correction', 'returned_from_payments', 'returned_from_registrar'
+    $summaryPending = $kpis['recent_applications'] ?? $items->filter(fn($x) => in_array(strtolower((string)($x->status ?? '')), [
+      'submitted', 'officer_review', 'under_officer_review'
     ], true))->count();
 
-    $summaryCorrections = $items->filter(fn($x) => in_array(strtolower((string)($x->status ?? '')), ['correction_requested','corrections_requested','needs_correction'], true))->count();
-    $summaryRejected = $kpis['rejected_applications'] ?? $items->filter(fn($x) => strtolower((string)($x->status ?? '')) === 'officer_rejected')->count();
+    $summaryCorrections = $kpis['returned_applications'] ?? $items->filter(fn($x) => in_array(strtolower((string)($x->status ?? '')), ['correction_requested','corrections_requested','needs_correction'], true))->count();
 
     $detailsUrlTemplate = route('staff.applications.details', ['application' => '__ID__']);
     $approveUrl = fn($id) => route('staff.officer.applications.approve', $id);
     $correctionUrl = fn($id) => route('staff.officer.applications.requestCorrection', $id);
   @endphp
-
-  {{-- Summary cards --}}
-  <div class="row g-3 mb-4">
-    <div class="col-12 col-md-3">
-      <div class="zmc-card h-100">
-        <div class="d-flex justify-content-between align-items-start">
-          <div>
-            <div class="text-muted small fw-bold">Total queue</div>
-            <div class="h3 fw-black mb-0">{{ $summaryTotal }}</div>
-          </div>
-          <div class="icon-box text-primary"><i class="ri-folders-line"></i></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-12 col-md-3">
-      <div class="zmc-card h-100">
-        <div class="d-flex justify-content-between align-items-start">
-          <div>
-            <div class="text-muted small fw-bold">Pending action</div>
-            <div class="h3 fw-black mb-0">{{ $summaryPending }}</div>
-          </div>
-          <div class="icon-box" style="background:transparent;border-left:3px solid var(--zmc-accent);border-radius:0;">
-            <i class="ri-time-line" style="color:var(--zmc-accent)"></i>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-12 col-md-3">
-      <div class="zmc-card h-100">
-        <div class="d-flex justify-content-between align-items-start">
-          <div>
-            <div class="text-muted small fw-bold">Corrections</div>
-            <div class="h3 fw-black mb-0">{{ $summaryCorrections }}</div>
-          </div>
-          <div class="icon-box text-warning"><i class="ri-chat-check-line"></i></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-12 col-md-3">
-      <div class="zmc-card h-100">
-        <div class="d-flex justify-content-between align-items-start">
-          <div>
-            <div class="text-muted small fw-bold">Rejected</div>
-            <div class="h3 fw-black mb-0">{{ $summaryRejected }}</div>
-          </div>
-          <div class="icon-box text-danger"><i class="ri-error-warning-line"></i></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  {{-- Records Summary Section --}}
-  <div class="row g-3 mb-4">
-    <div class="col-12">
-      <h6 class="fw-bold mb-3">
-        <i class="ri-file-list-3-line me-2" style="color:var(--zmc-accent)"></i> Records Management
-      </h6>
-    </div>
-    <div class="col-12 col-md-6">
-      <div class="zmc-card h-100">
-        <div class="d-flex justify-content-between align-items-start mb-3">
-          <div>
-            <h6 class="fw-bold m-0">Accredited Media Practitioners</h6>
-            <div class="text-muted small">View all accredited journalists and their collection status</div>
-          </div>
-          <div class="icon-box text-primary"><i class="ri-user-star-line"></i></div>
-        </div>
-        @php
-          $totalAccredited = \App\Models\AccreditationRecord::count();
-          $uncollectedCards = \App\Models\AccreditationRecord::whereNull('collected_at')->count();
-        @endphp
-        <div class="row g-2 mb-3">
-          <div class="col-6">
-            <div class="border rounded p-2 text-center">
-              <div class="h4 fw-bold mb-0">{{ $totalAccredited }}</div>
-              <div class="small text-muted">Total</div>
-            </div>
-          </div>
-          <div class="col-6">
-            <div class="border rounded p-2 text-center">
-              <div class="h4 fw-bold mb-0 text-warning">{{ $uncollectedCards }}</div>
-              <div class="small text-muted">Uncollected</div>
-            </div>
-          </div>
-        </div>
-        <a href="{{ route('staff.officer.records.accredited-journalists') }}" class="btn btn-outline-primary w-100">
-          <i class="ri-eye-line me-1"></i> View All Media Practitioners
-        </a>
-      </div>
-    </div>
-    <div class="col-12 col-md-6">
-      <div class="zmc-card h-100">
-        <div class="d-flex justify-content-between align-items-start mb-3">
-          <div>
-            <h6 class="fw-bold m-0">Registered Media Houses</h6>
-            <div class="text-muted small">View all registered media houses and their collection status</div>
-          </div>
-          <div class="icon-box text-success"><i class="ri-building-line"></i></div>
-        </div>
-        @php
-          $totalRegistered = \App\Models\RegistrationRecord::count();
-          $uncollectedCerts = \App\Models\RegistrationRecord::whereNull('collected_at')->count();
-        @endphp
-        <div class="row g-2 mb-3">
-          <div class="col-6">
-            <div class="border rounded p-2 text-center">
-              <div class="h4 fw-bold mb-0">{{ $totalRegistered }}</div>
-              <div class="small text-muted">Total</div>
-            </div>
-          </div>
-          <div class="col-6">
-            <div class="border rounded p-2 text-center">
-              <div class="h4 fw-bold mb-0 text-warning">{{ $uncollectedCerts }}</div>
-              <div class="small text-muted">Uncollected</div>
-            </div>
-          </div>
-        </div>
-        <a href="{{ route('staff.officer.records.registered-mediahouses') }}" class="btn btn-outline-success w-100">
-          <i class="ri-eye-line me-1"></i> View All Media Houses
-        </a>
-      </div>
-    </div>
-  </div>
 
   {{-- Renewals Due Section --}}
   @if(($expiringJournalists && $expiringJournalists->count() > 0) || ($expiringMediaHouses && $expiringMediaHouses->count() > 0))
@@ -331,6 +204,10 @@
     </div>
   @endif
 
+
+  {{-- Trends Analytics (Redistributed from IT) --}}
+  @include('partials.analytics.accreditation_summary')
+  @include('partials.analytics.trends')
 
   {{-- Table --}}
   <div class="zmc-card p-0 shadow-sm border-0">

@@ -18,7 +18,9 @@ class User extends Authenticatable
         'password',
         'region',
         'account_type',
+        'account_status',
         'designation',
+        'setup_token',
         'locale',
         'phone_country_code',
         'phone_number',
@@ -28,6 +30,7 @@ class User extends Authenticatable
         'social_media',
         'theme',
         'profile_data',
+        'country_code',
     ];
 
     protected $hidden = [

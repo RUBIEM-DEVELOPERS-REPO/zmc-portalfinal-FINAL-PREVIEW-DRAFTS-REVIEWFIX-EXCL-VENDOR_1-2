@@ -3,24 +3,31 @@
 
 @section('content')
 <div class="zmc-dashboard-wrapper" style="font-family:'Roboto', sans-serif; color:#334155;">
-
-  {{-- Header --}}
   <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4">
     <div>
-      <h4 class="fw-bold m-0" style="font-size:22px; color:#1e293b;">
-        Production Dashboard
-      </h4>
+      <h4 class="fw-bold m-0" style="font-size:22px; color:#1e293b;">Production Dashboard</h4>
       <div class="text-muted mt-1" style="font-size:13px;">
         <i class="ri-information-line me-1"></i>
-        Items approved by Registrar arrive here. Generate card/certificate, batch print, and mark as issued.
+        Manage card/certificate generation, printing, and issuance for approved applications.
       </div>
     </div>
 
-    <div class="d-flex align-items-center gap-2">
-      <span class="zmc-pill zmc-pill-dark">
-        <i class="ri-map-pin-user-line"></i>
-        <span>Region: {{ auth()->user()->region ?? 'NOT SET' }}</span>
+    <div class="d-flex gap-2 flex-wrap align-items-center">
+      <span class="text-muted small me-2">
+        <i class="ri-map-pin-user-line me-1"></i>
+        Region: <strong>{{ auth()->user()->region ?? 'NOT SET' }}</strong>
       </span>
+      <div class="btn-group me-2" role="group">
+        <button type="button" class="btn btn-outline-primary active" id="productionModeBtn">
+          <i class="ri-printer-line me-1"></i>Production
+        </button>
+        <button type="button" class="btn btn-outline-secondary" id="designerModeBtn">
+          <i class="ri-palette-line me-1"></i>Designer
+        </button>
+      </div>
+      <a href="{{ route('staff.switch-role', ['role' => 'accreditation_officer']) }}" class="btn btn-white border shadow-sm btn-sm px-3 me-2">
+        <i class="ri-dashboard-3-line me-1"></i>Back to Officer
+      </a>
       <a href="{{ url()->current() }}" class="btn btn-white border shadow-sm btn-sm px-3" title="Refresh">
         <i class="ri-refresh-line me-1"></i> Refresh
       </a>
@@ -165,12 +172,12 @@
       <table class="table table-hover align-middle mb-0 zmc-mini-table">
         <thead>
           <tr>
-            <th style="width:40px;"></th>
-            <th style="width:60px;">#</th>
-            <th><i class="ri-hashtag me-1"></i> Ref</th>
-            <th><i class="ri-user-line me-1"></i> Applicant</th>
-            <th><i class="ri-map-pin-line me-1"></i> Region</th>
-            <th><i class="ri-flag-line me-1"></i> Status</th>
+            <th><input class="form-check-input" type="checkbox" id="checkAll"></th>
+            <th class="text-muted small">No</th>
+            <th>Reference</th>
+            <th>Applicant</th>
+            <th>Region</th>
+            <th class="text-end">Status</th>
             <th class="text-end" style="min-width:210px;">Action</th>
           </tr>
         </thead>

@@ -100,7 +100,12 @@ class ItAdminController extends Controller
         // Accreditation trends (monthly last 12 months) - use issued_at if available
         $accreditationTrend = [];
         if (Schema::hasColumn('applications', 'issued_at')) {
-            $dateFormat = "TO_CHAR(issued_at, 'YYYY-MM')";
+            $driver = DB::getDriverName();
+            if ($driver === 'sqlite') {
+                $dateFormat = "strftime('%Y-%m', issued_at)";
+            } else {
+                $dateFormat = "TO_CHAR(issued_at, 'YYYY-MM')";
+            }
 
             $rows = Application::selectRaw("$dateFormat as ym, COUNT(*) as c")
                 ->whereNotNull('issued_at')
@@ -119,7 +124,12 @@ class ItAdminController extends Controller
         $avgProcessingHours = 0;
         if (Schema::hasColumn('applications', 'submitted_at')) {
             try {
-                $diffExpression = "EXTRACT(EPOCH FROM (COALESCE(decided_at, approved_at, rejected_at) - submitted_at)) / 3600";
+                $driver = DB::getDriverName();
+                if ($driver === 'sqlite') {
+                    $diffExpression = "(julianday(COALESCE(decided_at, approved_at, rejected_at)) - julianday(submitted_at)) * 24";
+                } else {
+                    $diffExpression = "EXTRACT(EPOCH FROM (COALESCE(decided_at, approved_at, rejected_at) - submitted_at)) / 3600";
+                }
 
                 $avgProcessingHours = (float) Application::whereNotNull('submitted_at')
                     ->where(function ($q) {
@@ -168,7 +178,7 @@ class ItAdminController extends Controller
                 ->get();
         }
 
-        return view('staff.it.dashboard', compact(
+        return view('staff.it.dashboard.index', compact(
             'pending',
             'regions',
             'totalUsers',

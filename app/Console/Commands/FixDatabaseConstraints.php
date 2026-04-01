@@ -15,6 +15,9 @@ class FixDatabaseConstraints extends Command
         $this->info('Fixing database constraints...');
 
         try {
+        if (DB::getDriverName() === 'sqlite') {
+            $this->info('  - Skipping CHECK constraints for SQLite');
+        } else {
             DB::statement('ALTER TABLE applications DROP CONSTRAINT IF EXISTS applications_status_check');
             DB::statement("ALTER TABLE applications ADD CONSTRAINT applications_status_check CHECK (status::text = ANY(ARRAY[
                 'draft', 'submitted', 'withdrawn', 'needs_correction',
@@ -37,16 +40,21 @@ class FixDatabaseConstraints extends Command
                 'harare', 'bulawayo', 'mutare', 'masvingo', 'gweru', 'chinhoyi'
             ]::text[]))");
             $this->info('  - applications.collection_region constraint updated');
+        }
 
+        if (DB::getDriverName() !== 'sqlite') {
             DB::statement("ALTER TABLE applications ALTER COLUMN status SET DEFAULT 'draft'");
             DB::statement("ALTER TABLE applications ALTER COLUMN collection_region DROP NOT NULL");
             $this->info('  - applications defaults updated');
+        }
 
-            DB::statement('ALTER TABLE application_documents DROP CONSTRAINT IF EXISTS application_documents_status_check');
-            DB::statement("ALTER TABLE application_documents ADD CONSTRAINT application_documents_status_check CHECK (status::text = ANY(ARRAY[
-                'pending', 'accepted', 'rejected', 'draft', 'uploaded'
-            ]::text[]))");
-            $this->info('  - application_documents.status constraint updated');
+            if (DB::getDriverName() !== 'sqlite') {
+                DB::statement('ALTER TABLE application_documents DROP CONSTRAINT IF EXISTS application_documents_status_check');
+                DB::statement("ALTER TABLE application_documents ADD CONSTRAINT application_documents_status_check CHECK (status::text = ANY(ARRAY[
+                    'pending', 'accepted', 'rejected', 'draft', 'uploaded'
+                ]::text[]))");
+                $this->info('  - application_documents.status constraint updated');
+            }
 
             $cols = [
                 'owner_id' => 'BIGINT',
@@ -56,14 +64,22 @@ class FixDatabaseConstraints extends Command
                 'thumbnail_path' => 'VARCHAR(255)',
                 'file_data' => 'BYTEA',
             ];
+            $isSqlite = DB::getDriverName() === 'sqlite';
             foreach ($cols as $col => $type) {
-                DB::statement("ALTER TABLE application_documents ADD COLUMN IF NOT EXISTS {$col} {$type}");
+                if ($isSqlite) {
+                    if (!\Illuminate\Support\Facades\Schema::hasColumn('application_documents', $col)) {
+                        DB::statement("ALTER TABLE application_documents ADD COLUMN {$col} {$type}");
+                    }
+                } else {
+                    DB::statement("ALTER TABLE application_documents ADD COLUMN IF NOT EXISTS {$col} {$type}");
+                }
             }
             $this->info('  - application_documents missing columns added');
 
-            if (!$this->columnExists('files', 'id')) {
+            if (!\Illuminate\Support\Facades\Schema::hasTable('files')) {
+                $idType = DB::getDriverName() === 'sqlite' ? 'INTEGER PRIMARY KEY AUTOINCREMENT' : 'BIGSERIAL PRIMARY KEY';
                 DB::statement("CREATE TABLE IF NOT EXISTS files (
-                    id BIGSERIAL PRIMARY KEY,
+                    id {$idType},
                     owner_id BIGINT,
                     application_id BIGINT,
                     path VARCHAR(255),
@@ -86,9 +102,6 @@ class FixDatabaseConstraints extends Command
 
     private function columnExists(string $table, string $column): bool
     {
-        return DB::selectOne(
-            "SELECT 1 FROM information_schema.columns WHERE table_name = ? AND column_name = ?",
-            [$table, $column]
-        ) !== null;
+        return \Illuminate\Support\Facades\Schema::hasColumn($table, $column);
     }
 }

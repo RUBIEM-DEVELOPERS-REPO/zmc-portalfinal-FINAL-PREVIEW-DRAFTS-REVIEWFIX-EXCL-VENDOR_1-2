@@ -41,6 +41,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
             // Token-based auth for iframe cookie bypass
             'token.auth' => \App\Http\Middleware\TokenAuth::class,
+            
+            // Session timeout management
+            'session.timeout' => \App\Http\Middleware\SessionTimeoutMiddleware::class,
         ]);
 
         $middleware->appendToGroup('web', [
@@ -48,6 +51,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\TokenAuth::class,
             \App\Http\Middleware\ZmcGatekeeper::class,
             \App\Http\Middleware\SetLocale::class,
+            \App\Http\Middleware\SessionTimeoutMiddleware::class,
         ]);
 
         $middleware->web(replace: [
@@ -85,5 +89,8 @@ return Application::configure(basePath: dirname(__DIR__))
                 // Never block exception reporting
             }
         });
+    })
+    ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule) {
+        $schedule->command('app:delete-old-drafts')->daily();
     })
     ->create();

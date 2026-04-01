@@ -134,7 +134,7 @@
             series: [
                 { name: 'Total Apps', data: @json($seriesApplications) },
                 { name: 'Approvals', data: @json($seriesApproved) },
-                { name: 'Rejections', data: @json($seriesRejected) }
+                { name: 'Returned for Correction', data: @json($seriesRejected) }
             ],
             chart: {
                 height: 350,

@@ -70,11 +70,24 @@
             margin-bottom: 25px;
             text-decoration: none;
         }
-        .brand img { height: 45px; width: auto; }
+        .brand img { width: 100%; height: 100%; object-fit: contain; display: block; margin: 0; mix-blend-mode: multiply; }
+        .logo-circle {
+            width: 110px;
+            height: 110px;
+            flex-shrink: 0;
+            background: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
         .brand span{
             font-family: Roboto, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
             font-weight: 900;
-            font-size: 20px;
+            font-size: 28px;
             color: var(--text);
             letter-spacing: -0.5px;
             text-transform: uppercase;
@@ -220,7 +233,9 @@
 <div class="wrap">
     {{-- Brand with Logo --}}
     <a href="{{ url('/') }}" class="brand">
-        <img src="{{ asset('zimbabwe_media_commission_transparent_edges.png') }}" alt="ZMC Logo">
+        <div class="logo-circle">
+            <img src="{{ asset('zmc_logo_circular.png') }}" alt="ZMC Logo">
+        </div>
         <span>ZMC Portal</span>
     </a>
 

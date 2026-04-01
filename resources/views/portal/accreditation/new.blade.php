@@ -1,24 +1,31 @@
 @extends('layouts.portal')
 
 @section('title', 'New Accreditation (AP3)')
-@section('page_title', 'NEW ACCREDITATION APPLICATION (AP3)')
 
 @section('content')
-<div id="new-application-page">
+<div id="new-accreditation-page">
+
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="fw-bold text-dark m-0" style="font-size:18px;">New Accreditation Application (AP3)</h4>
-    <a class="btn btn-secondary" href="{{ route('accreditation.home') }}">
-      <i class="ri-arrow-left-line me-1"></i>Back to Tracker
-    </a>
+    <h4 class="fw-bold text-dark m-0" style="font-size:18px;">
+      New Accreditation — Media Practitioner (AP3) — Digital Form
+    </h4>
+    <div class="d-flex gap-2">
+       <a href="{{ route('accreditation.home') }}" class="btn btn-outline-secondary btn-sm">
+         <i class="ri-arrow-left-line me-1"></i> Back to Dashboard
+       </a>
+    </div>
   </div>
 
   <div class="form-container">
     <div class="form-header">
-      <h1>Application for Accreditation of a Media Practitioner</h1>
-      <p>Zimbabwe Media Commission Act (2020), Statutory Instrument 169C (Registration, Accreditation and Levy) Regulations (2002)</p>
+      <h1>AP3 — Application for Accreditation as a Media Practitioner</h1>
+      <p class="m-0">
+        Complete this digital AP3 form and upload required documents. Ensure all details match your official identification.
+      </p>
     </div>
 
     <div class="form-steps-container">
+      {{-- PROGRESS --}}
       <div class="step-progress">
         <div class="step-progress-bar">
           <div class="step active" data-step="1">
@@ -27,1524 +34,1219 @@
           </div>
           <div class="step" data-step="2">
             <div class="step-number">2</div>
-            <div class="step-label">Personal Details</div>
+            <div class="step-label">Personal Info</div>
           </div>
           <div class="step" data-step="3">
             <div class="step-number">3</div>
-            <div class="step-label">Qualifications & Employment</div>
+            <div class="step-label">Qualifications</div>
           </div>
           <div class="step" data-step="4">
             <div class="step-number">4</div>
-            <div class="step-label">Uploads & Declaration</div>
+            <div class="step-label">Professional</div>
+          </div>
+          <div class="step" data-step="5">
+            <div class="step-number">5</div>
+            <div class="step-label">Criminal Record</div>
+          </div>
+          <div class="step" data-step="6">
+            <div class="step-number">6</div>
+            <div class="step-label">Referees</div>
+          </div>
+          <div class="step" data-step="7">
+            <div class="step-number">7</div>
+            <div class="step-label">Uploads</div>
+          </div>
+          <div class="step" data-step="8">
+            <div class="step-number">8</div>
+            <div class="step-label">Declaration</div>
           </div>
         </div>
       </div>
 
-      <form id="ap3Form" onsubmit="return false;">
-        {{-- Hidden scope --}}
-        <input type="hidden" name="journalist_scope" id="ap3_scope" required>
-
-        {{-- ===================== STEP 1: TYPE ===================== --}}
+      <form id="ap3Form" onsubmit="return false;" enctype="multipart/form-data">
+        @csrf
+        {{-- STEP 1: APPLICANT TYPE --}}
         <div class="step-content active" id="ap3-step-1">
-          <h3 class="step-title">Select Applicant Type</h3>
+          <h3 class="step-title">Choose Applicant Type</h3>
           <div class="current-step-info">
             <i class="ri-information-line me-2"></i>
-            Select whether you are a Local or Foreign media practitioner. Different requirements apply.
+            Select whether you are applying as a Local (Zimbabwean) or Foreign Media Practitioner.
           </div>
 
           <div class="app-type-container">
             <div class="app-type-cards">
               <div class="app-type-card" data-type="local">
-                <i class="ri-user-3-line"></i>
+                <i class="ri-map-pin-user-line"></i>
                 <h4>Local Media Practitioner</h4>
-                <p>Zimbabwean citizens/residents applying for accreditation.</p>
-                <div style="margin-top:15px;">
-                  <span class="badge bg-light text-dark">14 Days Processing</span>
-                  <span class="badge bg-light text-dark">National ID Required</span>
-                </div>
+                <p>Zimbabwean citizen or permanent resident.</p>
               </div>
 
               <div class="app-type-card" data-type="foreign">
                 <i class="ri-global-line"></i>
                 <h4>Foreign Media Practitioner</h4>
-                <p>International media practitioners seeking temporary accreditation.</p>
-                <div style="margin-top:15px;">
-                  <span class="badge bg-light text-dark">21 Days Processing</span>
-                  <span class="badge bg-light text-dark">Passport Required</span>
-                </div>
+                <p>Visiting journalists or foreign correspondents.</p>
               </div>
             </div>
           </div>
+
+          <input type="hidden" name="journalist_scope" id="ap3_journalist_scope" value="{{ $draft->journalist_scope ?? ($draft->form_data['journalist_scope'] ?? '') }}" required>
         </div>
 
-        {{-- ===================== STEP 2: PERSONAL DETAILS ===================== --}}
+        {{-- STEP 2: PERSONAL INFO --}}
         <div class="step-content" id="ap3-step-2">
-          <h3 class="step-title">PERSONAL DETAILS</h3>
+          <h3 class="step-title">Personal Identification Details</h3>
           <div class="current-step-info">
             <i class="ri-information-line me-2"></i>
-            Please provide your personal information as it appears on your official documents.
+            Enter your details exactly as they appear on your National ID or Passport.
           </div>
 
-          {{-- Title / Surname / Name / Other --}}
-          <div class="form-row">
-            <div class="form-field">
-              <label class="form-label required">Title</label>
-              <select class="form-control" name="title" required>
-                <option value="">Select</option>
-                <option value="Prof">Prof</option>
-                <option value="Dr">Dr</option>
-                <option value="Mr">Mr</option>
-                <option value="Mrs">Mrs</option>
-                <option value="Ms">Ms</option>
-                <option value="Miss">Miss</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-
-            <div class="form-field">
-              <label class="form-label required">Surname</label>
-              <input type="text" class="form-control" name="surname" required>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-field">
-              <label class="form-label required">Name</label>
-              <input type="text" class="form-control" name="first_name" required>
-            </div>
-
-            <div class="form-field">
-              <label class="form-label">Other</label>
-              <input type="text" class="form-control" name="other_names">
-            </div>
-          </div>
-
-          {{-- DOB / Place & Country of Birth --}}
-          <div class="form-row">
-            <div class="form-field">
-              <label class="form-label required">Date of Birth</label>
-              <input type="date" class="form-control" name="dob" required>
-            </div>
-
-            <div class="form-field">
-              <label class="form-label required">Place and Country of Birth</label>
-              <input type="text" class="form-control" name="birth_place" required>
-            </div>
-          </div>
-
-          {{-- Marital Status / Sex --}}
-          <div class="form-row">
-            <div class="form-field">
-              <label class="form-label required">Marital Status</label>
-              <select class="form-control" name="marital_status" required>
-                <option value="">Select</option>
-                <option value="Single">Single</option>
-                <option value="Married">Married</option>
-                <option value="Divorced">Divorced</option>
-                <option value="Widowed">Widowed</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-
-            <div class="form-field">
-              <label class="form-label required">Sex</label>
-              <div class="checkbox-group">
-                <div class="checkbox-item">
-                  <input type="radio" id="ap3-sex-male" name="gender" value="male" required>
-                  <label for="ap3-sex-male">Male</label>
-                </div>
-                <div class="checkbox-item">
-                  <input type="radio" id="ap3-sex-female" name="gender" value="female" required>
-                  <label for="ap3-sex-female">Female</label>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {{-- National Reg No (Local) / Passport No (Foreign) --}}
-          <div class="form-row">
-            <div class="form-field scope-local">
-              <label class="form-label required">National Reg. No</label>
-              <input type="text" class="form-control" name="national_reg_no" placeholder="63-1234567-X-89" data-req="1">
-            </div>
-
-            <div class="form-field scope-foreign">
-              <label class="form-label required">Passport No</label>
-              <input type="text" class="form-control" name="passport_no" placeholder="Passport number" data-req="1">
-            </div>
-
-            <div class="form-field">
-              <label class="form-label required">Nationality</label>
-              <input type="text" class="form-control" name="nationality" required>
-            </div>
-          </div>
-
-          {{-- Passport expiry / issued at (Foreign only required) --}}
-          <div class="form-row scope-foreign">
-            <div class="form-field">
-              <label class="form-label required">Date of Expiry</label>
-              <input type="date" class="form-control" name="passport_expiry" data-req="1">
-            </div>
-            <div class="form-field">
-              <label class="form-label required">Issued at</label>
-              <input type="text" class="form-control" name="passport_issued_at" placeholder="City/Country" data-req="1">
-            </div>
-          </div>
-
-          {{-- Driver’s licence / (Local optional passport block not required) --}}
-          <div class="form-row">
-            <div class="form-field">
-              <label class="form-label">Driver’s Licence No</label>
-              <input type="text" class="form-control" name="drivers_licence_no">
-            </div>
-            <div class="form-field"></div>
-          </div>
-
-          {{-- Residential Address --}}
-          <div class="form-row">
-            <div class="form-field">
-              <label class="form-label required">Residential Address</label>
-              <textarea class="form-control" rows="3" name="address" required></textarea>
-            </div>
-          </div>
-
-          {{-- Foreign-only: First time in Zim / last here / Address in Zimbabwe --}}
-          <div class="scope-foreign">
+          <div class="section-card">
             <div class="form-row">
               <div class="form-field">
-                <label class="form-label required">Is this your first time in Zimbabwe?</label>
-                <div class="checkbox-group">
-                  <div class="checkbox-item">
-                    <input type="radio" id="ap3-first-yes" name="first_time_in_zim" value="yes" data-req="1">
-                    <label for="ap3-first-yes">Yes</label>
-                  </div>
-                  <div class="checkbox-item">
-                    <input type="radio" id="ap3-first-no" name="first_time_in_zim" value="no" data-req="1">
-                    <label for="ap3-first-no">No</label>
-                  </div>
-                </div>
-              </div>
-
-              <div class="form-field">
-                <label class="form-label">If No, indicate when you were last here</label>
-                <input type="text" class="form-control" name="last_in_zim_when" placeholder="e.g. June 2024">
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-field">
-                <label class="form-label required">Address in Zimbabwe</label>
-                <input type="text" class="form-control" name="address_in_zimbabwe" data-req="1">
-              </div>
-              <div class="form-field"></div>
-            </div>
-          </div>
-
-          {{-- Phone / Email --}}
-          <div class="form-row">
-            <div class="form-field">
-              <label class="form-label required">Phone No.</label>
-              <div class="d-flex gap-2">
-                <select class="form-control" name="phone_country_code" style="max-width:180px;" required>
-                  <option value="">Country Code</option>
-                  <option value="+263">+263 (ZW)</option>
-                  <option value="+27">+27 (ZA)</option>
-                  <option value="+260">+260 (ZM)</option>
-                  <option value="+258">+258 (MZ)</option>
-                  <option value="+1">+1 (US/CA)</option>
-                  <option value="+44">+44 (UK)</option>
-                </select>
-                <input type="text" class="form-control" name="phone" placeholder="e.g. 771234567" required>
-              </div>
-            </div>
-
-            <div class="form-field">
-              <label class="form-label required">Email</label>
-              <input type="email" class="form-control" name="email" required>
-            </div>
-          </div>
-        </div>
-
-        {{-- ===================== STEP 3: QUALIFICATIONS + EMPLOYMENT + REFEREES ===================== --}}
-        <div class="step-content" id="ap3-step-3">
-          <h3 class="step-title">QUALIFICATIONS, EMPLOYMENT & REFEREES</h3>
-          <div class="current-step-info">
-            <i class="ri-information-line me-2"></i>
-            Qualifications are optional. Referees (3) are required.
-          </div>
-
-          {{-- ===== QUALIFICATIONS (Local only, optional) ===== --}}
-          <div class="scope-local">
-            <h6 class="mt-3 fw-bold">QUALIFICATIONS</h6>
-
-            <div class="form-row">
-              <div class="form-field">
-                <label class="form-label">Highest Academic Qualifications (Year / Institution / Qualification) <span class="text-muted">(Not mandatory)</span></label>
-                <div id="ap3HighestAcademicRows"></div>
-                <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="ap3AddHighestAcademicRow">
-                  <i class="ri-add-line"></i> Add Row
-                </button>
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-field">
-                <label class="form-label">Professional Qualifications (Year / Institution / Qualification)</label>
-                <div id="ap3ProfessionalQualRows"></div>
-                <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="ap3AddProfessionalQualRow">
-                  <i class="ri-add-line"></i> Add Row
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {{-- ===== EMPLOYMENT STATUS (Both) ===== --}}
-          <h6 class="mt-4 fw-bold">EMPLOYMENT</h6>
-          <div class="form-row">
-            <div class="form-field">
-              <label class="form-label required">Applicant Type</label>
-              <div class="checkbox-group">
-                <div class="checkbox-item">
-                  <input type="radio" id="ap3-employ-employed" name="employment_type" value="employed" required>
-                  <label for="ap3-employ-employed">Employed</label>
-                </div>
-                <div class="checkbox-item">
-                  <input type="radio" id="ap3-employ-freelancer" name="employment_type" value="freelancer" required>
-                  <label for="ap3-employ-freelancer">Freelancer</label>
-                </div>
-              </div>
-              <div class="form-hint"><i class="ri-eye-line"></i> If Freelancer, employment fields & employment letter will be hidden.</div>
-            </div>
-          </div>
-
-          {{-- Type of medium / Designation (Both) --}}
-          <div class="form-row">
-            <div class="form-field">
-              <label class="form-label required">Type of medium</label>
-              <select class="form-control" name="medium_type" required>
-                <option value="">Select</option>
-                <option value="News Agency">News Agency</option>
-                <option value="Newspaper">Newspaper</option>
-                <option value="Television">Television</option>
-                <option value="Radio">Radio</option>
-                <option value="Magazine">Magazine</option>
-                <option value="Reporter">Reporter</option>
-                <option value="Engineer/Technician">Engineer/Technician</option>
-                <option value="Others">Others (Specify)</option>
-              </select>
-            </div>
-
-            <div class="form-field">
-              <label class="form-label required">Designation</label>
-              <select class="form-control" name="designation" required>
-                <option value="">Select</option>
-                <option value="Producer/Editor">Producer/Editor</option>
-                <option value="Correspondent">Correspondent</option>
-                <option value="Photographer">Photographer</option>
-                <option value="Freelance">Freelance</option>
-                <option value="Camera person">Camera person</option>
-                <option value="News Photo">News Photo</option>
-                <option value="Others">Others (Specify)</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-field" id="ap3OtherMediumWrap" style="display:none;">
-              <label class="form-label required">If Others, specify (Medium)</label>
-              <input type="text" class="form-control" name="medium_type_other">
-            </div>
-            <div class="form-field" id="ap3OtherDesignationWrap" style="display:none;">
-              <label class="form-label required">If Others, specify (Designation)</label>
-              <input type="text" class="form-control" name="designation_other">
-            </div>
-          </div>
-
-          {{-- Employment fields (hide when freelancer) --}}
-          <div class="employment-only">
-            <div class="form-row">
-              <div class="form-field">
-                <label class="form-label">Media Organisation represented</label>
-                <input type="text" class="form-control" name="media_org">
-              </div>
-              <div class="form-field">
-                <label class="form-label">Physical Address</label>
-                <input type="text" class="form-control" name="media_org_address">
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-field">
-                <label class="form-label">Phone</label>
-                <input type="text" class="form-control" name="media_org_phone">
-              </div>
-              <div class="form-field">
-                <label class="form-label">Email</label>
-                <input type="email" class="form-control" name="media_org_email">
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-field">
-                <label class="form-label">Name of Editor/Publisher</label>
-                <input type="text" class="form-control" name="editor_publisher_name">
-              </div>
-              <div class="form-field">
-                <label class="form-label">Immediate Supervisor you report to</label>
-                <input type="text" class="form-control" name="immediate_supervisor">
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-field">
-                <label class="form-label">Which other Organisations do you string for?</label>
-                <input type="text" class="form-control" name="string_for_orgs">
-              </div>
-              <div class="form-field">
-                <label class="form-label">Give details</label>
-                <textarea class="form-control" rows="2" name="string_for_details"></textarea>
-              </div>
-            </div>
-          </div>
-
-          {{-- Foreign-only travel details (visible for all foreign applicants) --}}
-          <div class="scope-foreign">
-            <h6 class="mt-4 fw-bold">TRAVEL DETAILS</h6>
-            <div class="form-row">
-              <div class="form-field">
-                <label class="form-label required">Country in which journalist is based</label>
-                <input type="text" class="form-control" name="journalist_based_country" data-req="1">
-              </div>
-              <div class="form-field">
-                <label class="form-label required">Arrived on</label>
-                <input type="date" class="form-control" name="arrived_on" data-req="1">
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-field">
-                <label class="form-label required">By Air/Road</label>
-                <select class="form-control" name="arrival_mode" data-req="1">
+                <label class="form-label required">Title</label>
+                <select class="form-control" name="title" required>
                   <option value="">Select</option>
-                  <option value="Air">Air</option>
-                  <option value="Road">Road</option>
+                  @foreach(['Mr','Mrs','Ms','Miss','Dr','Prof','Rev'] as $t)
+                    <option @selected(($draft->form_data['title'] ?? '') === $t)>{{ $t }}</option>
+                  @endforeach
                 </select>
               </div>
               <div class="form-field">
-                <label class="form-label required">Port of Entry</label>
-                <input type="text" class="form-control" name="port_of_entry" data-req="1">
+                <label class="form-label required">Gender</label>
+                <select class="form-control" name="gender" required>
+                  <option value="">Select</option>
+                  <option value="male" @selected(($draft->form_data['gender'] ?? '') === 'male')>Male</option>
+                  <option value="female" @selected(($draft->form_data['gender'] ?? '') === 'female')>Female</option>
+                  <option value="other" @selected(($draft->form_data['gender'] ?? '') === 'other')>Other</option>
+                </select>
               </div>
             </div>
 
             <div class="form-row">
               <div class="form-field">
-                <label class="form-label required">Departing on</label>
-                <input type="date" class="form-control" name="departing_on" data-req="1">
+                <label class="form-label required">First Name(s)</label>
+                <input type="text" class="form-control" name="first_name" value="{{ $draft->form_data['first_name'] ?? '' }}" required>
               </div>
               <div class="form-field">
-                <label class="form-label required">Special assignment to be Covered in Zimbabwe (Briefly)</label>
-                <textarea class="form-control" rows="2" name="special_assignment" data-req="1"></textarea>
+                <label class="form-label required">Surname</label>
+                <input type="text" class="form-control" name="surname" value="{{ $draft->form_data['surname'] ?? '' }}" required>
               </div>
             </div>
-          </div>
 
-          {{-- ===== REFEREES (3 required) ===== --}}
-          <h6 class="mt-4 fw-bold">REFEREES <span class="text-muted">(3 required)</span></h6>
-          <div class="form-row">
-            <div class="form-field">
-              <div id="ap3RefereeFixedRows"></div>
-              <div class="form-hint"><i class="ri-information-line"></i> Fill all 3 referees (Name, Address, Phone).</div>
-            </div>
-          </div>
-        </div>
-
-        {{-- ===================== STEP 4: UPLOADS + DECLARATION ===================== --}}
-        <div class="step-content" id="ap3-step-4">
-          <h3 class="step-title">ANNEXURES/UPLOADS & DECLARATION</h3>
-          <div class="current-step-info">
-            <i class="ri-information-line me-2"></i>
-            Upload required documents. Photo should be passport size with a white background.
-          </div>
-
-          {{-- Local: Collection office required --}}
-          <div class="scope-local">
             <div class="form-row">
               <div class="form-field">
-                <label class="form-label required">Collection Office</label>
-                <select class="form-control" name="collection_region" required>
-                  <option value="">Select collection office</option>
-                  <option value="harare">Harare Regional Office - 3rd Floor, ZMC House, 109 Rotten Row, Harare</option>
-                  <option value="bulawayo">Bulawayo Regional Office - Room 12, CABS Centre, 74 Jason Moyo St, Bulawayo</option>
-                  <option value="mutare">Mutare Regional Office - 2nd Floor, Old Mutual Building, Main St, Mutare</option>
-                  <option value="masvingo">Masvingo Regional Office - Suite 5, TelOne Complex, Robert Mugabe Way, Masvingo</option>
+                <label class="form-label">Other Name(s)</label>
+                <input type="text" class="form-control" name="other_names" value="{{ $draft->form_data['other_names'] ?? '' }}" placeholder="Middle names or aliases">
+              </div>
+              <div class="form-field">
+                <label class="form-label">Driver's Licence Number</label>
+                <input type="text" class="form-control" name="drivers_licence" value="{{ $draft->form_data['drivers_licence'] ?? '' }}" placeholder="Optional">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-field">
+                <label class="form-label required" style="display:block;">Date of Birth</label>
+                <div class="d-flex gap-2">
+                  @php 
+                    $dob = $draft->form_data['dob'] ?? '';
+                    $d_y = $dob ? date('Y', strtotime($dob)) : '';
+                    $d_m = $dob ? date('m', strtotime($dob)) : '';
+                    $d_d = $dob ? date('d', strtotime($dob)) : '';
+                  @endphp
+                  <select class="form-control px-2" id="dob_date" required>
+                    <option value="">DD</option>
+                    @for($i=1; $i<=31; $i++) <option value="{{ sprintf('%02d', $i) }}" @selected($d_d == sprintf('%02d', $i))>{{ sprintf('%02d', $i) }}</option> @endfor
+                  </select>
+                  <select class="form-control px-2" id="dob_month" required>
+                    <option value="">MM</option>
+                    @for($i=1; $i<=12; $i++) <option value="{{ sprintf('%02d', $i) }}" @selected($d_m == sprintf('%02d', $i))>{{ date('M', mktime(0, 0, 0, $i, 1)) }}</option> @endfor
+                  </select>
+                  <select class="form-control px-2" id="dob_year" required>
+                    <option value="">YYYY</option>
+                    @for($i=date('Y'); $i>=1920; $i--) <option value="{{ $i }}" @selected($d_y == $i)>{{ $i }}</option> @endfor
+                  </select>
+                </div>
+                <input type="hidden" name="dob" id="real_dob" value="{{ $dob }}" required>
+              </div>
+              <div class="form-field">
+                <label class="form-label required">Place of Birth</label>
+                <input type="text" class="form-control" name="birth_place" value="{{ $draft->form_data['birth_place'] ?? '' }}" required>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-field">
+                <label class="form-label required">Nationality</label>
+                <input type="text" class="form-control" name="nationality" value="{{ $draft->form_data['nationality'] ?? '' }}" required>
+              </div>
+              <div class="form-field">
+                <label class="form-label required">Marital Status</label>
+                <select class="form-control" name="marital_status" required>
+                  <option value="">Select</option>
+                  @foreach(['Single','Married','Divorced','Widowed'] as $m)
+                    <option @selected(($draft->form_data['marital_status'] ?? '') === $m)>{{ $m }}</option>
+                  @endforeach
                 </select>
               </div>
             </div>
-          </div>
 
-          {{-- Photo (Upload or Camera) --}}
-          <div class="form-row">
-            <div class="form-field">
-              <label class="form-label required">Photo (Passport size, white background)</label>
-              <div class="upload-area">
-                <i class="ri-camera-line"></i>
-                <h5>Upload Photo</h5>
-                <p>JPG/PNG, clear face, white background</p>
-                <input type="file" name="passport_photo" accept=".jpg,.jpeg,.png" style="display:none;" required>
-                <div class="d-flex gap-2 justify-content-center">
-                  <button type="button" class="upload-btn btn btn-sm btn-primary">Choose File</button>
-                  <button type="button" class="btn btn-sm btn-outline-secondary" id="ap3TakePhotoBtn">
-                    <i class="ri-camera-lens-line"></i> Take Photo
-                  </button>
+            <div class="form-row local-fields">
+              <div class="form-field">
+                <label class="form-label required">National ID Number</label>
+                <input type="text" class="form-control" name="national_reg_no" id="ap3_national_reg_no" placeholder="e.g. 63-123456A78" value="{{ $draft->form_data['national_reg_no'] ?? '' }}">
+              </div>
+              <div class="form-field">
+                <label class="form-label">Passport Number (Optional for locals)</label>
+                <input type="text" class="form-control" name="passport_number" value="{{ $draft->form_data['passport_number'] ?? '' }}">
+              </div>
+            </div>
+
+            <div class="form-row foreign-fields" style="display:none;">
+              <div class="form-field">
+                <label class="form-label required">Passport Number</label>
+                <input type="text" class="form-control" name="passport_no" id="ap3_passport_no" value="{{ $draft->form_data['passport_no'] ?? '' }}">
+              </div>
+              <div class="form-field">
+                <label class="form-label required">Passport Issued At</label>
+                <input type="text" class="form-control" name="passport_issued_at" value="{{ $draft->form_data['passport_issued_at'] ?? '' }}">
+              </div>
+            </div>
+
+            <div class="form-row foreign-fields" style="display:none;">
+              <div class="form-field">
+                <label class="form-label required">Passport Expiry Date</label>
+                <input type="date" class="form-control" name="passport_expiry" value="{{ $draft->form_data['passport_expiry'] ?? '' }}">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-field">
+                <label class="form-label required">Physical Address</label>
+                <textarea class="form-control" name="address" rows="2" required>{{ $draft->form_data['address'] ?? '' }}</textarea>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-field">
+                <label class="form-label required">Phone Number</label>
+                <div class="d-flex gap-2">
+                  <select class="form-control px-2" name="phone_country_code" style="max-width:120px;" required>
+                    @include('partials.country-codes-options', ['selected' => $draft->form_data['phone_country_code'] ?? ''])
+                  </select>
+                  <input type="text" class="form-control" name="phone" value="{{ $draft->form_data['phone'] ?? '' }}" required>
                 </div>
               </div>
-              <div class="uploaded-files"></div>
-            </div>
-
-            {{-- Local: National ID scan / Foreign: Passport biodata page --}}
-            <div class="form-field scope-local">
-              <label class="form-label required">National ID Scan</label>
-              <div class="upload-area">
-                <i class="ri-id-card-line"></i>
-                <h5>Upload National ID</h5>
-                <p>PDF/JPG/PNG</p>
-                <input type="file" name="id_scan" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" required>
-                <button type="button" class="upload-btn btn btn-sm btn-primary">Choose File</button>
-              </div>
-              <div class="uploaded-files"></div>
-            </div>
-
-            <div class="form-field scope-foreign">
-              <label class="form-label required">Passport Bio Data Page</label>
-              <div class="upload-area">
-                <i class="ri-passport-line"></i>
-                <h5>Upload Passport Bio Data Page</h5>
-                <p>PDF/JPG/PNG</p>
-                <input type="file" name="passport_biodata_page" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" data-req="1">
-                <button type="button" class="upload-btn btn btn-sm btn-primary">Choose File</button>
-              </div>
-              <div class="uploaded-files"></div>
-            </div>
-          </div>
-
-          {{-- Foreign: Clearance letter --}}
-          <div class="form-row scope-foreign">
-            <div class="form-field">
-              <label class="form-label required">Clearance Letter</label>
-              <div class="upload-area">
-                <i class="ri-file-text-line"></i>
-                <h5>Upload Clearance Letter</h5>
-                <p>PDF/JPG/PNG</p>
-                <input type="file" name="clearance_letter" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" data-req="1">
-                <button type="button" class="upload-btn btn btn-sm btn-primary">Choose File</button>
-              </div>
-              <div class="uploaded-files"></div>
-            </div>
-            <div class="form-field"></div>
-          </div>
-
-          {{-- Local: Employment letter OR Reference/Testimonial/Affidavit --}}
-          <div class="form-row scope-local">
-            <div class="form-field employment-letter-only">
-              <label class="form-label required">Employment Letter (Employed)</label>
-              <div class="upload-area">
-                <i class="ri-file-text-line"></i>
-                <h5>Upload Employment Letter</h5>
-                <p>Required for Employed applicants</p>
-                <input type="file" name="employment_letter" accept=".pdf,.jpg,.jpeg,.png" style="display:none;">
-                <button type="button" class="upload-btn btn btn-sm btn-primary">Choose File</button>
-              </div>
-              <div class="uploaded-files"></div>
-            </div>
-
-            <div class="form-field freelancer-only" style="display:none;">
-              <label class="form-label required">Reference Letter / Affidavit (Freelancer)</label>
-              <div class="upload-area">
-                <i class="ri-file-paper-2-line"></i>
-                <h5>Upload Reference/Testimonial/Affidavit</h5>
-                <p>Required for Freelancers</p>
-                <input type="file" name="reference_letter" accept=".pdf,.jpg,.jpeg,.png" style="display:none;">
-                <button type="button" class="upload-btn btn btn-sm btn-primary">Choose File</button>
-              </div>
-              <div class="uploaded-files"></div>
-            </div>
-          </div>
-
-          {{-- Local: Educational Certificate (optional) --}}
-          <div class="form-row scope-local">
-            <div class="form-field">
-              <label class="form-label">Educational Certificate (Optional)</label>
-              <div class="upload-area">
-                <i class="ri-award-line"></i>
-                <h5>Upload Certificate</h5>
-                <p>Optional</p>
-                <input type="file" name="educational_certificate" accept=".pdf,.jpg,.jpeg,.png" style="display:none;">
-                <button type="button" class="upload-btn btn btn-sm btn-outline-secondary">Choose File</button>
-              </div>
-              <div class="uploaded-files"></div>
-            </div>
-            <div class="form-field"></div>
-          </div>
-
-          {{-- Declaration --}}
-          <div class="form-row">
-            <div class="form-field">
-              <label class="form-label required">Declaration</label>
-              <div class="alert alert-light border">
-                I declare that all the information given above, to the best of my knowledge is true and complete.
+              <div class="form-field">
+                <label class="form-label required">Email Address</label>
+                <input type="email" class="form-control" name="email" value="{{ $draft->form_data['email'] ?? '' }}" required>
               </div>
             </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-field">
-              <div class="form-check mt-1">
-                <input class="form-check-input" type="checkbox" id="ap3DeclarationConfirm" name="declaration_confirmed" value="1" required>
-                <label class="form-check-label" for="ap3DeclarationConfirm">
-                  I confirm that I have read and agree to this declaration.
-                </label>
+            
+            <div class="form-row local-fields">
+               <div class="form-field">
+                <label class="form-label required">Collection Office</label>
+                <select class="form-control" name="collection_region" id="ap3_collection_region">
+                  <option value="">Select collection office</option>
+                  @foreach(['harare'=>'Harare Regional Office', 'bulawayo'=>'Bulawayo Regional Office', 'mutare'=>'Mutare Regional Office', 'masvingo'=>'Masvingo Regional Office', 'gweru'=>'Gweru Terminal', 'chinhoyi'=>'Chinhoyi Terminal'] as $v => $l)
+                    <option value="{{ $v }}" @selected(($draft->collection_region ?? ($draft->form_data['collection_region'] ?? '')) === $v)>{{ $l }}</option>
+                  @endforeach
+                </select>
+                <div class="form-hint small text-muted mt-1"><i class="ri-map-pin-line"></i> Choose where you will collect your card.</div>
               </div>
             </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-field">
-              <label class="form-label required">Date</label>
-              <input type="date" class="form-control" name="declaration_date" required>
-            </div>
-            <div class="form-field"></div>
           </div>
         </div>
 
-        {{-- Buttons --}}
-        <div class="form-buttons">
-          <div>
-            <button type="button" class="btn btn-secondary" id="ap3PrevBtn"><i class="ri-arrow-left-line"></i> Previous</button>
-            <button type="button" class="btn btn-outline-secondary ms-2" id="ap3SaveDraftBtn"><i class="ri-save-line"></i> Save Draft</button>
+        {{-- STEP 3: QUALIFICATIONS --}}
+        <div class="step-content" id="ap3-step-3">
+          <h3 class="step-title">Qualifications</h3>
+          <div class="current-step-info">
+            <i class="ri-information-line me-2"></i>
+            Provide details about your academic and professional qualifications.
           </div>
-          <button type="button" class="btn btn-primary" id="ap3NextBtn">Next <i class="ri-arrow-right-line"></i></button>
+
+          <div class="section-card">
+            <h5 class="mb-3"><i class="ri-graduation-cap-line me-2"></i>Academic Qualifications</h5>
+            <div class="form-row">
+              <div class="form-field">
+                <label class="form-label required">Highest Academic Qualification</label>
+                <select class="form-control" name="highest_academic_qualification" required>
+                  <option value="">Select</option>
+                  <option value="phd" @selected(($draft->form_data['highest_academic_qualification'] ?? '') === 'phd')>PhD/Doctorate</option>
+                  <option value="masters" @selected(($draft->form_data['highest_academic_qualification'] ?? '') === 'masters')>Master's Degree</option>
+                  <option value="bachelors" @selected(($draft->form_data['highest_academic_qualification'] ?? '') === 'bachelors')>Bachelor's Degree</option>
+                  <option value="diploma" @selected(($draft->form_data['highest_academic_qualification'] ?? '') === 'diploma')>Diploma</option>
+                  <option value="certificate" @selected(($draft->form_data['highest_academic_qualification'] ?? '') === 'certificate')>Certificate</option>
+                  <option value="high_school" @selected(($draft->form_data['highest_academic_qualification'] ?? '') === 'high_school')>High School</option>
+                  <option value="other" @selected(($draft->form_data['highest_academic_qualification'] ?? '') === 'other')>Other</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label class="form-label">Field of Study</label>
+                <input type="text" class="form-control" name="field_of_study" value="{{ $draft->form_data['field_of_study'] ?? '' }}" placeholder="e.g. Journalism, Communications">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-field">
+                <label class="form-label">Institution Name</label>
+                <input type="text" class="form-control" name="institution_name" value="{{ $draft->form_data['institution_name'] ?? '' }}" placeholder="University/College name">
+              </div>
+              <div class="form-field">
+                <label class="form-label">Year Completed</label>
+                <input type="number" class="form-control" name="year_completed" value="{{ $draft->form_data['year_completed'] ?? '' }}" placeholder="e.g. 2020" min="1950" max="{{ date('Y') }}">
+              </div>
+            </div>
+          </div>
+
+          <div class="section-card mt-3">
+            <h5 class="mb-3"><i class="ri-award-line me-2"></i>Professional Qualifications</h5>
+            <div class="form-row">
+              <div class="form-field">
+                <label class="form-label required">Professional Qualification(s)</label>
+                <textarea class="form-control" name="professional_qualifications" rows="3" required placeholder="List your professional journalism/media qualifications">{{ $draft->form_data['professional_qualifications'] ?? '' }}</textarea>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-field">
+                <label class="form-label">Professional Memberships</label>
+                <textarea class="form-control" name="professional_memberships" rows="2" placeholder="List any professional journalism associations you belong to">{{ $draft->form_data['professional_memberships'] ?? '' }}</textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {{-- STEP 4: PROFESSIONAL INFO --}}
+        <div class="step-content" id="ap3-step-4">
+          <h3 class="step-title">Professional Details</h3>
+          <div class="current-step-info">
+            <i class="ri-information-line me-2"></i>
+            Provide details about your current employment and media specialization.
+          </div>
+
+          <div class="section-card">
+            <div class="form-row">
+              <div class="form-field">
+                <label class="form-label required">Employment Type</label>
+                <select class="form-control" name="employment_type" id="ap3_employment_type" required>
+                  <option value="">Select</option>
+                  <option value="employed" @selected(($draft->form_data['employment_type'] ?? '') === 'employed')>Employed</option>
+                  <option value="freelance" @selected(($draft->form_data['employment_type'] ?? '') === 'freelance')>Freelance</option>
+                  <option value="unemployed" @selected(($draft->form_data['employment_type'] ?? '') === 'unemployed')>Unemployed / Student</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label class="form-label required">Medium Type</label>
+                <select class="form-control" name="medium_type" required>
+                  <option value="">Select</option>
+                  <option value="news_agency" @selected(($draft->form_data['medium_type'] ?? '') === 'news_agency')>News Agency</option>
+                  <option value="newspaper" @selected(($draft->form_data['medium_type'] ?? '') === 'newspaper')>Newspaper</option>
+                  <option value="television" @selected(($draft->form_data['medium_type'] ?? '') === 'television')>Television</option>
+                  <option value="radio" @selected(($draft->form_data['medium_type'] ?? '') === 'radio')>Radio</option>
+                  <option value="magazine" @selected(($draft->form_data['medium_type'] ?? '') === 'magazine')>Magazine</option>
+                  <option value="online_media" @selected(($draft->form_data['medium_type'] ?? '') === 'online_media')>Online Media</option>
+                  <option value="other" @selected(($draft->form_data['medium_type'] ?? '') === 'other')>Other (Specify)</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label class="form-label required">Designation (Role)</label>
+                <select class="form-control" name="designation" required>
+                  <option value="">Select</option>
+                  <option value="producer_editor" @selected(($draft->form_data['designation'] ?? '') === 'producer_editor')>Producer/Editor</option>
+                  <option value="correspondent" @selected(($draft->form_data['designation'] ?? '') === 'correspondent')>Correspondent</option>
+                  <option value="photographer" @selected(($draft->form_data['designation'] ?? '') === 'photographer')>Photographer</option>
+                  <option value="freelance" @selected(($draft->form_data['designation'] ?? '') === 'freelance')>Freelance</option>
+                  <option value="camera_person" @selected(($draft->form_data['designation'] ?? '') === 'camera_person')>Camera Person</option>
+                  <option value="news_photo" @selected(($draft->form_data['designation'] ?? '') === 'news_photo')>News Photo</option>
+                  <option value="engineer_technician" @selected(($draft->form_data['designation'] ?? '') === 'engineer_technician')>Engineer/Technician</option>
+                  <option value="reporter" @selected(($draft->form_data['designation'] ?? '') === 'reporter')>Reporter</option>
+                  <option value="other" @selected(($draft->form_data['designation'] ?? '') === 'other')>Other (Specify)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-field">
+                <label class="form-label required">Media House / Employer</label>
+                <input type="text" class="form-control" name="media_house" placeholder="e.g. Zimpapers / Freelance" value="{{ $draft->form_data['media_house'] ?? '' }}" required>
+              </div>
+              <div class="form-field">
+                <label class="form-label">Other Designation (Specify)</label>
+                <input type="text" class="form-control" name="other_designation" value="{{ $draft->form_data['other_designation'] ?? '' }}" placeholder="If 'Other' selected above">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-field">
+                <label class="form-label required">Employer Physical Address</label>
+                <textarea class="form-control" name="employer_address" rows="2" required>{{ $draft->form_data['employer_address'] ?? '' }}</textarea>
+              </div>
+              <div class="form-field">
+                <label class="form-label required">Employer Phone</label>
+                <input type="text" class="form-control" name="employer_phone" value="{{ $draft->form_data['employer_phone'] ?? '' }}" required>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-field">
+                <label class="form-label required">Employer Email</label>
+                <input type="email" class="form-control" name="employer_email" value="{{ $draft->form_data['employer_email'] ?? '' }}" required>
+              </div>
+              <div class="form-field">
+                <label class="form-label required">Employer Cell Number</label>
+                <input type="text" class="form-control" name="employer_cell" value="{{ $draft->form_data['employer_cell'] ?? '' }}" required>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-field">
+                <label class="form-label">Headquarters Address</label>
+                <textarea class="form-control" name="headquarters_address" rows="2">{{ $draft->form_data['headquarters_address'] ?? '' }}</textarea>
+              </div>
+              <div class="form-field">
+                <label class="form-label">Headquarters Phone</label>
+                <input type="text" class="form-control" name="headquarters_phone" value="{{ $draft->form_data['headquarters_phone'] ?? '' }}">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-field">
+                <label class="form-label">Headquarters Email</label>
+                <input type="email" class="form-control" name="headquarters_email" value="{{ $draft->form_data['headquarters_email'] ?? '' }}">
+              </div>
+              <div class="form-field">
+                <label class="form-label">Headquarters Cell</label>
+                <input type="text" class="form-control" name="headquarters_cell" value="{{ $draft->form_data['headquarters_cell'] ?? '' }}">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-field">
+                <label class="form-label required">Name of Editor/Publisher</label>
+                <input type="text" class="form-control" name="editor_name" value="{{ $draft->form_data['editor_name'] ?? '' }}" required>
+              </div>
+              <div class="form-field">
+                <label class="form-label required">Editor Contact Details</label>
+                <input type="text" class="form-control" name="editor_contact" value="{{ $draft->form_data['editor_contact'] ?? '' }}" placeholder="Phone/Email" required>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-field">
+                <label class="form-label">Immediate Supervisor</label>
+                <input type="text" class="form-control" name="supervisor_name" value="{{ $draft->form_data['supervisor_name'] ?? '' }}">
+              </div>
+              <div class="form-field">
+                <label class="form-label">Supervisor Contact</label>
+                <input type="text" class="form-control" name="supervisor_contact" value="{{ $draft->form_data['supervisor_contact'] ?? '' }}" placeholder="Phone/Email">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-field">
+                <label class="form-label">Other organisations you string for</label>
+                <textarea class="form-control" name="other_organisations" rows="2" placeholder="List other media organisations you work with">{{ $draft->form_data['other_organisations'] ?? '' }}</textarea>
+              </div>
+              <div class="form-field">
+                <label class="form-label">Details of those organisations</label>
+                <textarea class="form-control" name="other_organisations_details" rows="2" placeholder="Provide details of the organisations listed above">{{ $draft->form_data['other_organisations_details'] ?? '' }}</textarea>
+              </div>
+            </div>
+
+            <div class="foreign-fields" style="display:none;">
+              <hr>
+              <div class="form-row">
+                <div class="form-field">
+                  <label class="form-label required">Country where journalist is based</label>
+                  <input type="text" class="form-control" name="journalist_based_country">
+                </div>
+                <div class="form-field">
+                  <label class="form-label required">Is this your first time in Zimbabwe?</label>
+                  <select class="form-control" name="first_time_in_zim">
+                    <option value="">Select</option>
+                    <option value="yes">Yes</option>
+                    <option value="no">No</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-field">
+                  <label class="form-label required">Date of Arrival</label>
+                  <input type="date" class="form-control" name="arrived_on">
+                </div>
+                <div class="form-field">
+                  <label class="form-label required">Date of Departure</label>
+                  <input type="date" class="form-control" name="departing_on">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-field">
+                  <label class="form-label required">Mode of Travel</label>
+                  <input type="text" class="form-control" name="arrival_mode" placeholder="e.g. Air / Road">
+                </div>
+                <div class="form-field">
+                  <label class="form-label required">Port of Entry</label>
+                  <input type="text" class="form-control" name="port_of_entry" placeholder="e.g. RGM Airport / Beitbridge">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-field">
+                  <label class="form-label required">Address in Zimbabwe</label>
+                  <textarea class="form-control" name="address_in_zimbabwe" rows="2"></textarea>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-field">
+                  <label class="form-label required">Special Assignment Details</label>
+                  <textarea class="form-control" name="special_assignment" rows="3" placeholder="Describe the purpose of your visit"></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {{-- STEP 5: CRIMINAL RECORD --}}
+        <div class="step-content" id="ap3-step-5">
+          <h3 class="step-title">Criminal Record</h3>
+          <div class="current-step-info">
+            <i class="ri-information-line me-2"></i>
+            Please declare any criminal convictions. This information is required for accreditation purposes.
+          </div>
+
+          <div class="section-card">
+            <div class="form-row">
+              <div class="form-field">
+                <label class="form-label required">Have you ever been convicted of a crime?</label>
+                <select class="form-control" name="criminal_conviction" id="criminal_conviction" required>
+                  <option value="">Select</option>
+                  <option value="no" @selected(($draft->form_data['criminal_conviction'] ?? '') === 'no')>No</option>
+                  <option value="yes" @selected(($draft->form_data['criminal_conviction'] ?? '') === 'yes')>Yes</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row" id="criminal_details_row" style="display: none;">
+              <div class="form-field">
+                <label class="form-label required">If yes, provide details</label>
+                <textarea class="form-control" name="criminal_details" rows="4" placeholder="Please provide details of the conviction, including date, nature of offense, and sentence">{{ $draft->form_data['criminal_details'] ?? '' }}</textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {{-- STEP 6: REFEREES --}}
+        <div class="step-content" id="ap3-step-6">
+          <h3 class="step-title">Referees</h3>
+          <div class="current-step-info">
+            <i class="ri-information-line me-2"></i>
+            Provide details of three professional referees who can vouch for your media practitioner status.
+          </div>
+
+          @for ($i = 1; $i <= 3; $i++)
+          <div class="section-card mb-3">
+            <div class="section-title"><i class="ri-user-star-line me-2"></i>Referee #{{ $i }}</div>
+            <div class="form-row">
+              <div class="form-field">
+                <label class="form-label required">Full Name</label>
+                <input type="text" class="form-control" name="referee_name_{{ $i }}" value="{{ $draft->form_data['referee_name_'.$i] ?? '' }}" required>
+              </div>
+              <div class="form-field">
+                <label class="form-label required">Phone Number</label>
+                <input type="text" class="form-control" name="referee_phone_{{ $i }}" value="{{ $draft->form_data['referee_phone_'.$i] ?? '' }}" required>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-field">
+                <label class="form-label required">Physical Address</label>
+                <input type="text" class="form-control" name="referee_address_{{ $i }}" value="{{ $draft->form_data['referee_address_'.$i] ?? '' }}" required>
+              </div>
+            </div>
+          </div>
+          @endfor
+        </div>
+
+        {{-- STEP 7: UPLOADS --}}
+        <div class="step-content" id="ap3-step-7">
+          <h3 class="step-title">Document Uploads</h3>
+          <div class="current-step-info">
+            <i class="ri-information-line me-2"></i>
+            Upload clear scans of required documents. All files should be under 5MB (Except work samples which can be up to 20MB).
+          </div>
+
+          <div class="row g-3">
+            <div class="col-12 col-lg-6">
+              <div class="form-field">
+                <label class="form-label required">Passport-size Photo</label>
+                <div class="upload-area" id="area_passport_photo">
+                  <i class="ri-user-smile-line fs-2 mb-2 text-primary"></i>
+                  <h5>Passport Photo</h5>
+                  <p class="mb-0 small text-muted">Recent color photo (JPG/PNG)</p>
+                  <input type="file" name="passport_photo" accept="image/*" class="d-none" required>
+                  <div class="d-flex gap-2 mt-2 justify-content-center">
+                    <button type="button" class="btn btn-sm btn-outline-primary pick-file">
+                      <i class="ri-folder-open-line me-1"></i> Pick Photo
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-success" id="btn_open_camera">
+                      <i class="ri-camera-lens-line me-1"></i> Take Photo
+                    </button>
+                  </div>
+                </div>
+                <div class="file-preview mt-2"></div>
+              </div>
+            </div>
+
+            <div class="col-12 col-lg-6 local-fields">
+              <div class="form-field">
+                <label class="form-label required">National ID Scan</label>
+                <div class="upload-area" id="area_id_scan">
+                  <i class="ri-file-user-line fs-2 mb-2 text-primary"></i>
+                  <h5>ID Card Scan</h5>
+                  <p class="mb-0 small text-muted">Clear scan of both sides (PDF/JPG)</p>
+                  <input type="file" name="id_scan" accept=".pdf,.jpg,.jpeg,.png" class="d-none">
+                  <button type="button" class="btn btn-sm btn-outline-primary mt-2 pick-file">Pick File</button>
+                </div>
+                <div class="file-preview mt-2"></div>
+              </div>
+            </div>
+
+            <div class="col-12 col-lg-6 foreign-fields" style="display:none;">
+              <div class="form-field">
+                <label class="form-label required">Passport Bio-data Page</label>
+                <div class="upload-area" id="area_passport_biodata">
+                  <i class="ri-passport-line fs-2 mb-2 text-primary"></i>
+                  <h5>Passport Bio-data</h5>
+                  <p class="mb-0 small text-muted">Information page scan (PDF/JPG)</p>
+                  <input type="file" name="passport_biodata_page" accept=".pdf,.jpg,.jpeg,.png" class="d-none">
+                  <button type="button" class="btn btn-sm btn-outline-primary mt-2 pick-file">Pick File</button>
+                </div>
+                <div class="file-preview mt-2"></div>
+              </div>
+            </div>
+            
+            <div class="col-12 col-lg-6">
+              <div class="form-field">
+                <label class="form-label required" id="label_employment_letter">Employment / Assignment Letter</label>
+                <div class="upload-area" id="area_employment_letter">
+                  <i class="ri-article-line fs-2 mb-2 text-primary"></i>
+                  <h5>Letter from Media House</h5>
+                  <p class="mb-0 small text-muted">Official assignment/confirm (PDF/JPG)</p>
+                  <input type="file" name="employment_letter" accept=".pdf,.jpg,.jpeg,.png" class="d-none" required>
+                  <button type="button" class="btn btn-sm btn-outline-primary mt-2 pick-file">Pick File</button>
+                </div>
+                <div class="file-preview mt-2"></div>
+              </div>
+            </div>
+
+            <div class="col-12 col-lg-6 foreign-fields" style="display:none;">
+              <div class="form-field">
+                <label class="form-label required">Clearance Letter</label>
+                <div class="upload-area" id="area_clearance_letter">
+                  <i class="ri-verified-badge-line fs-2 mb-2 text-primary"></i>
+                  <h5>Clearance/Regulatory Letter</h5>
+                  <p class="mb-0 small text-muted">From home country (PDF/JPG)</p>
+                  <input type="file" name="clearance_letter" accept=".pdf,.jpg,.jpeg,.png" class="d-none">
+                  <button type="button" class="btn btn-sm btn-outline-primary mt-2 pick-file">Pick File</button>
+                </div>
+                <div class="file-preview mt-2"></div>
+              </div>
+            </div>
+
+            <div class="col-12 col-lg-6">
+              <div class="form-field">
+                <label class="form-label">Work Samples (Optional)</label>
+                <div class="upload-area" id="area_work_samples">
+                  <i class="ri-movie-line fs-2 mb-2 text-primary"></i>
+                  <h5>Portfolio / Samples</h5>
+                  <p class="mb-0 small text-muted">Combined PDF/ZIP or Video (Max 20MB)</p>
+                  <input type="file" name="work_samples" accept=".pdf,.jpg,.jpeg,.png,.mp4,.mov,.avi,.doc,.docx" class="d-none">
+                  <button type="button" class="btn btn-sm btn-outline-primary mt-2 pick-file">Pick File</button>
+                </div>
+                <div class="file-preview mt-2"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {{-- STEP 8: DECLARATION --}}
+        <div class="step-content" id="ap3-step-8">
+          <h3 class="step-title">Declaration</h3>
+          <div class="current-step-info">
+            <i class="ri-information-line me-2"></i>
+            Confirm that all provided information is accurate and complete.
+          </div>
+
+          <div class="alert alert-warning mt-4">
+            <h6 class="fw-bold mb-2"><i class="ri-shield-check-line me-2"></i>DECLARATION BY APPLICANT</h6>
+            <p class="mb-3 text-dark" style="font-size:14px;">
+              I declare that all the information given above, to the best of my knowledge, is true and complete. I understand that any false statement may lead to the rejection of my application or revocation of my accreditation.
+            </p>
+
+            <div class="form-check mt-2">
+              <input class="form-check-input" type="checkbox" id="ap3Agree" name="declaration_agreed" required>
+              <label class="form-check-label fw-bold text-dark" for="ap3Agree" style="font-size:13px; cursor:pointer;">
+                I SOLEMNLY AGREE TO THE DECLARATION ABOVE.
+              </label>
+            </div>
+          </div>
+
+          <div class="section-card mt-3">
+             <div class="form-field">
+                <label class="form-label required">Declaration Date</label>
+                <input type="text" class="form-control bg-light" name="declaration_date" id="ap3_declaration_date" readonly required>
+             </div>
+          </div>
+        </div>
+
+        {{-- FORM BUTTONS --}}
+        <div class="form-buttons mt-4 pt-3 border-top">
+          <div>
+            <button type="button" class="btn btn-light px-4" id="ap3PrevBtn" style="display:none;">
+              <i class="ri-arrow-left-line me-1"></i> Previous
+            </button>
+            <button type="button" class="btn btn-outline-secondary px-4 ms-2" id="ap3SaveDraftBtn" style="display:none;">
+              <i class="ri-save-line me-1"></i> Save Draft
+            </button>
+          </div>
+          <button type="button" class="btn btn-primary px-4" id="ap3NextBtn">
+            Next <i class="ri-arrow-right-line ms-1"></i>
+          </button>
         </div>
       </form>
     </div>
   </div>
 
-  {{-- Review Modal --}}
-  <div class="modal fade" id="ap3ReviewModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title"><i class="ri-file-search-line me-2"></i>Review Your Application</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+  {{-- CAMERA MODAL --}}
+  <div class="modal fade" id="cameraModal" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog modal-md">
+      <div class="modal-content overflow-hidden" style="border-radius:16px;">
+        <div class="modal-header bg-dark text-white py-3 border-0">
+          <h5 class="modal-title fw-bold">Capture Passport Photo</h5>
+          <button type="button" class="btn-close btn-close-white" id="btn_close_camera" data-bs-dismiss="modal"></button>
         </div>
-        <div class="modal-body" id="ap3ReviewContent"></div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Edit Application</button>
-          <button type="button" class="btn btn-primary" id="ap3ConfirmSubmitBtn">
-            <i class="ri-send-plane-line me-2"></i>Confirm & Submit
+        <div class="modal-body p-0 position-relative bg-black" style="min-height:300px; display:flex; align-items:center; justify-content:center;">
+          <video id="camera_video" autoplay playsinline class="w-100 h-100" style="object-fit:cover;"></video>
+          <div class="camera-overlay" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:200px; height:250px; border:2px dashed rgba(255,255,255,0.5); border-radius:100px; pointer-events:none;"></div>
+          <canvas id="camera_canvas" class="d-none"></canvas>
+        </div>
+        <div class="modal-footer border-top bg-light justify-content-center py-3">
+          <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-success px-4" id="btn_capture_photo">
+            <i class="ri-camera-line me-1"></i> Capture Photo
           </button>
         </div>
       </div>
     </div>
   </div>
 
-  {{-- Camera Modal --}}
-  <div class="modal fade" id="ap3CameraModal" tabindex="-1">
-    <div class="modal-dialog modal-md modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title"><i class="ri-camera-lens-line me-2"></i>Take Photo</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" id="ap3CameraCloseBtn"></button>
+  {{-- REVIEW MODAL --}}
+  <div class="modal fade" id="ap3ReviewModal" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content overflow-hidden" style="border-radius:16px;">
+        <div class="modal-header bg-success text-white py-3 border-0">
+          <h5 class="modal-title fw-bold">Review Application</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
-        <div class="modal-body">
-          <div class="alert alert-info">
-            <i class="ri-information-line me-1"></i>
-            Stand in front of a <strong>white background</strong>. Make sure your face is well-lit.
-          </div>
-
-          <video id="ap3CamVideo" autoplay playsinline style="width:100%; border-radius:12px; background:#000;"></video>
-          <canvas id="ap3CamCanvas" style="display:none;"></canvas>
-
-          <div class="d-flex gap-2 mt-3">
-            <button type="button" class="btn btn-primary flex-grow-1" id="ap3CaptureBtn">
-              <i class="ri-camera-line me-1"></i> Capture
-            </button>
-            <button type="button" class="btn btn-outline-secondary" id="ap3RetakeBtn" style="display:none;">
-              <i class="ri-refresh-line me-1"></i> Retake
-            </button>
-          </div>
-
-          <div id="ap3CapturePreview" class="mt-3" style="display:none;">
-            <div class="fw-semibold mb-2">Preview</div>
-            <img id="ap3PreviewImg" alt="Captured photo" style="width:100%; border-radius:12px; border:1px solid #e5e7eb;" />
-            <button type="button" class="btn btn-success w-100 mt-3" id="ap3UsePhotoBtn">
-              <i class="ri-check-line me-1"></i> Use This Photo
-            </button>
-          </div>
+        <div class="modal-body p-4" id="ap3ReviewContent"></div>
+        <div class="modal-footer border-top bg-light">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Go Back & Edit</button>
+          <button type="button" class="btn btn-primary" id="ap3ConfirmSubmitBtn">
+            <i class="ri-send-plane-line me-1"></i> Confirm & Submit
+          </button>
         </div>
       </div>
     </div>
   </div>
+
+  {{-- PAYMENT MODAL --}}
+  <x-payment-modal 
+    modal-id="ap3PaymentModal"
+    description="Journalist Accreditation Application Fee"
+    currency="USD"
+  />
+
+</div>
 @endsection
 
 @push('scripts')
 <script>
-  let ap3CurrentStep = 1;
-  const csrfToken = '{{ csrf_token() }}';
-
-  const ap3Steps = document.querySelectorAll('#new-application-page .step');
-  const ap3StepContents = [
-    document.getElementById('ap3-step-1'),
-    document.getElementById('ap3-step-2'),
-    document.getElementById('ap3-step-3'),
-    document.getElementById('ap3-step-4'),
-  ];
-
-  const ap3PrevBtn = document.getElementById('ap3PrevBtn');
-  const ap3NextBtn = document.getElementById('ap3NextBtn');
-  const ap3SaveDraftBtn = document.getElementById('ap3SaveDraftBtn');
-
-  function getFormData() {
+  document.addEventListener('DOMContentLoaded', function() {
+    let currentStep = {{ $draft->form_data['current_step'] ?? 1 }};
+    let scope = '{{ $draft->journalist_scope ?? ($draft->form_data['journalist_scope'] ?? '') }}';
+    const totalSteps = 8;
     const form = document.getElementById('ap3Form');
-    const formData = {};
-    const inputs = form.querySelectorAll('input, select, textarea');
-
-    inputs.forEach(input => {
-      if (!input.name) return;
-      if (input.type === 'file') return;
-
-      if (input.type === 'radio') {
-        if (input.checked) formData[input.name] = input.value;
-      } else if (input.type === 'checkbox') {
-        formData[input.name] = input.checked;
-      } else {
-        formData[input.name] = input.value;
-      }
-    });
-
-    return formData;
-  }
-
-  function ap3ShowStep(step){
-    ap3StepContents.forEach((el, idx) => el.classList.toggle('active', idx === (step-1)));
-
-    ap3Steps.forEach(s => {
-      const n = parseInt(s.dataset.step, 10);
-      s.classList.remove('active','completed');
-      if(n === step) s.classList.add('active');
-      if(n < step){
-        s.classList.add('completed');
-        s.querySelector('.step-number').innerHTML = '<i class="ri-check-line"></i>';
-      }else{
-        s.querySelector('.step-number').textContent = n;
-      }
-    });
-
-    ap3PrevBtn.style.display = step === 1 ? 'none' : 'inline-block';
-    ap3NextBtn.innerHTML = step === 4 ? 'Review & Submit <i class="ri-file-search-line"></i>' : 'Next <i class="ri-arrow-right-line"></i>';
-  }
-
-  function setRequiredWithin(container, isRequired) {
-    if (!container) return;
-    container.querySelectorAll('input, select, textarea').forEach(el => {
-      if (el.type === 'hidden') return;
-      if (el.type === 'file') return;
-
-      if (isRequired) {
-        if (el.dataset.req === "1") el.setAttribute('required', 'required');
-      } else {
-        if (el.dataset.req === "1") el.removeAttribute('required');
-      }
-    });
-
-    // files with data-req=1 are required for the scope
-    container.querySelectorAll('input[type="file"][data-req="1"]').forEach(f => {
-      if (isRequired) f.setAttribute('required','required');
-      else f.removeAttribute('required');
-    });
-  }
-
-  function applyScopeVisibility(scope) {
-    const locals = document.querySelectorAll('.scope-local');
-    const foreigners = document.querySelectorAll('.scope-foreign');
-
-    locals.forEach(el => el.style.display = (scope === 'local') ? '' : 'none');
-    foreigners.forEach(el => el.style.display = (scope === 'foreign') ? '' : 'none');
-
-    locals.forEach(el => setRequiredWithin(el, scope === 'local'));
-    foreigners.forEach(el => setRequiredWithin(el, scope === 'foreign'));
-  }
-
-  function scopeVisible(el){
-    if (!el) return false;
-    if (el.closest('.scope-local') && document.getElementById('ap3_scope').value !== 'local') return false;
-    if (el.closest('.scope-foreign') && document.getElementById('ap3_scope').value !== 'foreign') return false;
-    if (el.closest('.employment-only') && currentEmploymentType() !== 'employed') return false;
-    if (el.closest('.freelancer-only') && currentEmploymentType() !== 'freelancer') return false;
-    return true;
-  }
-
-  function visible(el){
-    if (!scopeVisible(el)) return false;
-    if (el.offsetParent === null) return false;
-    return true;
-  }
-
-  function currentEmploymentType(){
-    return document.querySelector('input[name="employment_type"]:checked')?.value || '';
-  }
-
-  function validateFilesForStep4(){
-    const scope = document.getElementById('ap3_scope').value;
-
-    const passportPhoto = document.querySelector('input[name="passport_photo"]');
-    if (!passportPhoto?.files?.[0]) return 'Please upload or take your passport photo.';
-
-    if (scope === 'local') {
-      const idScan = document.querySelector('input[name="id_scan"]');
-      if (!idScan?.files?.[0]) return 'Please upload your National ID Scan.';
-
-      const empType = currentEmploymentType();
-      if (empType === 'employed') {
-        const emp = document.querySelector('input[name="employment_letter"]');
-        if (!emp?.files?.[0]) return 'Please upload Employment Letter (Employed applicants).';
-      }
-      if (empType === 'freelancer') {
-        const ref = document.querySelector('input[name="reference_letter"]');
-        if (!ref?.files?.[0]) return 'Please upload Reference/Testimonial/Affidavit (Freelancers).';
-      }
-    }
-
-    if (scope === 'foreign') {
-      const bio = document.querySelector('input[name="passport_biodata_page"]');
-      const clr = document.querySelector('input[name="clearance_letter"]');
-      if (!bio?.files?.[0]) return 'Please upload Passport Bio Data Page.';
-      if (!clr?.files?.[0]) return 'Please upload Clearance Letter.';
-    }
-
-    return '';
-  }
-
-  function ap3ValidateStep(step){
-    const scope = document.getElementById('ap3_scope').value;
-    if(step === 1){
-      if(!scope){ alert('Please select an applicant type (Local or Foreign Media Practitioner)'); return false; }
-    }
-
-    const currentContent = ap3StepContents[step-1];
-
-    // Required (text/select/radio) validation
-    const required = currentContent.querySelectorAll('[required]');
-    for(const field of required){
-      if (!visible(field)) continue;
-
-      if(field.type === 'radio'){
-        const group = currentContent.querySelectorAll(`input[name="${field.name}"]`);
-        const anyChecked = Array.from(group).some(r => visible(r) && r.checked);
-        if(!anyChecked){ alert('Please select an option.'); return false; }
-      } else if (field.type !== 'file') {
-        if(!String(field.value || '').trim()){
-          alert('Please complete all required fields.');
-          field.focus?.();
-          return false;
+    const steps = document.querySelectorAll('#new-accreditation-page .step');
+    const Contents = [
+      document.getElementById('ap3-step-1'),
+      document.getElementById('ap3-step-2'),
+      document.getElementById('ap3-step-3'),
+      document.getElementById('ap3-step-4'),
+      document.getElementById('ap3-step-5'),
+      document.getElementById('ap3-step-6'),
+      document.getElementById('ap3-step-7'),
+      document.getElementById('ap3-step-8')
+    ];
+    const prevBtn = document.getElementById('ap3PrevBtn');
+    const nextBtn = document.getElementById('ap3NextBtn');
+    const saveBtn = document.getElementById('ap3SaveDraftBtn');
+    
+    // Initial Setup from Draft
+    if (scope) {
+        const card = document.querySelector(`.app-type-card[data-type="${scope}"]`);
+        if (card) {
+            card.classList.add('selected');
+            document.querySelectorAll('.local-fields').forEach(el => el.style.display = (scope === 'local' ? '' : 'none'));
+            document.querySelectorAll('.foreign-fields').forEach(el => el.style.display = (scope === 'foreign' ? '' : 'none'));
         }
-      }
     }
+    showStep(currentStep);
+    
+    // Set auto date
+    document.getElementById('ap3_declaration_date').value = new Date().toISOString().slice(0, 10);
 
-    // Step 3: Referees required (3 fixed rows)
-    if (step === 3) {
-      for (let i=1;i<=3;i++){
-        const n = document.querySelector(`[name="referee_name_${i}"]`);
-        const a = document.querySelector(`[name="referee_address_${i}"]`);
-        const p = document.querySelector(`[name="referee_phone_${i}"]`);
-        if (!n?.value?.trim() || !a?.value?.trim() || !p?.value?.trim()){
-          alert('Please complete all 3 referees (Name, Address, Phone).');
-          return false;
-        }
-      }
-    }
-
-    // Step 4: file rules
-    if (step === 4) {
-      const msg = validateFilesForStep4();
-      if (msg) { alert(msg); return false; }
-    }
-
-    // “Others specify” rules
-    if (step === 3) {
-      const mt = document.querySelector('select[name="medium_type"]')?.value;
-      const des = document.querySelector('select[name="designation"]')?.value;
-      if (mt === 'Others' && !document.querySelector('input[name="medium_type_other"]')?.value?.trim()){
-        alert('Please specify the medium type (Others).'); return false;
-      }
-      if (des === 'Others' && !document.querySelector('input[name="designation_other"]')?.value?.trim()){
-        alert('Please specify the designation (Others).'); return false;
-      }
-    }
-
-    return true;
-  }
-
-  // ===== Repeaters (Qualifications) =====
-  function rowHtmlHighestAcademic(idx){
-    return `
-      <div class="d-flex gap-2 mb-2 ap3-row" data-row="${idx}">
-        <input class="form-control" name="highest_academic_year_${idx}" placeholder="Year" style="max-width:120px;">
-        <input class="form-control" name="highest_academic_institution_${idx}" placeholder="Name of Institution">
-        <input class="form-control" name="highest_academic_qualification_${idx}" placeholder="Qualification">
-        <button type="button" class="btn btn-light btn-sm ap3RemoveRow">Remove</button>
-      </div>
-    `;
-  }
-
-  function rowHtmlProfessionalQual(idx){
-    return `
-      <div class="d-flex gap-2 mb-2 ap3-row" data-row="${idx}">
-        <input class="form-control" name="professional_year_${idx}" placeholder="Year" style="max-width:120px;">
-        <input class="form-control" name="professional_institution_${idx}" placeholder="Name of Institution">
-        <input class="form-control" name="professional_qualification_${idx}" placeholder="Qualification">
-        <button type="button" class="btn btn-light btn-sm ap3RemoveRow">Remove</button>
-      </div>
-    `;
-  }
-
-  function initRepeater(containerId, addBtnId, rowBuilder){
-    const container = document.getElementById(containerId);
-    const btn = document.getElementById(addBtnId);
-    if(!container || !btn) return null;
-
-    let idx = 1;
-
-    function wireRemoveButtons() {
-      container.querySelectorAll('.ap3RemoveRow').forEach(rm => {
-        rm.onclick = (e) => e.target.closest('.ap3-row').remove();
-      });
-    }
-
-    function addRow(){
-      container.insertAdjacentHTML('beforeend', rowBuilder(idx++));
-      wireRemoveButtons();
-    }
-
-    btn.addEventListener('click', addRow);
-
-    return {
-      addRow,
-      clear: () => { container.innerHTML = ''; idx = 1; },
-      setCount: (count) => { container.innerHTML=''; idx=1; for(let i=0;i<count;i++) addRow(); },
+    // DOB handling
+    const updateDob = () => {
+        const d = document.getElementById('dob_date').value;
+        const m = document.getElementById('dob_month').value;
+        const y = document.getElementById('dob_year').value;
+        document.getElementById('real_dob').value = (d && m && y) ? `${y}-${m}-${d}` : '';
     };
-  }
+    ['dob_date', 'dob_month', 'dob_year'].forEach(id => {
+        document.getElementById(id).addEventListener('change', updateDob);
+    });
 
-  // ===== Upload UI =====
-  function setupUploads(root){
-    root.querySelectorAll('.upload-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const input = btn.closest('.upload-area')?.querySelector('input[type="file"]');
-        input?.click();
+    // Criminal Record field handling
+    const criminalConviction = document.getElementById('criminal_conviction');
+    const criminalDetailsRow = document.getElementById('criminal_details_row');
+    
+    if (criminalConviction && criminalDetailsRow) {
+      criminalConviction.addEventListener('change', () => {
+        criminalDetailsRow.style.display = criminalConviction.value === 'yes' ? 'block' : 'none';
+        const criminalDetails = document.querySelector('[name="criminal_details"]');
+        if (criminalDetails) {
+          criminalDetails.required = criminalConviction.value === 'yes';
+        }
+      });
+      
+      // Initialize based on current value
+      if (criminalConviction.value === 'yes') {
+        criminalDetailsRow.style.display = 'block';
+        const criminalDetails = document.querySelector('[name="criminal_details"]');
+        if (criminalDetails) criminalDetails.required = true;
+      }
+    }
+
+    // Pick Type Cards
+    document.querySelectorAll('.app-type-card').forEach(card => {
+      card.addEventListener('click', () => {
+        document.querySelectorAll('.app-type-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        scope = card.dataset.type;
+        document.getElementById('ap3_journalist_scope').value = scope;
+        
+        // Update fields visibility
+        document.querySelectorAll('.local-fields').forEach(el => el.style.display = (scope === 'local' ? '' : 'none'));
+        document.querySelectorAll('.foreign-fields').forEach(el => el.style.display = (scope === 'foreign' ? '' : 'none'));
+        
+        // Update required attributes
+        document.getElementById('ap3_national_reg_no').required = (scope === 'local');
+        document.getElementById('ap3_collection_region').required = (scope === 'local');
+        document.getElementById('ap3_passport_no').required = (scope === 'foreign');
+        
+        document.querySelectorAll('.foreign-fields input, .foreign-fields select, .foreign-fields textarea').forEach(el => {
+            if(el.name !== 'work_samples') el.required = (scope === 'foreign');
+        });
+
+        // Automatically move to next step when card is selected
+        setTimeout(handleNext, 300);
       });
     });
 
-    root.querySelectorAll('.upload-area input[type="file"]').forEach(input => {
+    // Handle temporary application type
+    const tempCard = document.querySelector('.app-type-card[data-type="temporary"]');
+    if (tempCard) {
+      tempCard.addEventListener('click', () => {
+        // Show additional temporary fields if needed
+        const tempFields = document.querySelector('.temporary-fields');
+        if (tempFields) {
+          tempFields.style.display = 'block';
+        }
+      });
+    }
+
+    // File Pickers
+    document.querySelectorAll('.pick-file').forEach(btn => {
+      btn.addEventListener('click', () => {
+        btn.parentElement.querySelector('input[type="file"]').click();
+      });
+    });
+
+    document.querySelectorAll('input[type="file"]').forEach(input => {
       input.addEventListener('change', () => {
-        const file = input.files[0];
         const area = input.closest('.upload-area');
-        const list = area?.parentElement?.querySelector('.uploaded-files');
-        if(!file || !area || !list) return;
-
-        area.style.borderColor = '#10b981';
-        area.style.backgroundColor = 'rgba(16, 185, 129, 0.05)';
-
-        const fileName = file.name.length > 30 ? file.name.slice(0,30)+'...' : file.name;
-        const fileSize = (file.size/1024).toFixed(1)+' KB';
-
-        list.innerHTML = `
-          <div class="uploaded-file d-flex align-items-center justify-content-between p-2 border rounded mb-2">
-            <div class="d-flex align-items-center gap-2">
-              <i class="ri-file-text-line file-icon"></i>
-              <div>
-                <div class="file-name fw-semibold" style="font-size:13px;">${fileName}</div>
-                <div class="file-size text-muted" style="font-size:11px;">${fileSize}</div>
-              </div>
-            </div>
-            <button type="button" class="btn btn-sm btn-light">Remove</button>
-          </div>
-        `;
-
-        list.querySelector('button').addEventListener('click', () => {
-          input.value = '';
-          list.innerHTML = '';
+        const preview = area.parentElement.querySelector('.file-preview');
+        if(input.files.length) {
+          area.style.borderColor = '#10b981';
+          area.style.backgroundColor = 'rgba(16, 185, 129, 0.05)';
+          preview.innerHTML = `<span class="badge bg-success-subtle text-success p-2 rounded w-100">
+            <i class="ri-check-line me-1"></i> ${input.files[0].name}
+          </span>`;
+        } else {
           area.style.borderColor = '';
           area.style.backgroundColor = '';
-        });
-      });
-    });
-  }
-
-  // ===== Fixed 3 referees =====
-  function buildReferees(){
-    const wrap = document.getElementById('ap3RefereeFixedRows');
-    if (!wrap) return;
-    let html = '';
-    for (let i=1;i<=3;i++){
-      html += `
-        <div class="d-flex gap-2 mb-2">
-          <input class="form-control" name="referee_name_${i}" placeholder="Name" required>
-          <input class="form-control" name="referee_address_${i}" placeholder="Address" required>
-          <input class="form-control" name="referee_phone_${i}" placeholder="Phone" style="max-width:220px;" required>
-        </div>
-      `;
-    }
-    wrap.innerHTML = html;
-  }
-
-  // ===== Employment toggle show/hide =====
-  function applyEmploymentVisibility() {
-    const type = currentEmploymentType();
-    document.querySelectorAll('.employment-only, .employment-letter-only').forEach(el => {
-      el.style.display = (type === 'employed') ? '' : 'none';
-    });
-    document.querySelectorAll('.freelancer-only').forEach(el => {
-      el.style.display = (type === 'freelancer') ? '' : 'none';
-    });
-
-    // Upload requirements on local only
-    const empInput = document.querySelector('input[name="employment_letter"]');
-    const refInput = document.querySelector('input[name="reference_letter"]');
-
-    if (empInput) empInput.required = (document.getElementById('ap3_scope').value === 'local' && type === 'employed');
-    if (refInput) refInput.required = (document.getElementById('ap3_scope').value === 'local' && type === 'freelancer');
-  }
-
-  // ===== Others specify toggle =====
-  function applyOthersVisibility(){
-    const mt = document.querySelector('select[name="medium_type"]')?.value;
-    const des = document.querySelector('select[name="designation"]')?.value;
-
-    const mtWrap = document.getElementById('ap3OtherMediumWrap');
-    const desWrap = document.getElementById('ap3OtherDesignationWrap');
-
-    if (mtWrap) mtWrap.style.display = (mt === 'Others') ? '' : 'none';
-    if (desWrap) desWrap.style.display = (des === 'Others') ? '' : 'none';
-
-    const mtOther = document.querySelector('input[name="medium_type_other"]');
-    const desOther = document.querySelector('input[name="designation_other"]');
-    if (mtOther) mtOther.required = (mt === 'Others');
-    if (desOther) desOther.required = (des === 'Others');
-  }
-
-  // ===== Review =====
-  function getUploadedFiles() {
-    const files = [];
-    const fileInputs = document.querySelectorAll('#ap3Form input[type="file"]');
-    fileInputs.forEach(input => {
-      if (input.files && input.files[0]) {
-        const file = input.files[0];
-        files.push({
-          name: input.name,
-          fileName: file.name,
-          size: (file.size / 1024).toFixed(1) + ' KB'
-        });
-      }
-    });
-    return files;
-  }
-
-  function extractRows(prefix, formData, columns) {
-    const rows = [];
-    const indices = new Set();
-    Object.keys(formData || {}).forEach(k => {
-      const m = k.match(new RegExp('^' + prefix + '[a-zA-Z_]+_([0-9]+)$'));
-      if (m) indices.add(parseInt(m[1], 10));
-    });
-    const sorted = Array.from(indices).sort((a,b)=>a-b);
-    for (const i of sorted) {
-      const row = {};
-      let hasAny = false;
-      for (const c of columns) {
-        const key = `${prefix}${c}_${i}`;
-        row[c] = (formData[key] || '').trim();
-        if (row[c]) hasAny = true;
-      }
-      if (hasAny) rows.push(row);
-    }
-    return rows;
-  }
-
-  function showReviewModal() {
-    const formData = getFormData();
-    const scope = formData.journalist_scope === 'foreign' ? 'Foreign Media Practitioner' : 'Local Media Practitioner';
-    const empType = formData.employment_type || '-';
-
-    const highest = extractRows('highest_academic_', formData, ['year','institution','qualification']);
-    const prof = extractRows('professional_', formData, ['year','institution','qualification']);
-
-    const refs = [];
-    for (let i=1;i<=3;i++){
-      refs.push({
-        name: formData[`referee_name_${i}`] || '-',
-        address: formData[`referee_address_${i}`] || '-',
-        phone: formData[`referee_phone_${i}`] || '-',
-      });
-    }
-
-    const files = getUploadedFiles();
-
-    const highestHtml = highest.length ? `<ul class="mb-0">${highest.map(r=>`<li>${r.year||'-'} — ${r.institution||'-'} — ${r.qualification||'-'}</li>`).join('')}</ul>` : `<div class="text-muted">No rows provided.</div>`;
-    const profHtml = prof.length ? `<ul class="mb-0">${prof.map(r=>`<li>${r.year||'-'} — ${r.institution||'-'} — ${r.qualification||'-'}</li>`).join('')}</ul>` : `<div class="text-muted">No rows provided.</div>`;
-
-    const filesHtml = files.length ? `
-      <div class="list-group">
-        ${files.map(f => `
-          <div class="list-group-item d-flex align-items-center">
-            <i class="ri-file-text-line text-primary me-3 fs-4"></i>
-            <div>
-              <div class="fw-semibold">${f.name.replaceAll('_',' ')}</div>
-              <small class="text-muted">${f.fileName} (${f.size})</small>
-            </div>
-            <i class="ri-checkbox-circle-fill text-success ms-auto"></i>
-          </div>
-        `).join('')}
-      </div>` : `<div class="alert alert-danger mb-0">No documents uploaded.</div>`;
-    // Passport photo preview (uploaded or taken)
-    const photoInput = document.querySelector('input[name="passport_photo"]');
-    const photoFile = (photoInput && photoInput.files && photoInput.files[0]) ? photoInput.files[0] : null;
-    const photoPreviewHtml = photoFile ? (() => {
-      const isImg = (photoFile.type || '').startsWith('image/');
-      if (!isImg) return `<div class="text-muted">Passport photo selected (${photoFile.name})</div>`;
-      const url = URL.createObjectURL(photoFile);
-      return `
-        <div class="d-flex align-items-start gap-3">
-          <img src="${url}" alt="Passport photo preview" style="width:120px;height:120px;object-fit:cover;border-radius:10px;border:1px solid #e2e8f0;">
-          <div>
-            <div class="fw-semibold">Passport Photo</div>
-            <small class="text-muted">${photoFile.name} (${formatFileSize(photoFile.size)})</small>
-            <div class="text-muted mt-1">If this image looks wrong, go back and re-upload / retake.</div>
-          </div>
-        </div>`;
-    })() : `<div class="alert alert-danger mb-0">No passport photo selected.</div>`;
-
-
-    let personalExtra = '';
-    if (formData.journalist_scope === 'local') {
-      personalExtra = `
-        <div class="col-6"><p><strong>National Reg. No:</strong> ${formData.national_reg_no || '-'}</p></div>
-      `;
-    } else {
-      personalExtra = `
-        <div class="col-6"><p><strong>Passport No:</strong> ${formData.passport_no || '-'}</p></div>
-        <div class="col-6"><p><strong>Date of Expiry:</strong> ${formData.passport_expiry || '-'}</p></div>
-        <div class="col-6"><p><strong>Issued at:</strong> ${formData.passport_issued_at || '-'}</p></div>
-        <div class="col-6"><p><strong>First time in Zimbabwe:</strong> ${formData.first_time_in_zim || '-'}</p></div>
-        <div class="col-6"><p><strong>Last here:</strong> ${formData.last_in_zim_when || '-'}</p></div>
-        <div class="col-12"><p><strong>Address in Zimbabwe:</strong> ${formData.address_in_zimbabwe || '-'}</p></div>
-      `;
-    }
-
-    const employmentExtraForeign = (formData.journalist_scope === 'foreign') ? `
-      <div class="col-6"><p><strong>Country based:</strong> ${formData.journalist_based_country || '-'}</p></div>
-      <div class="col-6"><p><strong>Arrived on:</strong> ${formData.arrived_on || '-'}</p></div>
-      <div class="col-6"><p><strong>By Air/Road:</strong> ${formData.arrival_mode || '-'}</p></div>
-      <div class="col-6"><p><strong>Port of Entry:</strong> ${formData.port_of_entry || '-'}</p></div>
-      <div class="col-6"><p><strong>Departing on:</strong> ${formData.departing_on || '-'}</p></div>
-      <div class="col-12"><p><strong>Special assignment:</strong> ${formData.special_assignment || '-'}</p></div>
-    ` : '';
-
-    const reviewHtml = `
-      <div class="review-section">
-        <h6 class="fw-bold border-bottom pb-2 mb-3"><i class="ri-user-line me-2"></i>Applicant Type</h6>
-        <p><strong>Type:</strong> ${scope}</p>
-        <p><strong>Employment Status:</strong> ${empType}</p>
-      </div>
-
-      <div class="review-section mt-4">
-        <h6 class="fw-bold border-bottom pb-2 mb-3"><i class="ri-profile-line me-2"></i>Personal Details</h6>
-        <div class="row">
-          <div class="col-6"><p><strong>Title:</strong> ${formData.title || '-'}</p></div>
-          <div class="col-6"><p><strong>Surname:</strong> ${formData.surname || '-'}</p></div>
-          <div class="col-6"><p><strong>Name:</strong> ${formData.first_name || '-'}</p></div>
-          <div class="col-6"><p><strong>Other:</strong> ${formData.other_names || '-'}</p></div>
-          <div class="col-6"><p><strong>Date of Birth:</strong> ${formData.dob || '-'}</p></div>
-          <div class="col-6"><p><strong>Place/Country of Birth:</strong> ${formData.birth_place || '-'}</p></div>
-          <div class="col-6"><p><strong>Marital Status:</strong> ${formData.marital_status || '-'}</p></div>
-          <div class="col-6"><p><strong>Sex:</strong> ${formData.gender || '-'}</p></div>
-          <div class="col-6"><p><strong>Nationality:</strong> ${formData.nationality || '-'}</p></div>
-          ${personalExtra}
-          <div class="col-6"><p><strong>Driver’s Licence No:</strong> ${formData.drivers_licence_no || '-'}</p></div>
-          <div class="col-12"><p><strong>Residential Address:</strong> ${formData.address || '-'}</p></div>
-          <div class="col-6"><p><strong>Phone:</strong> ${(formData.phone_country_code || '') + ' ' + (formData.phone || '-')}</p></div>
-          <div class="col-6"><p><strong>Email:</strong> ${formData.email || '-'}</p></div>
-        </div>
-      </div>
-
-      ${formData.journalist_scope === 'local' ? `
-        <div class="review-section mt-4">
-          <h6 class="fw-bold border-bottom pb-2 mb-3"><i class="ri-graduation-cap-line me-2"></i>Qualifications</h6>
-          <div class="mt-2"><strong>Highest Academic:</strong>${highestHtml}</div>
-          <div class="mt-2"><strong>Professional Qualifications:</strong>${profHtml}</div>
-        </div>
-      ` : ''}
-
-      <div class="review-section mt-4">
-        <h6 class="fw-bold border-bottom pb-2 mb-3"><i class="ri-briefcase-line me-2"></i>Employment</h6>
-        <div class="row">
-          <div class="col-6"><p><strong>Type of Medium:</strong> ${formData.medium_type || '-'}</p></div>
-          <div class="col-6"><p><strong>Designation:</strong> ${formData.designation || '-'}</p></div>
-          ${(formData.medium_type === 'Others') ? `<div class="col-12"><p><strong>Medium (Other):</strong> ${formData.medium_type_other || '-'}</p></div>` : ``}
-          ${(formData.designation === 'Others') ? `<div class="col-12"><p><strong>Designation (Other):</strong> ${formData.designation_other || '-'}</p></div>` : ``}
-
-          ${empType === 'employed' ? `
-            <div class="col-6"><p><strong>Media Org:</strong> ${formData.media_org || '-'}</p></div>
-            <div class="col-6"><p><strong>Physical Address:</strong> ${formData.media_org_address || '-'}</p></div>
-            <div class="col-6"><p><strong>Phone:</strong> ${formData.media_org_phone || '-'}</p></div>
-            <div class="col-6"><p><strong>Email:</strong> ${formData.media_org_email || '-'}</p></div>
-            <div class="col-6"><p><strong>Editor/Publisher:</strong> ${formData.editor_publisher_name || '-'}</p></div>
-            <div class="col-6"><p><strong>Immediate Supervisor:</strong> ${formData.immediate_supervisor || '-'}</p></div>
-            <div class="col-6"><p><strong>String for Orgs:</strong> ${formData.string_for_orgs || '-'}</p></div>
-            <div class="col-6"><p><strong>Details:</strong> ${formData.string_for_details || '-'}</p></div>
-          ` : `
-            <div class="col-12"><div class="alert alert-light border mb-0">Freelancer selected — organisation fields were not required.</div></div>
-          `}
-          ${employmentExtraForeign}
-        </div>
-      </div>
-
-      <div class="review-section mt-4">
-        <h6 class="fw-bold border-bottom pb-2 mb-3"><i class="ri-group-line me-2"></i>Referees</h6>
-        <ul class="mb-0">
-          ${refs.map((r,idx)=>`<li><strong>Referee ${idx+1}:</strong> ${r.name} — ${r.address} — ${r.phone}</li>`).join('')}
-        </ul>
-      </div>
-
-      ${formData.journalist_scope === 'local' ? `
-        <div class="review-section mt-4">
-          <h6 class="fw-bold border-bottom pb-2 mb-3"><i class="ri-map-pin-line me-2"></i>Collection Office</h6>
-          <p>${document.querySelector('select[name="collection_region"]')?.selectedOptions[0]?.text || '-'}</p>
-        </div>
-      ` : ''}
-
-      <div class="review-section mt-4">
-        <h6 class="fw-bold border-bottom pb-2 mb-3"><i class="ri-file-upload-line me-2"></i>Uploaded Documents</h6>
-        ${filesHtml}
-      </div>
-
-      <div class="review-section mt-4">
-        <h6 class="fw-bold border-bottom pb-2 mb-3"><i class="ri-shield-check-line me-2"></i>Declaration</h6>
-        <p>I declare that all the information given above, to the best of my knowledge is true and complete.</p>
-        <p><strong>Date:</strong> ${formData.declaration_date || '-'}</p>
-      </div>
-
-      <div class="alert alert-warning mt-4">
-        <i class="ri-information-line me-2"></i>
-        Please review all information carefully before submitting.
-      </div>
-    `;
-
-    document.getElementById('ap3ReviewContent').innerHTML = reviewHtml;
-    const modalEl = document.getElementById('ap3ReviewModal');
-    // Support both global bootstrap (window.bootstrap) and legacy bootstrap global.
-    const bs = window.bootstrap || (typeof bootstrap !== 'undefined' ? bootstrap : null);
-    if (modalEl && bs?.Modal) {
-      const modal = bs.Modal.getOrCreateInstance ? bs.Modal.getOrCreateInstance(modalEl) : new bs.Modal(modalEl);
-      modal.show();
-    } else {
-      // Fallback if Bootstrap JS isn't loaded
-      alert('Review is ready, but the modal could not be opened. Please refresh the page and try again.');
-    }
-  }
-
-  async function saveDraft() {
-  const textFormData = getFormData();
-  const scope = document.getElementById('ap3_scope').value;
-  const region = document.querySelector('select[name="collection_region"]')?.value || 'harare';
-
-  try {
-    ap3SaveDraftBtn.disabled = true;
-    ap3SaveDraftBtn.innerHTML = '<i class="ri-loader-4-line"></i> Saving...';
-
-    const fd = new FormData();
-    fd.append('journalist_scope', scope || '');
-    fd.append('collection_region', region);
-    fd.append('form_data', JSON.stringify(textFormData));
-
-    // attach files too
-    document.querySelectorAll('#ap3Form input[type="file"]').forEach(input => {
-      if (!visible(input)) return;
-      if (input.files && input.files[0]) fd.append(input.name, input.files[0]);
-    });
-
-    const response = await fetch('{{ route("accreditation.saveDraft") }}', {
-      method: 'POST',
-      headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
-      body: fd,
-    });
-
-    const result = await response.json();
-
-    if (result.success) {
-      alert('Draft saved successfully! Reference: ' + (result.reference || ''));
-    } else {
-      alert('Failed to save draft. Please try again.');
-    }
-  } catch (e) {
-    console.error(e);
-    alert('An error occurred while saving the draft.');
-  } finally {
-    ap3SaveDraftBtn.disabled = false;
-    ap3SaveDraftBtn.innerHTML = '<i class="ri-save-line"></i> Save Draft';
-  }
-}
-
-
-  function formatFileSize(bytes) {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  }
-
-  async function submitApplication() {
-    const textFormData = getFormData();
-    const scope = document.getElementById('ap3_scope').value;
-    const region = document.querySelector('select[name="collection_region"]')?.value || 'harare';
-
-    const confirmBtn = document.getElementById('ap3ConfirmSubmitBtn');
-
-    const submitData = new FormData();
-    submitData.append('journalist_scope', scope);
-    submitData.append('collection_region', region);
-    submitData.append('form_data', JSON.stringify(textFormData));
-
-    const fileInputs = document.querySelectorAll('#ap3Form input[type="file"]');
-    fileInputs.forEach(input => {
-      if (!scopeVisible(input)) return;
-      if (input.files && input.files[0]) submitData.append(input.name, input.files[0]);
-    });
-
-    try {
-      confirmBtn.disabled = true;
-      confirmBtn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Submitting...';
-
-      const submitUrl = @json(isset($draft) && !$draft->is_draft && ($draft->status ?? null) === \App\Models\Application::CORRECTION_REQUESTED
-        ? route('accreditation.applications.resubmit', $draft)
-        : route('accreditation.submit'));
-
-      const response = await fetch(submitUrl, {
-        method: 'POST',
-        headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
-        body: submitData,
-      });
-
-      const result = await response.json().catch(() => null);
-
-      if (!response.ok || !result?.success) {
-        let msg = result?.message || '';
-        if (result?.errors) {
-          const errs = Object.values(result.errors).flat();
-          msg = errs.join('\n');
+          preview.innerHTML = '';
         }
-        alert('Submission error: ' + (msg || 'Please check all required fields and try again.'));
-        console.error('Submission failed:', result);
-        return;
+      });
+    });
+
+    // Navigation
+    function showStep(s) {
+      Contents.forEach((c, idx) => c.classList.toggle('active', idx === s - 1));
+      steps.forEach((st, idx) => {
+        st.classList.toggle('active', idx === s - 1);
+        st.classList.toggle('completed', idx < s - 1);
+        const num = st.querySelector('.step-number');
+        if(idx < s - 1) num.innerHTML = '<i class="ri-check-line"></i>';
+        else num.textContent = idx + 1;
+      });
+      
+      prevBtn.style.display = s === 1 ? 'none' : 'block';
+      saveBtn.style.display = s > 1 ? 'block' : 'none';
+      nextBtn.innerHTML = s === totalSteps ? 'Review & Submit <i class="ri-send-plane-line ms-1"></i>' : 'Next <i class="ri-arrow-right-line ms-1"></i>';
+    }
+
+    function validateStep(s) {
+      if(s === 1 && !scope) { alert('Please choose an applicant type.'); return false; }
+      
+      const current = Contents[s-1];
+      const required = current.querySelectorAll('[required]');
+      for(const field of required) {
+        if(field.offsetParent === null) continue; // Skip visible:hidden
+        if(field.type === 'file' && !field.files.length) { alert('Please upload required file: ' + field.name.replaceAll('_',' ')); return false; }
+        if(field.type === 'checkbox' && !field.checked) { alert('Please agree to the declaration.'); return false; }
+        if(field.type !== 'file' && field.type !== 'checkbox' && !field.value.trim()) {
+          alert('Missing field: ' + field.name.replaceAll('_',' '));
+          field.focus();
+          return false;
+        }
       }
-
-      bootstrap.Modal.getInstance(document.getElementById('ap3ReviewModal')).hide();
-      alert('Application submitted successfully! Reference: ' + result.reference);
-      window.location.href = "{{ route('accreditation.home') }}";
-    } catch (error) {
-      console.error(error);
-      alert('An error occurred while submitting the application: ' + error.message);
-    } finally {
-      confirmBtn.disabled = false;
-      confirmBtn.innerHTML = '<i class="ri-send-plane-line me-2"></i>Confirm & Submit';
-    }
-  }
-
-  // ===== Camera capture =====
-  let ap3Stream = null;
-  let ap3CapturedBlob = null;
-
-  async function startCamera(){
-    const video = document.getElementById('ap3CamVideo');
-    ap3CapturedBlob = null;
-
-    try {
-      ap3Stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
-      video.srcObject = ap3Stream;
-    } catch (e) {
-      alert('Camera access failed. Please allow camera permission or upload a photo instead.');
-      throw e;
-    }
-  }
-
-  function stopCamera(){
-    if (ap3Stream) {
-      ap3Stream.getTracks().forEach(t => t.stop());
-      ap3Stream = null;
-    }
-  }
-
-  function blobToFile(blob, fileName){
-    return new File([blob], fileName, { type: blob.type || 'image/png' });
-  }
-
-  function setFileInput(input, file){
-    const dt = new DataTransfer();
-    dt.items.add(file);
-    input.files = dt.files;
-    input.dispatchEvent(new Event('change'));
-  }
-
-  // ===== Init =====
-  document.querySelectorAll('#new-application-page .app-type-card').forEach(card => {
-    card.addEventListener('click', () => {
-      document.querySelectorAll('#new-application-page .app-type-card').forEach(c => c.classList.remove('selected'));
-      card.classList.add('selected');
-      const type = card.dataset.type;
-      document.getElementById('ap3_scope').value = type;
-      applyScopeVisibility(type);
-      applyEmploymentVisibility();
-    });
-  });
-
-  ap3PrevBtn.addEventListener('click', () => {
-    ap3CurrentStep = Math.max(1, ap3CurrentStep - 1);
-    ap3ShowStep(ap3CurrentStep);
-  });
-
-  ap3NextBtn.addEventListener('click', () => {
-    if(!ap3ValidateStep(ap3CurrentStep)) return;
-
-    if(ap3CurrentStep === 4){
-      showReviewModal();
-      return;
+      return true;
     }
 
-    ap3CurrentStep = Math.min(4, ap3CurrentStep + 1);
-    ap3ShowStep(ap3CurrentStep);
-  });
+    function handleNext() {
+      if(validateStep(currentStep)) {
+        if(currentStep < totalSteps) {
+          currentStep++;
+          showStep(currentStep);
+          window.scrollTo(0, 0);
+          autoSave(); // Auto save on step change
+        } else {
+          showReview();
+        }
+      }
+    }
 
-  ap3SaveDraftBtn.addEventListener('click', saveDraft);
-  document.getElementById('ap3ConfirmSubmitBtn').addEventListener('click', submitApplication);
-
-  document.addEventListener('DOMContentLoaded', () => {
-    ap3ShowStep(1);
-    setupUploads(document.getElementById('new-application-page'));
-    buildReferees();
-
-    // Default date inputs to today if empty
-    const today = new Date().toISOString().split('T')[0];
-    document.querySelectorAll('#new-application-page input[type="date"]').forEach(i => { if(!i.value) i.value = today; });
-
-    // Qualifications repeaters (Local only)
-    const highestRep = initRepeater('ap3HighestAcademicRows','ap3AddHighestAcademicRow', rowHtmlHighestAcademic);
-    const profRep = initRepeater('ap3ProfessionalQualRows','ap3AddProfessionalQualRow', rowHtmlProfessionalQual);
-    if (highestRep) highestRep.addRow();
-    if (profRep) profRep.addRow();
-
-    // Hide local/foreign by default until selection
-    applyScopeVisibility(document.getElementById('ap3_scope').value || 'local');
-
-    // Employment toggles
-    document.querySelectorAll('input[name="employment_type"]').forEach(r => r.addEventListener('change', applyEmploymentVisibility));
-    applyEmploymentVisibility();
-
-    // Others toggles
-    document.querySelector('select[name="medium_type"]')?.addEventListener('change', applyOthersVisibility);
-    document.querySelector('select[name="designation"]')?.addEventListener('change', applyOthersVisibility);
-    applyOthersVisibility();
-
-    // Camera modal handlers
-    const takeBtn = document.getElementById('ap3TakePhotoBtn');
-    const captureBtn = document.getElementById('ap3CaptureBtn');
-    const retakeBtn = document.getElementById('ap3RetakeBtn');
-    const useBtn = document.getElementById('ap3UsePhotoBtn');
-    const previewWrap = document.getElementById('ap3CapturePreview');
-    const previewImg = document.getElementById('ap3PreviewImg');
-    const video = document.getElementById('ap3CamVideo');
-    const canvas = document.getElementById('ap3CamCanvas');
-
-    takeBtn?.addEventListener('click', async () => {
-      const modalEl = document.getElementById('ap3CameraModal');
-      const modal = new bootstrap.Modal(modalEl);
-      modal.show();
-
-      previewWrap.style.display = 'none';
-      retakeBtn.style.display = 'none';
-      captureBtn.style.display = '';
-      await startCamera();
+    nextBtn.addEventListener('click', handleNext);
+    prevBtn.addEventListener('click', () => {
+      if(currentStep > 1) {
+        currentStep--;
+        showStep(currentStep);
+      }
     });
 
-    document.getElementById('ap3CameraCloseBtn')?.addEventListener('click', () => {
-      stopCamera();
-    });
+    // Review
+    function showReview() {
+      const fd = new FormData(form);
+      let html = '<div class="review-grid">';
+      
+      const fields = [
+        ['Application Information', [
+          ['Applicant Type', scope === 'local' ? 'Local Media Practitioner' : 'Foreign Media Practitioner'],
+          ['Other Name(s)', fd.get('other_names') || '-'],
+          ['Driver\'s Licence', fd.get('drivers_licence') || '-']
+        ]],
+        ['Personal Information', [
+          ['Full Name', fd.get('title') + ' ' + fd.get('first_name') + ' ' + fd.get('surname')],
+          ['Gender', fd.get('gender')],
+          ['Date of Birth', fd.get('dob')],
+          ['Place of Birth', fd.get('birth_place')],
+          ['Nationality', fd.get('nationality')],
+          ['Marital Status', fd.get('marital_status')],
+          [scope === 'local' ? 'National ID Number' : 'Passport Number', scope === 'local' ? fd.get('national_reg_no') : fd.get('passport_no')],
+          [scope === 'local' ? 'Passport Number (Optional)' : 'Passport Issued At', scope === 'local' ? (fd.get('passport_number') || '-') : fd.get('passport_issued_at')],
+          [scope === 'local' ? '' : 'Passport Expiry Date', scope === 'local' ? '' : fd.get('passport_expiry')],
+          ['Email', fd.get('email')],
+          ['Phone', (fd.get('phone_country_code') || '') + ' ' + (fd.get('phone') || '')],
+          ['Physical Address', fd.get('address')],
+          [scope === 'local' ? 'Collection Office' : '', scope === 'local' ? (document.getElementById('ap3_collection_region').options[document.getElementById('ap3_collection_region').selectedIndex]?.text || '-') : '']
+        ]],
+        ['Qualifications', [
+          ['Highest Academic Qualification', fd.get('highest_academic_qualification') || '-'],
+          ['Field of Study', fd.get('field_of_study') || '-'],
+          ['Institution Name', fd.get('institution_name') || '-'],
+          ['Year Completed', fd.get('year_completed') || '-'],
+          ['Professional Qualifications', fd.get('professional_qualifications') || '-'],
+          ['Professional Memberships', fd.get('professional_memberships') || '-']
+        ]],
+        ['Employment Details', [
+          ['Employment Type', fd.get('employment_type')],
+          ['Media House / Employer', fd.get('media_house')],
+          ['Designation', fd.get('designation')],
+          ['Other Designation', fd.get('other_designation') || '-'],
+          ['Medium Type', fd.get('medium_type')],
+          ['Employer Physical Address', fd.get('employer_address') || '-'],
+          ['Employer Phone', fd.get('employer_phone') || '-'],
+          ['Employer Email', fd.get('employer_email') || '-'],
+          ['Employer Cell', fd.get('employer_cell') || '-'],
+          ['Headquarters Address', fd.get('headquarters_address') || '-'],
+          ['Headquarters Phone', fd.get('headquarters_phone') || '-'],
+          ['Headquarters Email', fd.get('headquarters_email') || '-'],
+          ['Headquarters Cell', fd.get('headquarters_cell') || '-'],
+          ['Name of Editor/Publisher', fd.get('editor_name') || '-'],
+          ['Editor Contact Details', fd.get('editor_contact') || '-'],
+          ['Immediate Supervisor', fd.get('supervisor_name') || '-'],
+          ['Supervisor Contact', fd.get('supervisor_contact') || '-'],
+          ['Other Organisations', fd.get('other_organisations') || '-'],
+          ['Organisations Details', fd.get('other_organisations_details') || '-']
+        ]],
+        ['Foreign Applicant Details', [
+          ...(scope === 'foreign' ? [
+            ['Country where journalist is based', fd.get('journalist_based_country') || '-'],
+            ['First time in Zimbabwe?', fd.get('first_time_in_zim') || '-'],
+            ['Date of Arrival', fd.get('arrived_on') || '-'],
+            ['Date of Departure', fd.get('departing_on') || '-'],
+            ['Mode of Travel', fd.get('arrival_mode') || '-'],
+            ['Port of Entry', fd.get('port_of_entry') || '-'],
+            ['Address in Zimbabwe', fd.get('address_in_zimbabwe') || '-'],
+            ['Special Assignment Details', fd.get('special_assignment') || '-']
+          ] : [])
+        ]],
+        ['Criminal Record', [
+          ['Criminal Conviction', fd.get('criminal_conviction') || '-'],
+          ['Criminal Details', fd.get('criminal_details') || '-']
+        ]]
+      ];
 
-    document.getElementById('ap3CameraModal')?.addEventListener('hidden.bs.modal', () => {
-      stopCamera();
-    });
+      // Add Referees
+      const refereeFields = [];
+      for(let i=1; i<=3; i++) {
+        const name = fd.get(`referee_name_${i}`);
+        if(name) {
+          refereeFields.push([`Referee #${i}`, `${name} (${fd.get(`referee_phone_${i}`)}) - ${fd.get(`referee_address_${i}`)}`]);
+        }
+      }
+      if(refereeFields.length > 0) fields.push(['Referees', refereeFields]);
 
-    captureBtn?.addEventListener('click', () => {
-      const w = video.videoWidth || 640;
-      const h = video.videoHeight || 480;
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(video, 0, 0, w, h);
-
-      canvas.toBlob((blob) => {
-        if (!blob) return;
-        ap3CapturedBlob = blob;
-
-        previewImg.src = URL.createObjectURL(blob);
-        previewWrap.style.display = '';
-        retakeBtn.style.display = '';
-        captureBtn.style.display = 'none';
-      }, 'image/png', 0.92);
-    });
-
-    retakeBtn?.addEventListener('click', () => {
-      previewWrap.style.display = 'none';
-      retakeBtn.style.display = 'none';
-      captureBtn.style.display = '';
-      ap3CapturedBlob = null;
-    });
-
-    useBtn?.addEventListener('click', () => {
-      if (!ap3CapturedBlob) return;
-
-      const input = document.querySelector('input[name="passport_photo"]');
-      const file = blobToFile(ap3CapturedBlob, 'passport_photo.png');
-      setFileInput(input, file);
-
-      const modal = bootstrap.Modal.getInstance(document.getElementById('ap3CameraModal'));
-      modal.hide();
-      stopCamera();
-    });
-
-    @if(isset($draft) && $draft)
-      const draftData = @json($draft->form_data ?? []);
-      if (draftData) {
-        // restore scope
-        @if($draft->journalist_scope)
-          const scopeCard = document.querySelector(`.app-type-card[data-type="{{ $draft->journalist_scope }}"]`);
-          if (scopeCard) scopeCard.click();
-        @endif
-
-        // restore text/select/textarea/radio
-        Object.keys(draftData).forEach(key => {
-          const field = document.querySelector(`[name="${key}"]`);
-          if (!field) return;
-          if (field.type === 'radio') {
-            const radio = document.querySelector(`[name="${key}"][value="${draftData[key]}"]`);
-            if (radio) radio.checked = true;
-          } else {
-            field.value = draftData[key];
-          }
+      fields.forEach(sect => {
+        html += `<h6 class="fw-bold mt-3 mb-2 text-primary border-bottom pb-1">${sect[0]}</h6>`;
+        html += `<div class="row g-2">`;
+        sect[1].forEach(f => {
+          html += `<div class="col-12 mb-2">
+            <div class="small text-muted fw-bold">${f[0]}</div>
+            <div class="text-dark">${f[1] || '-'}</div>
+          </div>`;
         });
+        html += `</div>`;
+      });
 
-        applyEmploymentVisibility();
-        applyOthersVisibility();
+      // Documents Section
+      html += `<h6 class="fw-bold mt-4 mb-2 text-primary border-bottom pb-1">Uploaded Documents</h6>`;
+      html += `<div class="row g-3">`;
+
+      const docFields = [
+        ['passport_photo', 'Passport Photo'],
+        ['id_scan', 'ID / Passport Scan'],
+        ['educational_certificate', 'Educational Certificate'],
+        ['reference_letter', 'Reference Letter'],
+        ['employment_letter', 'Employment Letter'],
+        ['editorial_charter', 'Editorial Charter'],
+        ['clearance_letter', 'Clearance Letter']
+      ];
+
+      docFields.forEach(df => {
+        const file = fd.get(df[0]);
+        if(file && file.size > 0) {
+          html += `<div class="col-6 col-md-4">
+            <div class="card h-100 border-dashed">
+              <div class="card-body p-2 text-center">
+                <div class="doc-preview mb-2" id="preview-${df[0]}" style="height:120px; background:#f8f9fa; display:flex; align-items:center; justify-content:center; overflow:hidden; border-radius:4px;">
+                  <i class="ri-file-text-line fs-1 text-muted"></i>
+                </div>
+                <div class="small fw-bold text-truncate">${df[1]}</div>
+                <div class="extra-small text-muted">${(file.size/1024).toFixed(1)} KB</div>
+              </div>
+            </div>
+          </div>`;
+          
+          // Generate preview if it's an image
+          if(file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              const prev = document.getElementById(`preview-${df[0]}`);
+              if(prev) prev.innerHTML = `<img src="${e.target.result}" style="max-width:100%; max-height:100%; object-fit:contain;">`;
+            };
+            reader.readAsDataURL(file);
+          }
+        }
+      });
+
+      html += `</div>`;
+      html += '</div>';
+      
+      document.getElementById('ap3ReviewContent').innerHTML = html;
+      new bootstrap.Modal(document.getElementById('ap3ReviewModal')).show();
+    }
+
+    // Submit
+    document.getElementById('ap3ConfirmSubmitBtn').addEventListener('click', async function() {
+      const btn = this;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Submitting...';
+      
+      const fd = new FormData(form);
+      const dataObj = {};
+      fd.forEach((v, k) => {
+          if(!(v instanceof File)) dataObj[k] = v;
+      });
+      fd.append('form_data', JSON.stringify(dataObj));
+
+      try {
+        const res = await fetch('{{ route("accreditation.submit") }}', {
+          method: 'POST',
+          body: fd,
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const result = await res.json();
+        
+        if(result.success) {
+           bootstrap.Modal.getInstance(document.getElementById('ap3ReviewModal')).hide();
+           if(result.application_id) {
+              initPaymentModal('ap3PaymentModal', result.application_id, {
+                  initiate: '{{ url("/payments") }}/' + result.application_id + '/initiate',
+                  initiateMobile: '{{ url("/payments") }}/' + result.application_id + '/initiate-mobile',
+                  status: '{{ url("/payments") }}/' + result.application_id + '/status',
+                  proof: '{{ url("/payments") }}/' + result.application_id + '/upload-proof',
+              });
+              new bootstrap.Modal(document.getElementById('ap3PaymentModal')).show();
+           } else {
+              alert('Submitted successfully!');
+              window.location.href = '{{ route("accreditation.home") }}';
+           }
+        } else {
+          alert('Error: ' + result.message);
+          btn.disabled = false;
+          btn.innerHTML = '<i class="ri-send-plane-line me-1"></i> Confirm & Submit';
+        }
+      } catch(e) {
+        console.error(e);
+        alert('An error occurred. Please try again.');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ri-send-plane-line me-1"></i> Confirm & Submit';
       }
-    @endif
+    });
+
+    // Save Draft
+    async function autoSave() {
+        const fd = new FormData(form);
+        const dataObj = {};
+        fd.forEach((v, k) => { if(!(v instanceof File)) dataObj[k] = v; });
+        fd.append('form_data', JSON.stringify(dataObj));
+        fd.append('current_step', currentStep);
+        
+        try {
+            const res = await fetch('{{ route("accreditation.saveDraft") }}', {
+                method: 'POST',
+                body: fd,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            console.log('Draft auto-saved');
+        } catch(e) {
+            console.error('Auto-save failed', e);
+        }
+    }
+
+    // Auto save every 60 seconds if form is visible
+    setInterval(() => {
+        if (currentStep > 1 && currentStep < totalSteps) {
+            autoSave();
+        }
+    }, 60000);
+
+    saveBtn.addEventListener('click', async function() {
+        const btn = this;
+        btn.disabled = true;
+        const fd = new FormData(form);
+        const dataObj = {};
+        fd.forEach((v, k) => { if(!(v instanceof File)) dataObj[k] = v; });
+        fd.append('form_data', JSON.stringify(dataObj));
+        fd.append('current_step', currentStep);
+        
+        try {
+            const res = await fetch('{{ route("accreditation.saveDraft") }}', {
+                method: 'POST',
+                body: fd,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const result = await res.json();
+            if(result.success) alert('Draft saved successfully!');
+            else alert('Draft save failed: ' + result.message);
+        } catch(e) {
+            console.error(e);
+            alert('Draft save error.');
+        } finally {
+            btn.disabled = false;
+        }
+    });
+
+    // Camera Handling
+    const cameraModal = new bootstrap.Modal(document.getElementById('cameraModal'));
+    const video = document.getElementById('camera_video');
+    const canvas = document.getElementById('camera_canvas');
+    const openCamBtn = document.getElementById('btn_open_camera');
+    const captureBtn = document.getElementById('btn_capture_photo');
+    let stream = null;
+
+    openCamBtn.addEventListener('click', async () => {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 640, height: 480 } });
+            video.srcObject = stream;
+            cameraModal.show();
+        } catch (err) {
+            console.error("Camera access error:", err);
+            alert("Could not access camera. Please ensure you have given permission or use 'Pick Photo' instead.");
+        }
+    });
+
+    const stopCamera = () => {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+    };
+
+    document.getElementById('cameraModal').addEventListener('hidden.bs.modal', stopCamera);
+
+    captureBtn.addEventListener('click', () => {
+        const context = canvas.getContext('2d');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob((blob) => {
+            const fileName = 'captured_photo_' + Date.now() + '.jpg';
+            const file = new File([blob], fileName, { type: 'image/jpeg' });
+            
+            // Manual trigger of the file input logic
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            const fileInput = document.querySelector('input[name="passport_photo"]');
+            fileInput.files = dataTransfer.files;
+            
+            // Trigger change event to update preview
+            fileInput.dispatchEvent(new Event('change'));
+            
+            cameraModal.hide();
+        }, 'image/jpeg', 0.9);
+    });
+
   });
 </script>
 @endpush

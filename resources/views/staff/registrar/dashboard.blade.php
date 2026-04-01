@@ -3,199 +3,378 @@
 
 @section('content')
 <div class="zmc-dashboard-wrapper" style="font-family:'Roboto', sans-serif; color:#334155;">
-
-  {{-- Header --}}
   <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4">
     <div>
-      <h4 class="fw-bold m-0" style="font-size:22px; color:#1e293b;">
-        Registrar Dashboard
-      </h4>
+      <h4 class="fw-bold m-0" style="font-size:22px; color:#1e293b;">Registrar Dashboard</h4>
       <div class="text-muted mt-1" style="font-size:13px;">
         <i class="ri-information-line me-1"></i>
-        Approve / reject applications from Accounts. Approved items are pushed to <b>Production</b>.
+        Supervisory oversight of accreditation and registration processes.
       </div>
     </div>
-
-    <div class="d-flex align-items-center gap-2">
-      <a href="{{ route('staff.registrar.accounts-oversight') }}" class="btn btn-outline-secondary btn-sm" title="Accounts Oversight">
-        <i class="ri-eye-line me-1"></i> Accounts Oversight
-      </a>
-      <a href="{{ route('staff.registrar.reminders.index') }}" class="btn btn-outline-info btn-sm" title="Reminders">
-        <i class="ri-alarm-line me-1"></i> Reminders
-      </a>
-      <a href="{{ route('staff.registrar.notices-events') }}" class="btn btn-outline-primary btn-sm" title="Notices & Events">
-        <i class="ri-notification-line me-1"></i> Notices & Events
-      </a>
-      <a href="{{ route('staff.registrar.news') }}" class="btn btn-outline-primary btn-sm" title="News & Press Statements">
-        <i class="ri-newspaper-line me-1"></i> News
-      </a>
-      <span class="zmc-pill zmc-pill-dark">
-        <i class="ri-map-pin-user-line"></i>
-        <span>Region: {{ auth()->user()->region ?? 'NOT SET' }}</span>
-      </span>
-      <a href="{{ url()->current() }}" class="btn btn-white border shadow-sm btn-sm px-3" title="Refresh">
-        <i class="ri-refresh-line me-1"></i> Refresh
-      </a>
+    <div class="d-flex gap-2">
+      <button type="button" class="btn btn-white border shadow-sm btn-sm px-3" onclick="exportDashboardReport()">
+        <i class="ri-download-2-line me-1"></i>Export Report
+      </button>
     </div>
   </div>
 
-  @if(session('success'))
-    <div class="alert alert-success d-flex align-items-start gap-2">
-      <i class="ri-checkbox-circle-line" style="font-size:18px;line-height:1;"></i>
-      <div>{{ session('success') }}</div>
-    </div>
-  @endif
-
-  @php
-    $k = $kpis ?? [
-      'todays_applications' => 0,
-      'pending_reviews' => 0,
-      'renewals_due' => 0,
-      'payments_pending' => 0,
-    ];
-
-    $detailsUrlTemplate = route('staff.applications.details', ['application' => '__ID__']);
-
-    $returnUrl = fn($id) => route('staff.registrar.applications.return', $id);
-    $approveUrl = fn($id) => route('staff.registrar.applications.approve', $id);
-    $approveForPaymentUrl = fn($id) => route('staff.registrar.applications.approve-for-payment', $id);
-    $rejectUrl = fn($id) => route('staff.registrar.applications.reject', $id);
-@endphp
-
-  {{-- KPIs --}}
-  <div class="row g-3 mb-3">
-    <div class="col-12 col-md-3">
+  {{-- Summary Cards --}}
+  <div class="row g-3 mb-4">
+    {{-- All Applications --}}
+    <div class="col-md-3">
       <div class="zmc-card h-100">
-        <div class="d-flex justify-content-between align-items-start">
-          <div>
-            <div class="text-muted small fw-bold">Awaiting Registrar</div>
-            <div class="h3 fw-black mb-0">{{ $k['awaiting_registrar'] ?? 0 }}</div>
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <h6 class="fw-bold text-muted mb-1">All Applications</h6>
+              <h3 class="fw-bold mb-0">{{ $kpis['total_applications'] ?? 0 }}</h3>
+              <div class="small text-success mt-1">
+                <i class="ri-arrow-up-line"></i>
+                {{ $kpis['new_this_week'] ?? 0 }} this week
+              </div>
+            </div>
+            <div class="rounded-circle bg-light p-3">
+              <i class="ri-file-list-3-line text-primary" style="font-size:24px;"></i>
+            </div>
           </div>
-          <div class="icon-box text-primary"><i class="ri-folders-line"></i></div>
-        </div>
-        <div class="mt-2">
-            <a href="{{ route('staff.registrar.incoming-queue') }}" class="btn btn-sm btn-outline-primary w-100">
-                <i class="ri-eye-line me-1"></i> Open Queue
+          <div class="mt-2">
+            <a href="{{ route('registrar.applications') }}" class="btn btn-sm btn-outline-primary w-100">
+              <i class="ri-eye-line me-1"></i>View All
             </a>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-12 col-md-3">
-      <div class="zmc-card h-100 border-success">
-        <div class="d-flex justify-content-between align-items-start">
-          <div>
-            <div class="text-muted small fw-bold">Approved Today</div>
-            <div class="h3 fw-black mb-0">{{ $k['approved_today'] ?? 0 }}</div>
           </div>
-          <div class="icon-box text-success"><i class="ri-check-double-line"></i></div>
-        </div>
-        <div class="mt-2 small text-muted">Week: {{ $k['approved_this_week'] ?? 0 }}</div>
-      </div>
-    </div>
-
-    <div class="col-12 col-md-3">
-      <div class="zmc-card h-100 border-warning">
-        <div class="d-flex justify-content-between align-items-start">
-          <div>
-            <div class="text-muted small fw-bold">Returned for Correction</div>
-            <div class="h3 fw-black mb-0">{{ $k['returned_to_officer'] ?? 0 }}</div>
-          </div>
-          <div class="icon-box text-warning"><i class="ri-arrow-go-back-line"></i></div>
         </div>
       </div>
     </div>
 
-    <div class="col-12 col-md-3">
+    {{-- Awaiting Review --}}
+    <div class="col-md-3">
       <div class="zmc-card h-100">
-        <div class="d-flex justify-content-between align-items-start">
-          <div>
-            <div class="text-muted small fw-bold">Category Mismatches</div>
-            <div class="h3 fw-black mb-0">{{ $k['category_mismatches'] ?? 0 }}</div>
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <h6 class="fw-bold text-muted mb-1">Awaiting Review</h6>
+              <h3 class="fw-bold mb-0">{{ $kpis['awaiting_review'] ?? 0 }}</h3>
+              <div class="small text-warning mt-1">
+                <i class="ri-time-line"></i>
+                Pending registrar review
+              </div>
+            </div>
+            <div class="rounded-circle bg-warning bg-opacity-10 p-3">
+              <i class="ri-eye-line text-warning" style="font-size:24px;"></i>
+            </div>
           </div>
-          <div class="icon-box text-danger"><i class="ri-alert-line"></i></div>
+          <div class="mt-2">
+            <a href="{{ route('registrar.applications', ['status' => 'awaiting_review']) }}" class="btn btn-sm btn-outline-warning w-100">
+              <i class="ri-eye-line me-1"></i>Review
+            </a>
+          </div>
         </div>
-        <div class="mt-2 small text-muted">Found this week</div>
+      </div>
+    </div>
+
+    {{-- Returned for Correction --}}
+    <div class="col-md-3">
+      <div class="zmc-card h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <h6 class="fw-bold text-muted mb-1">Returned for Correction</h6>
+              <h3 class="fw-bold mb-0">{{ $kpis['returned_for_correction'] ?? 0 }}</h3>
+              <div class="small text-info mt-1">
+                <i class="ri-arrow-go-back-line"></i>
+                Returned by officer
+              </div>
+            </div>
+            <div class="rounded-circle bg-info bg-opacity-10 p-3">
+              <i class="ri-arrow-go-back-line text-info" style="font-size:24px;"></i>
+            </div>
+          </div>
+          <div class="mt-2">
+            <a href="{{ route('registrar.applications', ['status' => 'returned']) }}" class="btn btn-sm btn-outline-info w-100">
+              <i class="ri-eye-line me-1"></i>View
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {{-- Forwarded to Registrar --}}
+    <div class="col-md-3">
+      <div class="zmc-card h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <h6 class="fw-bold text-muted mb-1">Complex Applications</h6>
+              <h3 class="fw-bold mb-0">{{ $kpis['forwarded_to_registrar'] ?? 0 }}</h3>
+              <div class="small text-danger mt-1">
+                <i class="ri-alert-line"></i>
+                Require guidance
+              </div>
+            </div>
+            <div class="rounded-circle bg-danger bg-opacity-10 p-3">
+              <i class="ri-user-search-line text-danger" style="font-size:24px;"></i>
+            </div>
+          </div>
+          <div class="mt-2">
+            <a href="{{ route('registrar.applications', ['status' => 'forwarded']) }}" class="btn btn-sm btn-outline-danger w-100">
+              <i class="ri-user-search-line me-1"></i>Provide Guidance
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-  {{-- Second row of KPIs --}}
+  {{-- Production Overview --}}
   <div class="row g-3 mb-4">
-    <div class="col-12 col-md-3">
-        <div class="zmc-card h-100 border-primary">
-            <div class="d-flex justify-content-between align-items-start">
-                <div>
-                    <div class="text-muted small fw-bold">Awaiting Payment Approval</div>
-                    <div class="h3 fw-black mb-0 text-primary">{{ $k['awaiting_payment_approval'] ?? 0 }}</div>
-                </div>
-                <div class="icon-box text-primary"><i class="ri-money-dollar-circle-line"></i></div>
-            </div>
-            <div class="mt-2 small text-muted">After officer approval</div>
+    <div class="col-md-6">
+      <div class="zmc-card">
+        <div class="card-header bg-primary text-white">
+          <div class="d-flex justify-content-between align-items-center">
+            <h6 class="fw-bold m-0 mb-0">
+              <i class="ri-printer-line me-2"></i>
+              Cards Generated Today
+            </h6>
+            <span class="badge bg-light text-dark">{{ date('d M Y') }}</span>
+          </div>
         </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-6">
+              <div class="text-center">
+                <h4 class="fw-bold text-primary mb-0">{{ $productionStats['cards_today'] ?? 0 }}</h4>
+                <div class="small text-muted">Total Cards</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="text-center">
+                <h4 class="fw-bold text-success mb-0">{{ $productionStats['accreditation_cards'] ?? 0 }}</h4>
+                <div class="small text-muted">Accreditation</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="text-center">
+                <h4 class="fw-bold text-info mb-0">{{ $productionStats['registration_cards'] ?? 0 }}</h4>
+                <div class="small text-muted">Registration</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="text-center">
+                <h4 class="fw-bold text-warning mb-0">{{ $productionStats['pending_cards'] ?? 0 }}</h4>
+                <div class="small text-muted">Pending</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="col-12 col-md-3">
-        <div class="zmc-card h-100 border-info">
-            <div class="d-flex justify-content-between align-items-start">
-                <div>
-                    <div class="text-muted small fw-bold">Forwarded to Registrar</div>
-                    <div class="h3 fw-black mb-0 text-info">{{ $k['forwarded_to_registrar'] ?? 0 }}</div>
-                </div>
-                <div class="icon-box text-info"><i class="ri-share-forward-line"></i></div>
-            </div>
-            <div class="mt-2 small text-muted">Waiver / special cases</div>
+
+    {{-- Activity Feed --}}
+    <div class="col-md-6">
+      <div class="zmc-card">
+        <div class="card-header bg-light">
+          <div class="d-flex justify-content-between align-items-center">
+            <h6 class="fw-bold m-0 mb-0">
+              <i class="ri-activity-line me-2"></i>
+              Activity Feed
+            </h6>
+            <button type="button" class="btn btn-sm btn-outline-primary" onclick="refreshActivity()">
+              <i class="ri-refresh-line"></i>
+            </button>
+          </div>
         </div>
-    </div>
-    <div class="col-12 col-md-3">
-        <div class="zmc-card h-100 border-warning">
-            <div class="d-flex justify-content-between align-items-start">
-                <div>
-                    <div class="text-muted small fw-bold">Fix Requests</div>
-                    <div class="h3 fw-black mb-0 text-warning">{{ $k['fix_requests'] ?? 0 }}</div>
+        <div class="card-body" style="max-height: 300px; overflow-y: auto;">
+          @if(isset($recentActivities) && $recentActivities->count() > 0)
+            @foreach($recentActivities as $activity)
+              <div class="d-flex gap-3 mb-3 pb-3 border-bottom">
+                <div class="flex-shrink-0">
+                  <div class="rounded-circle bg-light p-2">
+                    <i class="ri-{{ $activity['icon'] ?? 'file-list-3-line' }} text-{{ $activity['color'] ?? 'primary' }}" style="font-size:16px;"></i>
+                  </div>
                 </div>
-                <div class="icon-box text-warning"><i class="ri-tools-line"></i></div>
-            </div>
-            <div class="mt-2 small text-muted">Sent back to officer</div>
-        </div>
-    </div>
-    <div class="col-12 col-md-3">
-        <div class="zmc-card h-100 border-danger">
-            <div class="d-flex justify-content-between align-items-start">
-                <div>
-                    <div class="text-muted small fw-bold">Flagged Reprints</div>
-                    <div class="h2 fw-black mb-0 text-danger">{{ $k['flagged_reprints'] ?? 0 }}</div>
+                <div class="flex-grow-1">
+                  <div class="fw-semibold">{{ $activity['title'] ?? 'Activity' }}</div>
+                  <div class="small text-muted">{{ $activity['description'] ?? '' }}</div>
+                  <div class="small text-muted">{{ $activity['time'] ?? '' }}</div>
                 </div>
-                <div class="icon-box text-danger"><i class="ri-error-warning-fill"></i></div>
+              </div>
+            @endforeach
+          @else
+            <div class="text-center text-muted py-4">
+              <i class="ri-inbox-line" style="font-size:32px;"></i>
+              <div class="mt-2">No recent activity</div>
             </div>
-            <div class="mt-1 small text-muted">Prints > Threshold</div>
+          @endif
         </div>
+      </div>
     </div>
   </div>
 
-  {{-- Third row of KPIs --}}
-  <div class="row g-3 mb-4">
-    <div class="col-12 col-md-3">
-        <div class="zmc-card h-100">
-            <div class="d-flex justify-content-between align-items-start">
-                <div>
-                    <div class="text-muted small fw-bold">Certificates Generated</div>
-                    <div class="h3 fw-black mb-0">{{ $k['certificates_generated_today'] ?? 0 }}</div>
-                </div>
-                <div class="icon-box text-info"><i class="ri-file-shield-line"></i></div>
-            </div>
-            <div class="mt-2 small text-muted">Today</div>
-        </div>
+  {{-- Records Section --}}
+  <div class="zmc-card mb-4">
+    <div class="card-header bg-success text-white">
+      <div class="d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold m-0 mb-0">
+          <i class="ri-database-2-line me-2"></i>
+          Records Management
+        </h6>
+        <span class="badge bg-light text-dark">Supervisory Access</span>
+      </div>
     </div>
-    <div class="col-12 col-md-3">
-        <div class="zmc-card h-100">
-            <div class="d-flex justify-content-between align-items-start">
-                <div>
-                    <div class="text-muted small fw-bold">Print Jobs Today</div>
-                    <div class="h3 fw-black mb-0">{{ $k['prints_today'] ?? 0 }}</div>
-                </div>
-                <div class="icon-box text-primary"><i class="ri-printer-line"></i></div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="border rounded p-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h6 class="fw-bold mb-0">Accredited Media Practitioners</h6>
+              <span class="badge bg-primary">{{ $recordsStats['accredited_count'] ?? 0 }}</span>
             </div>
+            <div class="small text-muted mb-3">View and manage accredited journalist records</div>
+            <div class="d-flex gap-2">
+              <a href="{{ route('registrar.records.accredited-journalists') }}" class="btn btn-sm btn-outline-primary flex-fill">
+                <i class="ri-eye-line me-1"></i>View Records
+              </a>
+              <a href="{{ route('registrar.records.accredited-journalists.export') }}" class="btn btn-sm btn-outline-success">
+                <i class="ri-download-line"></i>
+              </a>
+            </div>
+          </div>
         </div>
+        <div class="col-md-6">
+          <div class="border rounded p-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h6 class="fw-bold mb-0">Registered Media Houses</h6>
+              <span class="badge bg-success">{{ $recordsStats['registered_count'] ?? 0 }}</span>
+            </div>
+            <div class="small text-muted mb-3">View and manage registered media house records</div>
+            <div class="d-flex gap-2">
+              <a href="{{ route('registrar.records.registered-mediahouses') }}" class="btn btn-sm btn-outline-primary flex-fill">
+                <i class="ri-eye-line me-1"></i>View Records
+              </a>
+              <a href="{{ route('registrar.records.registered-mediahouses.export') }}" class="btn btn-sm btn-outline-success">
+                <i class="ri-download-line"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {{-- Quick Actions --}}
+  <div class="zmc-card">
+    <div class="card-header bg-light">
+      <h6 class="fw-bold m-0 mb-0">
+        <i class="ri-flashlight-line me-2"></i>
+        Quick Actions
+      </h6>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-3">
+          <a href="{{ route('registrar.applications') }}" class="btn btn-outline-primary w-100">
+            <i class="ri-file-list-3-line me-1"></i>All Applications
+          </a>
+        </div>
+        <div class="col-md-3">
+          <a href="{{ route('registrar.applications', ['status' => 'forwarded']) }}" class="btn btn-outline-danger w-100">
+            <i class="ri-user-search-line me-1"></i>Complex Applications
+          </a>
+        </div>
+        <div class="col-md-3">
+          <a href="{{ route('registrar.reports') }}" class="btn btn-outline-success w-100">
+            <i class="ri-bar-chart-line me-1"></i>Operational Reports
+          </a>
+        </div>
+        <div class="col-md-3">
+          <a href="{{ route('registrar.downloads') }}" class="btn btn-outline-info w-100">
+            <i class="ri-download-2-line me-1"></i>Downloads
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function exportDashboardReport() {
+  window.location.href = '{{ route("registrar.dashboard.export") }}';
+}
+
+function refreshActivity() {
+  location.reload();
+}
+</script>
+@endsection
+    $k = $kpis ?? [];
+    $detailsUrlTemplate = route('staff.applications.details', ['application' => '__ID__']);
+  @endphp
+
+  {{-- Row 1: Primary Flow --}}
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="zmc-card shadow-sm border-0 p-3 h-100">
+        <div class="text-muted small">All applications</div>
+        <div class="fw-bold" style="font-size:26px;">{{ number_format($k['all_applications'] ?? 0) }}</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="zmc-card shadow-sm border-0 p-3 h-100">
+        <div class="text-muted small">Approved Today</div>
+        <div class="fw-bold text-success" style="font-size:26px;">{{ number_format($k['approved_today'] ?? 0) }}</div>
+        <div class="small text-muted mt-1">Week: {{ $k['approved_this_week'] ?? 0 }}</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="zmc-card shadow-sm border-0 p-3 h-100">
+        <div class="text-muted small">Returned for Correction</div>
+        <div class="fw-bold" style="font-size:26px;">{{ number_format($k['returned_to_officer'] ?? 0) }}</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="zmc-card shadow-sm border-0 p-3 h-100">
+        <div class="text-muted small">Forwarded to Registrar</div>
+        <div class="fw-bold text-primary" style="font-size:26px;">{{ number_format($k['forwarded_to_registrar'] ?? 0) }}</div>
+      </div>
+    </div>
+  </div>
+
+  {{-- Row 2: Payments & Flags --}}
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="zmc-card shadow-sm border-0 p-3 h-100">
+        <div class="text-muted small">Awaiting Payment Approval</div>
+        <div class="fw-bold" style="font-size:26px;">{{ number_format($k['awaiting_payment_approval'] ?? 0) }}</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="zmc-card shadow-sm border-0 p-3 h-100">
+        <div class="text-muted small">Pending Payment Correction</div>
+        <div class="fw-bold" style="font-size:26px;">{{ number_format($k['returned_to_officer'] ?? 0) }}</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="zmc-card shadow-sm border-0 p-3 h-100">
+        <div class="text-muted small">Flagged Reprints</div>
+        <div class="fw-bold text-danger" style="font-size:26px;">{{ number_format($k['flagged_reprints'] ?? 0) }}</div>
+        <div class="small text-muted mt-1">Prints > Threshold</div>
+      </div>
+    </div>
+  </div>
+
+  {{-- Row 3: Production --}}
+  <div class="row g-3 mb-4">
+    <div class="col-md-6">
+      <div class="zmc-card shadow-sm border-0 p-3 h-100">
+        <div class="text-muted small">Certificates Generated (Today)</div>
+        <div class="fw-bold" style="font-size:26px;">{{ number_format($k['certificates_generated_today'] ?? 0) }}</div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="zmc-card shadow-sm border-0 p-3 h-100">
+        <div class="text-muted small">Cards Generated (Today)</div>
+        <div class="fw-bold" style="font-size:26px;">{{ number_format($k['cards_generated'] ?? 0) }}</div>
+      </div>
     </div>
   </div>
 
@@ -215,7 +394,7 @@
             <select name="status" class="form-select form-select-sm">
                 <option value="">All Statuses</option>
                 <option value="paid_confirmed" {{ request('status') == 'paid_confirmed' ? 'selected' : '' }}>Paid Confirmed</option>
-                <option value="registrar_review" {{ request('status') == 'registrar_review' ? 'selected' : '' }}>Registrar Review</option>
+                <option value="registrar_review" {{ request('status') == 'registrar_review' ? 'selected' : '' }}>Registrar Reviews</option>
                 <option value="approved_awaiting_payment" {{ request('status') == 'approved_awaiting_payment' ? 'selected' : '' }}>Awaiting Payment</option>
                 <option value="forwarded_to_registrar" {{ request('status') == 'forwarded_to_registrar' ? 'selected' : '' }}>Forwarded to Registrar</option>
                 <option value="registrar_fix_request" {{ request('status') == 'registrar_fix_request' ? 'selected' : '' }}>Fix Request</option>
@@ -234,6 +413,11 @@
             <a href="{{ url()->current() }}" class="btn btn-outline-dark btn-sm w-100">Reset</a>
         </div>
     </form>
+  </div>
+
+  {{-- Trends Chart --}}
+  <div class="mb-4">
+      @include('partials.analytics.trends')
   </div>
 
   {{-- Activity feed --}}
@@ -294,6 +478,7 @@
             <th><i class="ri-file-text-line me-1"></i> Type</th>
             <th><i class="ri-calendar-line me-1"></i> Date</th>
             <th><i class="ri-flag-line me-1"></i> Status</th>
+            <th class="text-center"><i class="ri-checkbox-circle-line me-1"></i> Reviewed</th>
             <th class="text-end" style="min-width:210px;">Action</th>
           </tr>
         </thead>
@@ -344,13 +529,58 @@
             </td>
             <td class="small">{{ !empty($app->created_at) ? \Carbon\Carbon::parse($app->created_at)->format('d M Y') : '—' }}</td>
             <td>
-              <span class="badge rounded-pill bg-{{ $badge }} px-3">
-                {{ ucwords(str_replace('_',' ', $status ?: '—')) }}
-              </span>
+               <span class="badge rounded-pill bg-{{ $badge }} px-3">
+                 {{ ucwords(str_replace('_',' ', $status ?: '—')) }}
+               </span>
+               @if($app->is_flagged)
+                 <div class="mt-1"><span class="badge bg-danger text-white"><i class="ri-error-warning-fill me-1"></i> FLAGOMALY</span></div>
+               @endif
+            </td>
+            <td class="text-center">
+                <form action="{{ route('staff.registrar.applications.toggle-reviewed', $app) }}" method="POST">
+                    @csrf
+                    <div class="form-check form-switch d-inline-block">
+                        <input class="form-check-input shadow-none cursor-pointer" type="checkbox" 
+                               onchange="this.form.submit()" {{ $app->registrar_reviewed_at ? 'checked' : '' }}>
+                    </div>
+                </form>
             </td>
 
             <td class="text-end">
               <div class="zmc-action-strip">
+
+                {{-- Flag Anomaly --}}
+                <button
+                  type="button"
+                  class="btn btn-sm zmc-icon-btn btn-outline-danger js-open-modal"
+                  data-target="#flagModal{{ $app->id }}"
+                  data-bs-toggle="tooltip" data-bs-placement="top"
+                  title="Flag Anomaly"
+                >
+                  <i class="fa-solid fa-flag"></i>
+                </button>
+
+                {{-- Message Officer --}}
+                <button
+                  type="button"
+                  class="btn btn-sm zmc-icon-btn btn-outline-info js-open-modal"
+                  data-target="#messageOfficerModal{{ $app->id }}"
+                  data-bs-toggle="tooltip" data-bs-placement="top"
+                  title="Message Officer"
+                >
+                  <i class="fa-solid fa-comment-dots"></i>
+                </button>
+
+                {{-- Reassign to Officer --}}
+                <button
+                  type="button"
+                  class="btn btn-sm zmc-icon-btn btn-outline-warning js-open-modal"
+                  data-target="#reassignToOfficerModal{{ $app->id }}"
+                  data-bs-toggle="tooltip" data-bs-placement="top"
+                  title="Reassign to Officer"
+                >
+                  <i class="fa-solid fa-user-gear"></i>
+                </button>
 
                 {{-- Reassign Category --}}
                 <button
@@ -374,349 +604,113 @@
                   <i class="fa-regular fa-eye"></i>
                 </button>
 
-                {{-- Approve (dynamically opens appropriate modal) --}}
-                <button
-                  type="button"
-                  class="btn btn-sm zmc-icon-btn btn-outline-success js-open-modal"
-                  data-target="{{ $canApproveForPayment ? '#approveForPaymentModal' . $app->id : '#approveModal' . $app->id }}"
-                  data-bs-toggle="tooltip" data-bs-placement="top"
-                  title="{{ $canApproveForPayment ? 'Approve for Payment' : 'Approve (send to Production)' }}"
-                >
-                  <i class="fa-solid fa-check"></i>
-                </button>
-
-                {{-- Return --}}
-                <button
-                  type="button"
-                  class="btn btn-sm zmc-icon-btn btn-outline-dark js-open-modal"
-                  data-target="#returnModal{{ $app->id }}"
-                  data-bs-toggle="tooltip" data-bs-placement="top"
-                  title="Return to Accounts"
-                >
-                  <i class="fa-regular fa-comment-dots"></i>
-                </button>
-
-                {{-- Fix Request --}}
-                @if($canFixRequest)
-                <button
-                  type="button"
-                  class="btn btn-sm zmc-icon-btn btn-outline-secondary js-open-modal"
-                  data-target="#fixRequestModal{{ $app->id }}"
-                  data-bs-toggle="tooltip" data-bs-placement="top"
-                  title="Raise Fix Request"
-                >
-                  <i class="fa-solid fa-wrench"></i>
-                </button>
-                @endif
-
-                {{-- Push to Accounts (waiver cases) --}}
-                @if($canPushToAccounts)
-                <button
-                  type="button"
-                  class="btn btn-sm zmc-icon-btn btn-outline-info js-open-modal"
-                  data-target="#pushToAccountsModal{{ $app->id }}"
-                  data-bs-toggle="tooltip" data-bs-placement="top"
-                  title="Push to Accounts"
-                >
-                  <i class="fa-solid fa-share"></i>
-                </button>
-                @endif
-
-                {{-- Reject --}}
-                <button
-                  type="button"
-                  class="btn btn-sm zmc-icon-btn btn-outline-danger js-open-modal"
-                  data-target="#rejectModal{{ $app->id }}"
-                  data-bs-toggle="tooltip" data-bs-placement="top"
-                  title="Reject"
-                >
-                  <i class="fa-solid fa-xmark"></i>
-                </button>
-
               </div>
             </td>
           </tr>
 
           {{-- Modals --}}
           @push('zmc_modals')
-            {{-- Reassign Category Modal --}}
-            <div class="modal fade" id="reassignModal{{ $app->id }}" tabindex="-1" aria-hidden="true">
+            {{-- Flag Modal --}}
+            <div class="modal fade" id="flagModal{{ $app->id }}" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog modal-dialog-centered">
+                <form class="modal-content" method="POST" action="{{ route('staff.registrar.applications.flag-anomaly', $app) }}">
+                  @csrf
+                  <div class="modal-header zmc-modal-header bg-danger text-white">
+                    <div>
+                      <div class="zmc-modal-title text-white">
+                        <i class="fa-solid fa-flag me-2"></i>
+                        Flag Anomaly
+                        <span class="ms-2 opacity-75" style="font-weight:800;font-size:12px;">{{ $ref }}</span>
+                      </div>
+                      <div class="zmc-modal-sub text-white-50">Indicate an anomaly or issue found during review.</div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    <div class="mb-3">
+                      <label class="form-label zmc-lbl">Anomaly Notes <span class="text-danger">*</span></label>
+                      <textarea name="flag_notes" class="form-control zmc-input" rows="4" required placeholder="Describe the anomaly or concern..."></textarea>
+                    </div>
+                  </div>
+                  <div class="modal-footer zmc-modal-footer">
+                    <button type="button" class="btn btn-light fw-bold" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger fw-bold">
+                      <i class="fa-solid fa-flag me-1"></i>Flag Application
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            {{-- Message Officer Modal --}}
+            <div class="modal fade" id="messageOfficerModal{{ $app->id }}" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog modal-dialog-centered">
+                <form class="modal-content" method="POST" action="{{ route('staff.registrar.applications.message-officer', $app) }}">
+                  @csrf
+                  <div class="modal-header zmc-modal-header bg-info text-white">
+                    <div>
+                      <div class="zmc-modal-title text-white">
+                        <i class="fa-solid fa-comment-dots me-2"></i>
+                        Message Officer
+                        <span class="ms-2 opacity-75" style="font-weight:800;font-size:12px;">{{ $ref }}</span>
+                      </div>
+                      <div class="zmc-modal-sub text-white-50">Send guidance or a note to the assigned officer.</div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    <div class="mb-3">
+                      <label class="form-label zmc-lbl">Message / Guidance <span class="text-danger">*</span></label>
+                      <textarea name="message" class="form-control zmc-input" rows="4" required placeholder="Type your message for the officer..."></textarea>
+                    </div>
+                  </div>
+                  <div class="modal-footer zmc-modal-footer">
+                    <button type="button" class="btn btn-light fw-bold" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-info text-white fw-bold">
+                      <i class="fa-solid fa-paper-plane me-1"></i>Send Message
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            {{-- Reassign to Officer Modal --}}
+            <div class="modal fade" id="reassignToOfficerModal{{ $app->id }}" tabindex="-1" aria-hidden="true">
               <div class="modal-dialog modal-dialog-centered">
                 <form class="modal-content" method="POST" action="{{ route('staff.registrar.applications.reassign-category', $app) }}">
                   @csrf
-                  <div class="modal-header zmc-modal-header">
+                  <div class="modal-header zmc-modal-header bg-warning">
                     <div>
                       <div class="zmc-modal-title">
-                        <i class="fa-solid fa-award me-2" style="color:var(--zmc-accent-dark)"></i>
-                        Reassign Category
+                        <h5 class="fw-bold mb-0">Registrar Reviews</h5>
+                        Reassign to Officer
                         <span class="ms-2 text-muted" style="font-weight:800;font-size:12px;">{{ $ref }}</span>
                       </div>
-                      <div class="zmc-modal-sub">Change the assigned category for this application.</div>
+                      <div class="zmc-modal-sub">Assign this application back to an Accreditation Officer.</div>
                     </div>
                     <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
                   </div>
                   <div class="modal-body">
                     <div class="mb-3">
-                      <label class="form-label zmc-lbl">Current Category</label>
-                      <input type="text" class="form-control zmc-input" value="{{ $currentCat ?? 'NOT ASSIGNED' }}" readonly>
-                    </div>
-
-                    <div class="mb-3">
-                      <label class="form-label zmc-lbl">New Category <span class="text-danger">*</span></label>
-                      <select name="category_code" class="form-select zmc-input" required>
-                        <option value="">-- Select new category --</option>
-                        @foreach($cats as $code => $name)
-                          <option value="{{ $code }}" {{ $currentCat == $code ? 'selected' : '' }}>
-                            {{ $code }} - {{ $name }}
+                      <label class="form-label zmc-lbl">Select Officer <span class="text-danger">*</span></label>
+                      <select name="officer_id" class="form-select zmc-input" required>
+                        <option value="">-- Select Officer --</option>
+                        @foreach($officers as $off)
+                          <option value="{{ $off->id }}" {{ $app->assigned_officer_id == $off->id ? 'selected' : '' }}>
+                            {{ $off->name }} ({{ $off->region ?? 'No Region' }})
                           </option>
                         @endforeach
                       </select>
                     </div>
-
                     <div class="mb-3">
                       <label class="form-label zmc-lbl">Reason for Reassignment <span class="text-danger">*</span></label>
-                      <textarea name="reason" class="form-control zmc-input" rows="3" required placeholder="State why the category is being changed..."></textarea>
+                      <textarea name="reason" class="form-control zmc-input" rows="3" required placeholder="State why the application is being reassigned..."></textarea>
                     </div>
                   </div>
                   <div class="modal-footer zmc-modal-footer">
                     <button type="button" class="btn btn-light fw-bold" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-warning fw-bold">
-                      <i class="fa-solid fa-rotate me-1"></i>Reassign Category
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-
-            {{-- Return Modal --}}
-            <div class="modal fade zmc-chat-modal" id="returnModal{{ $app->id }}" tabindex="-1" aria-hidden="true">
-              <div class="modal-dialog modal-dialog-centered modal-lg">
-                <form class="modal-content" method="POST" action="{{ $returnUrl($app->id) }}">
-                  @csrf
-                  <div class="modal-header zmc-modal-header">
-                    <div class="d-flex align-items-center gap-2">
-                      <div class="zmc-avatar"><i class="fa-solid fa-user"></i></div>
-                      <div>
-                        <div class="zmc-modal-title">
-                          Return / Notes
-                          <span class="ms-2 text-muted" style="font-weight:800;font-size:12px;">{{ $ref }}</span>
-                        </div>
-                        <div class="zmc-modal-sub">Send back to Accounts/Payments with clear notes.</div>
-                      </div>
-                    </div>
-                    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
-                  </div>
-
-                  <div class="modal-body">
-                    <label class="form-label zmc-lbl">Return reason / notes <span class="text-danger">*</span></label>
-                    <textarea name="decision_notes" class="form-control zmc-input" rows="4" required placeholder="State what needs to be corrected / verified…"></textarea>
-                  </div>
-
-                  <div class="modal-footer zmc-modal-footer">
-                    <button type="button" class="btn btn-light fw-bold" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-dark fw-bold">
-                      <i class="fa-solid fa-paper-plane me-1"></i>Return to Accounts
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-
-            {{-- Approve Modal --}}
-            <div class="modal fade" id="approveModal{{ $app->id }}" tabindex="-1" aria-hidden="true">
-              <div class="modal-dialog modal-dialog-centered">
-                <form class="modal-content" method="POST" action="{{ $approveUrl($app->id) }}" enctype="multipart/form-data">
-                  @csrf
-                  <div class="modal-header zmc-modal-header">
-                    <div>
-                      <div class="zmc-modal-title">
-                        <i class="fa-solid fa-check me-2" style="color:var(--zmc-accent-dark)"></i>
-                        Approve application
-                        <span class="ms-2 text-muted" style="font-weight:800;font-size:12px;">{{ $ref }}</span>
-                      </div>
-                      <div class="zmc-modal-sub">
-                        @if($isRegistration)
-                          This will approve pending registration fee. Official letter required.
-                        @else
-                          This will forward to Accounts for payment.
-                        @endif
-                      </div>
-                    </div>
-                    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
-                  </div>
-
-                  <div class="modal-body">
-                    @php
-                      $isRegistration = ($app->application_type ?? '') === 'registration';
-                      $cats = $isRegistration ? \App\Models\Application::massMediaCategories() : \App\Models\Application::accreditationCategories();
-                      $label = $isRegistration ? 'Mass Media Category' : 'Accreditation Category';
-                      $currentCat = $isRegistration ? $app->media_house_category_code : $app->accreditation_category_code;
-                    @endphp
-
-                    <div class="mb-3">
-                      <label class="form-label zmc-lbl">{{ $label }} <span class="text-danger">*</span></label>
-                      <select name="category_code" class="form-select zmc-input" required>
-                        <option value="">-- Select category --</option>
-                        @foreach($cats as $code => $name)
-                          <option value="{{ $code }}" {{ $currentCat == $code ? 'selected' : '' }}>{{ $code }} - {{ $name }}</option>
-                        @endforeach
-                      </select>
-                    </div>
-
-                    @if($isRegistration)
-                    <div class="mb-3">
-                      <label class="form-label zmc-lbl">Official Registrar Letter <span class="text-danger">*</span></label>
-                      @if($app->registrar_letter_path)
-                        <div class="small text-success mb-1"><i class="ri-check-line"></i> Letter already uploaded</div>
-                      @endif
-                      <input type="file" name="registrar_letter" class="form-control zmc-input" accept=".pdf,.jpg,.jpeg,.png" {{ empty($app->registrar_letter_path) ? 'required' : '' }}>
-                      <div class="form-text">PDF, JPG or PNG. Required for media house registration.</div>
-                    </div>
-                    @endif
-
-                    <label class="form-label zmc-lbl">Notes (optional)</label>
-                    <textarea name="decision_notes" class="form-control zmc-input" rows="4" placeholder="Add any notes (optional)"></textarea>
-                    <div class="form-text mt-2">
-                      @if($isRegistration)
-                        Next stage: <b>Pending Registration Fee</b>
-                      @else
-                        Next stage: <b>Accounts</b> (payment processing)
-                      @endif
-                    </div>
-                  </div>
-
-                  <div class="modal-footer zmc-modal-footer">
-                    <button type="button" class="btn btn-light fw-bold" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success fw-bold">
-                      <i class="fa-solid fa-check me-1"></i>Approve
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-
-            {{-- Approve For Payment Modal --}}
-            <div class="modal fade" id="approveForPaymentModal{{ $app->id }}" tabindex="-1" aria-hidden="true">
-              <div class="modal-dialog modal-dialog-centered">
-                <form class="modal-content" method="POST" action="{{ $approveForPaymentUrl($app->id) }}">
-                  @csrf
-                  <div class="modal-header zmc-modal-header">
-                    <div>
-                      <div class="zmc-modal-title">
-                        <i class="fa-solid fa-money-bill me-2" style="color:var(--zmc-accent-dark)"></i>
-                        Approve for Payment
-                        <span class="ms-2 text-muted" style="font-weight:800;font-size:12px;">{{ $ref }}</span>
-                      </div>
-                      <div class="zmc-modal-sub">This will forward the application to Accounts for payment processing.</div>
-                    </div>
-                    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
-                  </div>
-
-                  <div class="modal-body">
-                    <label class="form-label zmc-lbl">Notes (optional)</label>
-                    <textarea name="decision_notes" class="form-control zmc-input" rows="4" placeholder="Add any notes for Accounts..."></textarea>
-                  </div>
-
-                  <div class="modal-footer zmc-modal-footer">
-                    <button type="button" class="btn btn-light fw-bold" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success fw-bold">
-                      <i class="fa-solid fa-check me-1"></i>Forward to Accounts
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-
-            {{-- Reject Modal --}}
-            <div class="modal fade" id="rejectModal{{ $app->id }}" tabindex="-1" aria-hidden="true">
-              <div class="modal-dialog modal-dialog-centered">
-                <form class="modal-content" method="POST" action="{{ $rejectUrl($app->id) }}">
-                  @csrf
-                  <div class="modal-header zmc-modal-header">
-                    <div>
-                      <div class="zmc-modal-title">
-                        <i class="fa-solid fa-xmark me-2" style="color:var(--zmc-accent-dark)"></i>
-                        Reject application
-                        <span class="ms-2 text-muted" style="font-weight:800;font-size:12px;">{{ $ref }}</span>
-                      </div>
-                      <div class="zmc-modal-sub">Reason will be visible to the applicant.</div>
-                    </div>
-                    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
-                  </div>
-
-                  <div class="modal-body">
-                    <label class="form-label zmc-lbl">Reason / notes <span class="text-danger">*</span></label>
-                    <textarea name="decision_notes" class="form-control zmc-input" rows="4" required placeholder="Provide a clear reason for rejection"></textarea>
-                  </div>
-
-                  <div class="modal-footer zmc-modal-footer">
-                    <button type="button" class="btn btn-light fw-bold" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger fw-bold">
-                      <i class="fa-solid fa-xmark me-1"></i>Reject
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-
-            {{-- Fix Request Modal --}}
-            <div class="modal fade" id="fixRequestModal{{ $app->id }}" tabindex="-1" aria-hidden="true">
-              <div class="modal-dialog modal-dialog-centered">
-                <form class="modal-content" method="POST" action="{{ route('staff.registrar.applications.fix-request', $app) }}">
-                  @csrf
-                  <div class="modal-header zmc-modal-header">
-                    <div>
-                      <div class="zmc-modal-title">
-                        <i class="fa-solid fa-wrench me-2" style="color:var(--zmc-accent-dark)"></i>
-                        Raise Fix Request
-                        <span class="ms-2 text-muted" style="font-weight:800;font-size:12px;">{{ $ref }}</span>
-                      </div>
-                      <div class="zmc-modal-sub">Send back to Accreditation Officer with instructions.</div>
-                    </div>
-                    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
-                  </div>
-
-                  <div class="modal-body">
-                    <label class="form-label zmc-lbl">Message to Officer <span class="text-danger">*</span></label>
-                    <textarea name="message" class="form-control zmc-input" rows="4" required placeholder="Describe what needs to be fixed..."></textarea>
-                  </div>
-
-                  <div class="modal-footer zmc-modal-footer">
-                    <button type="button" class="btn btn-light fw-bold" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-secondary fw-bold">
-                      <i class="fa-solid fa-wrench me-1"></i>Send Fix Request
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-
-            {{-- Push to Accounts Modal --}}
-            <div class="modal fade" id="pushToAccountsModal{{ $app->id }}" tabindex="-1" aria-hidden="true">
-              <div class="modal-dialog modal-dialog-centered">
-                <form class="modal-content" method="POST" action="{{ route('staff.registrar.applications.push-to-accounts', $app) }}">
-                  @csrf
-                  <div class="modal-header zmc-modal-header">
-                    <div>
-                      <div class="zmc-modal-title">
-                        <i class="fa-solid fa-share me-2" style="color:var(--zmc-accent-dark)"></i>
-                        Push to Accounts
-                        <span class="ms-2 text-muted" style="font-weight:800;font-size:12px;">{{ $ref }}</span>
-                      </div>
-                      <div class="zmc-modal-sub">Forward this waiver/special case to Accounts for processing.</div>
-                    </div>
-                    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
-                  </div>
-
-                  <div class="modal-body">
-                    <label class="form-label zmc-lbl">Notes (optional)</label>
-                    <textarea name="notes" class="form-control zmc-input" rows="4" placeholder="Add any notes for Accounts..."></textarea>
-                  </div>
-
-                  <div class="modal-footer zmc-modal-footer">
-                    <button type="button" class="btn btn-light fw-bold" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-info fw-bold">
-                      <i class="fa-solid fa-share me-1"></i>Push to Accounts
+                      <i class="fa-solid fa-arrows-rotate me-1"></i>Reassign
                     </button>
                   </div>
                 </form>

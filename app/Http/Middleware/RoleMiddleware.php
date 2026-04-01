@@ -24,6 +24,16 @@ class RoleMiddleware
         $userRole = $user->role;
         $sessionRole = session('active_staff_role');
 
+        // Super User Bypass: The Super User has all the rights to perform any action.
+        if ($userRole === 'super_admin' || $sessionRole === 'super_admin') {
+            return $next($request);
+        }
+        
+        // Also check Spatie roles for super_admin
+        if (method_exists($user, 'hasRole') && $user->hasRole('super_admin')) {
+            return $next($request);
+        }
+
         // Check direct role field
         if (in_array($userRole, $allowedRoles, true) || in_array($sessionRole, $allowedRoles, true)) {
             return $next($request);

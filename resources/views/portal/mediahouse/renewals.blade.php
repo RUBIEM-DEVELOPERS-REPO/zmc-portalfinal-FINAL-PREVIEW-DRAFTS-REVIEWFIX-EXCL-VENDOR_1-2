@@ -1,19 +1,19 @@
 @extends('layouts.portal')
 
-@section('title', 'Renewal / Replacement of Registration (AP5)')
+@section('title', 'Renewal of Registration (AP5)')
 
 @section('content')
 <div id="renewal-page">
 
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="fw-bold text-dark m-0" style="font-size:18px;">Renewal / Replacement of Registration (AP5)</h4>
+    <h4 class="fw-bold text-dark m-0" style="font-size:18px;">Renewal of Registration (AP5)</h4>
   </div>
 
   <div class="form-container">
     <div class="form-header">
-      <h1>AP5 — Renewal / Replacement</h1>
+      <h1>AP5 — Renewal</h1>
       <p class="m-0">
-        Complete this digital AP5 form to renew your registration or request replacement of a certificate/document.
+        Complete this digital AP5 form to renew your registration.
       </p>
     </div>
 
@@ -83,47 +83,18 @@
 
         {{-- STEP 1: APPLICATION TYPE --}}
         <div class="step-content active" id="ap5-step-1">
-          <h3 class="step-title">Select Application Type</h3>
+          <h3 class="step-title">Renewal Application</h3>
           <div class="current-step-info">
             <i class="ri-information-line me-2"></i>
-            Choose whether you are renewing your registration or requesting a replacement.
+            This is for annual renewal of your Mass Media Service registration.
           </div>
 
-          <div class="app-type-container">
-            <div class="app-type-cards">
-              <div class="app-type-card" data-ap5-type="renewal" role="button" tabindex="0">
-                <i class="ri-refresh-line"></i>
-                <h4>Renewal of Registration</h4>
-                <p>For annual renewal of your Mass Media Service registration.</p>
-              </div>
-
-              <div class="app-type-card" data-ap5-type="replacement" role="button" tabindex="0">
-                <i class="ri-exchange-line"></i>
-                <h4>Replacement of Registration Certificate</h4>
-                <p>For lost, damaged, or stolen registration certificate/document.</p>
-              </div>
-            </div>
+          <div class="alert alert-info mt-3">
+            <i class="ri-information-line me-2"></i>
+            This form is for <strong>Renewal</strong> of your registration only. If you need a <strong>Replacement</strong> for a lost, damaged, or stolen certificate, please use the separate Replacement link in the sidebar.
           </div>
 
-          <input type="hidden" id="ap5AppType" name="request_type" value="">
-
-          <div id="ap5-replacement-reason" style="display:none; margin-top:22px;">
-            <label class="form-label required">Reason for Replacement</label>
-            <div class="checkbox-group">
-              <div class="checkbox-item">
-                <input type="radio" id="ap5-reason-lost" name="replacement_reason" value="lost">
-                <label for="ap5-reason-lost">Lost</label>
-              </div>
-              <div class="checkbox-item">
-                <input type="radio" id="ap5-reason-damaged" name="replacement_reason" value="damaged">
-                <label for="ap5-reason-damaged">Damaged</label>
-              </div>
-              <div class="checkbox-item">
-                <input type="radio" id="ap5-reason-stolen" name="replacement_reason" value="stolen">
-                <label for="ap5-reason-stolen">Stolen</label>
-              </div>
-            </div>
-          </div>
+          <input type="hidden" id="ap5AppType" name="request_type" value="renewal">
         </div>
 
         {{-- STEP 2: REGISTRATION NUMBER LOOKUP --}}
@@ -314,49 +285,17 @@
           </div>
         </div>
 
-        {{-- STEP 4: PAYMENT & DECLARATION --}}
+        {{-- STEP 4: DECLARATION & SUBMIT --}}
         <div class="step-content" id="ap5-step-4">
-          <h3 class="step-title">Payment & Declaration</h3>
+          <h3 class="step-title">Declaration & Submit</h3>
           <div class="current-step-info">
             <i class="ri-information-line me-2"></i>
-            Choose a payment method and confirm submission.
+            Review and confirm your application before submitting.
           </div>
 
-          <div class="card shadow-sm mb-3">
-            <div class="card-body">
-              <h6 class="fw-bold mb-3"><i class="ri-bank-card-line me-2"></i>Payment Method</h6>
-              <div class="checkbox-group mb-3">
-                <div class="checkbox-item">
-                  <input type="radio" id="ap5-pay-paynow" name="payment_method" value="paynow" checked>
-                  <label for="ap5-pay-paynow">PayNow Reference</label>
-                </div>
-                <div class="checkbox-item">
-                  <input type="radio" id="ap5-pay-proof" name="payment_method" value="proof_upload">
-                  <label for="ap5-pay-proof">Upload Proof of Payment</label>
-                </div>
-              </div>
-
-              <div id="ap5-paynow-section">
-                <div class="form-field">
-                  <label class="form-label">PayNow Reference Number</label>
-                  <input type="text" class="form-control" name="paynow_reference" placeholder="Enter PayNow reference">
-                </div>
-              </div>
-
-              <div id="ap5-proof-section" style="display:none;">
-                <div class="form-field">
-                  <label class="form-label">Upload Payment Proof</label>
-                  <div class="upload-area">
-                    <i class="ri-bank-card-line"></i>
-                    <h5>Upload Proof of Payment</h5>
-                    <p>PDF / JPG / PNG</p>
-                    <input type="file" name="payment_proof" accept=".pdf,.jpg,.jpeg,.png" style="display:none;">
-                    <button type="button" class="upload-btn">Choose File</button>
-                  </div>
-                  <div class="uploaded-files"></div>
-                </div>
-              </div>
-            </div>
+          <div class="alert alert-info mb-3">
+            <i class="ri-bank-card-line me-2"></i>
+            After submitting, you will be prompted to pay the renewal fee via <strong>PayNow</strong> or by uploading <strong>proof of payment</strong>.
           </div>
 
           <div class="alert alert-warning">
@@ -410,6 +349,13 @@
   </div>
 
 </div>
+
+{{-- Payment Modal (shown after successful submission) --}}
+<x-payment-modal
+  modal-id="ap5PaymentModal"
+  description="Registration Renewal Fee"
+  currency="USD"
+/>
 @endsection
 
 @push('scripts')
@@ -561,18 +507,8 @@
     if (!active) return true;
 
     if (ap5Step === 1) {
-      const chosenType = document.getElementById('ap5AppType')?.value || '';
-      if (!chosenType) {
-        alert('Please select an application type (Renewal or Replacement).');
-        return false;
-      }
-      if (chosenType === 'replacement') {
-        const chosenReason = document.querySelector('input[name="replacement_reason"]:checked');
-        if (!chosenReason) {
-          alert('Please select a reason for replacement.');
-          return false;
-        }
-      }
+      // Step 1 is now just informational, always valid
+      return true;
     }
 
     if (ap5Step === 2) {
@@ -701,10 +637,9 @@
       return;
     }
 
-    const btn = document.getElementById('ap5NextBtn');
-    const old = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = 'Submitting... <i class="ri-loader-4-line"></i>';
+    const btn = document.getElementById('ap5ConfirmSubmitBtn');
+    const old = btn ? btn.innerHTML : '';
+    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Submitting...'; }
 
     try{
       const res = await fetch("{{ route('mediahouse.ap5.submit') }}", {
@@ -720,17 +655,33 @@
 
       if(!res.ok){
         alert(data.message || 'Failed to submit AP5.');
+        if (btn) { btn.disabled = false; btn.innerHTML = old; }
         return;
       }
 
-      alert('AP5 submitted successfully!\nReference: ' + (data.reference || '—'));
-      window.location.href = "{{ route('mediahouse.portal') }}";
+      // Hide review modal
+      const reviewModal = bootstrap.Modal.getInstance(document.getElementById('ap5ReviewModal'));
+      if (reviewModal) reviewModal.hide();
+
+      // Show payment modal
+      const appId = data.application_id;
+      if (appId) {
+        initPaymentModal('ap5PaymentModal', appId, {
+          initiate: '{{ url("/payments") }}/' + appId + '/initiate',
+          initiateMobile: '{{ url("/payments") }}/' + appId + '/initiate-mobile',
+          status: '{{ url("/payments") }}/' + appId + '/status',
+          proof: '{{ url("/payments") }}/' + appId + '/upload-proof',
+        });
+        const payModal = new bootstrap.Modal(document.getElementById('ap5PaymentModal'));
+        payModal.show();
+      } else {
+        alert('AP5 submitted successfully!\nReference: ' + (data.reference || '—'));
+        window.location.href = "{{ route('mediahouse.portal') }}";
+      }
     }catch(e){
       console.error(e);
       alert('Network/server error while submitting.');
-    }finally{
-      btn.disabled = false;
-      btn.innerHTML = old;
+      if (btn) { btn.disabled = false; btn.innerHTML = old; }
     }
   }
 
@@ -756,7 +707,6 @@
       ['Registration Number', document.getElementById('ap5RegNumber')?.value || '-'],
       ['Changes', document.getElementById('ap5_has_changes')?.value === 'yes' ? 'Yes' : 'No'],
       ['Collection Office', document.getElementById('ap5Office')?.value || '-'],
-      ['Payment Method', document.querySelector('input[name="payment_method"]:checked')?.value || '-'],
     ];
 
     const table = `
@@ -852,12 +802,8 @@
       ap5UpdateSteps();
     });
 
-    document.querySelectorAll('input[name="payment_method"]').forEach(r => {
-      r.addEventListener('change', () => {
-        const val = document.querySelector('input[name="payment_method"]:checked')?.value;
-        document.getElementById('ap5-paynow-section').style.display = (val === 'paynow') ? 'block' : 'none';
-        document.getElementById('ap5-proof-section').style.display = (val === 'proof_upload') ? 'block' : 'none';
-      });
+    document.querySelectorAll('input[name="replacement_reason"]').forEach(r => {
+      r.addEventListener('change', () => ap5SyncPoliceRequirement());
     });
 
     @if(isset($draft) && $draft)

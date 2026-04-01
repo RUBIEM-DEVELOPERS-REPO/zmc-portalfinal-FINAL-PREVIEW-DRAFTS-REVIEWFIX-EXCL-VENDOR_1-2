@@ -195,63 +195,38 @@
   </div>
 
   <div class="row g-3 mb-4">
-    <div class="col-12 col-lg-6">
-      <div class="zmc-card h-100">
-        <h6 class="fw-bold mb-3" style="color:#2e7d32;">
-          <i class="ri-time-line me-2" style="color:var(--zmc-accent)"></i>Expected Timelines
-        </h6>
-        <div class="table-responsive">
-          <table class="table table-sm align-middle mb-0" style="font-size:13px;">
-            <tbody>
-              <tr>
-                <td class="fw-bold border-0">Application Review</td>
-                <td class="text-muted border-0">10 - 15 working days</td>
-              </tr>
-              <tr>
-                <td class="fw-bold border-0">Payment Processing</td>
-                <td class="text-muted border-0">1 - 3 working days</td>
-              </tr>
-              <tr>
-                <td class="fw-bold border-0">Certificate Production</td>
-                <td class="text-muted border-0">5 - 10 working days</td>
-              </tr>
-              <tr>
-                <td class="fw-bold border-0">Total (Estimated)</td>
-                <td class="fw-bold border-0" style="color:#2e7d32;">15 - 30 working days</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="mt-2 small text-muted">
-          <i class="ri-information-line me-1"></i> Track your application status in real-time on your Dashboard.
-        </div>
-      </div>
-    </div>
-
-    <div class="col-12 col-lg-6">
-      <div class="zmc-card h-100">
+    <div class="col-12">
+      <div class="zmc-card">
         <h6 class="fw-bold mb-3" style="color:#2e7d32;">
           <i class="ri-customer-service-2-line me-2" style="color:var(--zmc-accent)"></i>Need Help?
         </h6>
-        <div class="d-flex align-items-start gap-3 mb-3">
-          <i class="ri-whatsapp-line text-success" style="font-size:20px;margin-top:2px;"></i>
-          <div>
-            <div class="fw-bold small">WhatsApp Hotline</div>
-            <div class="text-muted small">+263 719 299 150</div>
+        <div class="row g-4">
+          <div class="col-12 col-md-4">
+            <div class="d-flex align-items-start gap-3">
+              <i class="ri-whatsapp-line text-success" style="font-size:20px;margin-top:2px;"></i>
+              <div>
+                <div class="fw-bold small">WhatsApp Hotline</div>
+                <div class="text-muted small">+263 719 299 150</div>
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="d-flex align-items-start gap-3 mb-3">
-          <i class="ri-mail-line" style="font-size:20px;margin-top:2px;color:#2e7d32;"></i>
-          <div>
-            <div class="fw-bold small">Email Support</div>
-            <div class="text-muted small">info@zmc.org.zw / zmcaccreditation@gmail.com</div>
+          <div class="col-12 col-md-4">
+            <div class="d-flex align-items-start gap-3">
+              <i class="ri-mail-line" style="font-size:20px;margin-top:2px;color:#2e7d32;"></i>
+              <div>
+                <div class="fw-bold small">Email Support</div>
+                <div class="text-muted small">info@zmc.org.zw / zmcaccreditation@gmail.com</div>
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="d-flex align-items-start gap-3">
-          <i class="ri-phone-line" style="font-size:20px;margin-top:2px;color:#2e7d32;"></i>
-          <div>
-            <div class="fw-bold small">Telephone</div>
-            <div class="text-muted small">+263 242 253509/10 | +263 242 253572/75/76</div>
+          <div class="col-12 col-md-4">
+            <div class="d-flex align-items-start gap-3">
+              <i class="ri-phone-line" style="font-size:20px;margin-top:2px;color:#2e7d32;"></i>
+              <div>
+                <div class="fw-bold small">Telephone</div>
+                <div class="text-muted small">+263 242 253509/10 | +263 242 253572/75/76</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -78,12 +78,12 @@
                 $ref = $msg->application?->reference ?? ('APP-' . $msg->application_id);
                 $when = $msg->sent_at ? $msg->sent_at->diffForHumans() : ($msg->created_at?->diffForHumans() ?? '');
               @endphp
-              <a href="{{ route('messages.thread', $msg->application_id) }}" class="dropdown-item p-3 border-bottom d-flex align-items-start gap-3 {{ $isUnread ? 'bg-light' : '' }}">
+              <a href="{{ route('messages.thread', $msg->application_id) }}" class="dropdown-item p-3 border-bottom d-flex align-items-start gap-3 @if($isUnread) bg-light-subtle @endif">
                 <div class="flex-shrink-0 bg-warning-subtle text-warning p-2 rounded-circle" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
                   <i class="ri-message-2-line"></i>
                 </div>
                 <div class="flex-grow-1">
-                  <p class="mb-0 fw-bold small text-dark">{{ $who }} <span class="text-muted" style="font-weight:800;">• {{ $ref }}</span></p>
+                  <p class="mb-0 fw-bold small">{{ $who }} <span class="text-muted" style="font-weight:800;">• {{ $ref }}</span></p>
                   <p class="mb-0 text-muted small">{{ \Illuminate\Support\Str::limit($msg->body, 60) }}</p>
                   <span class="text-muted" style="font-size: 10px;">{{ $when }}</span>
                 </div>
@@ -122,9 +122,9 @@
                 $when = $n->created_at?->diffForHumans();
                 $unread = is_null($n->read_at);
               @endphp
-              <div class="p-3 border-bottom {{ $unread ? 'bg-light' : '' }}">
+                <div class="p-3 border-bottom @if($unread) bg-light-subtle @endif">
                 <div class="d-flex justify-content-between gap-2">
-                  <div class="fw-bold small text-dark">{{ $ref ? ($ref . ' • ') : '' }}{{ $msg }}</div>
+                  <div class="fw-bold small">{{ $ref ? ($ref . ' • ') : '' }}{{ $msg }}</div>
                   <div class="text-muted" style="font-size: 10px; white-space: nowrap;">{{ $when }}</div>
                 </div>
               </div>

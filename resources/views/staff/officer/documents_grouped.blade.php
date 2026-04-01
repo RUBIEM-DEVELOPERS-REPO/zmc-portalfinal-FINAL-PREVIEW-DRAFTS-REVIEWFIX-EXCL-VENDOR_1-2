@@ -32,6 +32,14 @@
           <label class="form-label small fw-bold">To</label>
           <input type="date" name="date_to" value="{{ request('date_to') }}" class="form-control" />
         </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label small fw-bold">Record Number</label>
+          <input type="text" name="record_number" value="{{ request('record_number') }}" class="form-control" placeholder="Accreditation / Registration No" />
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label small fw-bold">Search</label>
+          <input type="text" name="q" value="{{ request('q') }}" class="form-control" placeholder="Ref / Name / Email" />
+        </div>
         <input type="hidden" name="application_type" value="{{ request('application_type') }}" />
         <div class="col-12 col-md-3 d-flex gap-2">
           <button class="btn btn-dark w-100"><i class="ri-filter-3-line me-1"></i>Apply</button>
@@ -51,7 +59,15 @@
           <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ $accId }}" aria-expanded="false" aria-controls="collapse{{ $accId }}">
             <div class="w-100 d-flex justify-content-between align-items-center flex-wrap gap-2">
               <div>
-                <div class="fw-bold">{{ $app->applicant?->name ?? '—' }} <span class="text-muted fw-normal">({{ $app->applicant?->email ?? '—' }})</span></div>
+                @php
+                  $recNo = ($app->application_type === 'registration') 
+                    ? ($app->registrationRecord?->registration_no ?? '—')
+                    : ($app->accreditationRecord?->certificate_no ?? '—');
+                @endphp
+                <div class="fw-bold">
+                  <span class="text-primary me-2">#{{ $recNo }}</span>
+                  {{ $app->applicant?->name ?? '—' }} <span class="text-muted fw-normal">({{ $app->applicant?->email ?? '—' }})</span>
+                </div>
                 <div class="small text-muted">Ref: <span class="fw-semibold">{{ $app->reference }}</span> • {{ $app->applicationTypeLabel() }} • Submitted: {{ optional($app->created_at)->format('d M Y') }}</div>
               </div>
               <span class="badge bg-dark">{{ $app->documents->count() }} docs</span>

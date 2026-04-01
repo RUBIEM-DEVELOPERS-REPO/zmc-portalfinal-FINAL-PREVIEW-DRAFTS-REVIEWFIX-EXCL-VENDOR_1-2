@@ -15,15 +15,15 @@ class ContentController extends Controller
 {
     public function __construct()
     {
-        // View access: Super Admin, IT Admin, Director
+        // View access: Super Admin, IT Admin, Director, PR
         // Create/update/delete is restricted in the action methods.
-        $this->middleware(['auth', 'role:super_admin|it_admin|director']);
+        $this->middleware(['auth', 'role:super_admin|it_admin|director|pr']);
     }
 
     public function index()
     {
         // Role-gated instead of permission-gated to avoid 403s when permissions are not yet seeded/cached.
-        abort_unless(auth()->user()?->hasAnyRole(['super_admin','it_admin','director']), 403);
+        abort_unless(auth()->user()?->hasAnyRole(['super_admin','it_admin','director','pr']), 403);
 
         $notices   = Notice::orderByDesc('id')->paginate(15, ['*'], 'notices');
         $events    = Event::orderByDesc('starts_at')->paginate(15, ['*'], 'events');
@@ -61,8 +61,8 @@ class ContentController extends Controller
 
     public function storeNotice(Request $request)
     {
-        // Uploading allowed for Super Admin + IT Admin only
-        abort_unless(auth()->user()?->hasAnyRole(['super_admin','it_admin']), 403);
+        // Uploading allowed for Super Admin + IT Admin + PR only
+        abort_unless(auth()->user()?->hasAnyRole(['super_admin','it_admin','pr']), 403);
 
         $data = $request->validate([
             'title' => ['required','string','max:200'],
@@ -88,7 +88,7 @@ class ContentController extends Controller
 
     public function updateNotice(Request $request, Notice $notice)
     {
-        abort_unless(auth()->user()?->hasAnyRole(['super_admin','it_admin']), 403);
+        abort_unless(auth()->user()?->hasAnyRole(['super_admin','it_admin','pr']), 403);
 
         $data = $request->validate([
             'title' => ['required','string','max:200'],
@@ -114,7 +114,7 @@ class ContentController extends Controller
 
     public function destroyNotice(Notice $notice)
     {
-        abort_unless(auth()->user()?->hasAnyRole(['super_admin','it_admin']), 403);
+        abort_unless(auth()->user()?->hasAnyRole(['super_admin','it_admin','pr']), 403);
 
         $id = $notice->id;
         if ($notice->image_path) Storage::disk('public')->delete($notice->image_path);
@@ -127,7 +127,7 @@ class ContentController extends Controller
 
     public function storeEvent(Request $request)
     {
-        abort_unless(auth()->user()?->hasAnyRole(['super_admin','it_admin']), 403);
+        abort_unless(auth()->user()?->hasAnyRole(['super_admin','it_admin','pr']), 403);
 
         $data = $request->validate([
             'title' => ['required','string','max:200'],
@@ -159,7 +159,7 @@ class ContentController extends Controller
 
     public function updateEvent(Request $request, Event $event)
     {
-        abort_unless(auth()->user()?->hasAnyRole(['super_admin','it_admin']), 403);
+        abort_unless(auth()->user()?->hasAnyRole(['super_admin','it_admin','pr']), 403);
 
         $data = $request->validate([
             'title' => ['required','string','max:200'],
@@ -189,7 +189,7 @@ class ContentController extends Controller
 
     public function destroyEvent(Event $event)
     {
-        abort_unless(auth()->user()?->hasAnyRole(['super_admin','it_admin']), 403);
+        abort_unless(auth()->user()?->hasAnyRole(['super_admin','it_admin','pr']), 403);
 
         $id = $event->id;
         if ($event->image_path) Storage::disk('public')->delete($event->image_path);
@@ -203,7 +203,7 @@ class ContentController extends Controller
     /* Vacancy Methods */
     public function storeVacancy(Request $request)
     {
-        abort_unless(auth()->user()?->hasAnyRole(['super_admin', 'it_admin']), 403);
+        abort_unless(auth()->user()?->hasAnyRole(['super_admin', 'it_admin', 'pr']), 403);
 
         $data = $request->validate([
             'title' => ['required', 'string', 'max:200'],
@@ -227,7 +227,7 @@ class ContentController extends Controller
 
     public function updateVacancy(Request $request, Vacancy $vacancy)
     {
-        abort_unless(auth()->user()?->hasAnyRole(['super_admin', 'it_admin']), 403);
+        abort_unless(auth()->user()?->hasAnyRole(['super_admin', 'it_admin', 'pr']), 403);
 
         $data = $request->validate([
             'title' => ['required', 'string', 'max:200'],
@@ -252,7 +252,7 @@ class ContentController extends Controller
 
     public function destroyVacancy(Vacancy $vacancy)
     {
-        abort_unless(auth()->user()?->hasAnyRole(['super_admin', 'it_admin']), 403);
+        abort_unless(auth()->user()?->hasAnyRole(['super_admin', 'it_admin', 'pr']), 403);
         $id = $vacancy->id;
         if ($vacancy->image_path) Storage::disk('public')->delete($vacancy->image_path);
         if ($vacancy->attachment_path) Storage::disk('public')->delete($vacancy->attachment_path);
@@ -265,7 +265,7 @@ class ContentController extends Controller
     /* Tender Methods */
     public function storeTender(Request $request)
     {
-        abort_unless(auth()->user()?->hasAnyRole(['super_admin', 'it_admin']), 403);
+        abort_unless(auth()->user()?->hasAnyRole(['super_admin', 'it_admin', 'pr']), 403);
 
         $data = $request->validate([
             'title' => ['required', 'string', 'max:200'],
@@ -288,7 +288,7 @@ class ContentController extends Controller
 
     public function updateTender(Request $request, Tender $tender)
     {
-        abort_unless(auth()->user()?->hasAnyRole(['super_admin', 'it_admin']), 403);
+        abort_unless(auth()->user()?->hasAnyRole(['super_admin', 'it_admin', 'pr']), 403);
 
         $data = $request->validate([
             'title' => ['required', 'string', 'max:200'],
@@ -312,7 +312,7 @@ class ContentController extends Controller
 
     public function destroyTender(Tender $tender)
     {
-        abort_unless(auth()->user()?->hasAnyRole(['super_admin', 'it_admin']), 403);
+        abort_unless(auth()->user()?->hasAnyRole(['super_admin', 'it_admin', 'pr']), 403);
         $id = $tender->id;
         if ($tender->attachment_path) Storage::disk('public')->delete($tender->attachment_path);
         $tender->delete();

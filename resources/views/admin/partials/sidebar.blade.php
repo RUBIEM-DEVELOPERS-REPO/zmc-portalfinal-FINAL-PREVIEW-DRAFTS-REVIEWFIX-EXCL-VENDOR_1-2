@@ -48,6 +48,7 @@
     <span>Media Practitioners Accreditation</span>
   </a>
 
+  @hasanyrole('super_admin|it_admin')
   <div class="nav-section">Users & Roles</div>
   <a class="nav-link {{ $is('admin.roles') ? 'active' : '' }}" href="{{ Route::has('admin.roles.index') ? route('admin.roles.index') : '#' }}">
     <span class="nav-icon"><i class="ri-shield-keyhole-line"></i></span>
@@ -62,9 +63,10 @@
     <span class="nav-icon"><i class="ri-layout-grid-line"></i></span>
     <span>Permission Matrix</span>
   </a>
+  @endhasanyrole
 
   {{-- Users split into separate lists as requested --}}
-  @hasanyrole('super_admin|it_admin|director')
+  @hasanyrole('super_admin|it_admin')
   <a class="nav-link {{ $is('admin.users.staff') ? 'active' : '' }}" href="{{ Route::has('admin.users.staff') ? route('admin.users.staff') : '#' }}">
     <span class="nav-icon"><i class="ri-shield-user-line"></i></span>
     <span>Staff Users</span>
@@ -80,6 +82,7 @@
     <span>Login Activity</span>
   </a>
 
+  @hasanyrole('super_admin|it_admin')
   <a class="nav-link {{ $is('admin.approvals') ? 'active' : '' }}" href="{{ Route::has('admin.approvals.index') ? route('admin.approvals.index') : '#' }}">
     <span class="nav-icon"><i class="ri-user-follow-line"></i></span>
     <span>User Approvals</span>
@@ -89,6 +92,7 @@
     <span class="nav-icon"><i class="ri-file-search-line"></i></span>
     <span>Audit & Logs</span>
   </a>
+  @endhasanyrole
 
   <div class="nav-section">Workflow Configuration</div>
 
@@ -127,7 +131,7 @@
   </a>
 
   <div class="nav-section">Content System Control</div>
-  @hasanyrole('super_admin|it_admin|director')
+  @hasanyrole('super_admin|it_admin')
   <a class="nav-link {{ $is('admin.content') ? 'active' : '' }}" href="{{ Route::has('admin.content.index') ? route('admin.content.index') : (Route::has('content.index') ? route('content.index') : '#') }}">
     <span class="nav-icon"><i class="ri-notification-3-line"></i></span>
     <span>Content</span>
@@ -139,12 +143,14 @@
     <span>Module Access & Rules</span>
   </a>
 
+  @hasanyrole('super_admin|it_admin')
   <div class="nav-section">Audit & Logs</div>
 
   <a class="nav-link {{ $is('admin.audit') ? 'active' : '' }}" href="{{ Route::has('admin.audit.index') ? route('admin.audit.index') : '#' }}">
     <span class="nav-icon"><i class="ri-file-search-line"></i></span>
     <span>System Audit Log</span>
   </a>
+  @endhasanyrole
 
   <div class="nav-section">Regions & Offices</div>
 

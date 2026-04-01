@@ -41,8 +41,45 @@
         </div>
 
         <div class="col-md-6">
+          <label class="form-label fw-bold">Assigned Regions</label>
+          <select name="regions[]" class="form-control" multiple size="3">
+            @foreach($regions as $region)
+              <option value="{{ $region->id }}">{{ $region->name }}</option>
+            @endforeach
+          </select>
+          <div class="text-muted small mt-1">Select regions this officer will handle. Hold Ctrl/Cmd to select multiple.</div>
+        </div>
+
+        <div class="col-md-6">
           <label class="form-label fw-bold">Email</label>
           <input name="email" value="{{ old('email') }}" type="email" class="form-control" required>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-bold">Phone Number</label>
+          <div class="input-group">
+            <select name="phone_country_code" class="form-select" style="max-width: 150px;" required>
+              <option value="">Code</option>
+              @foreach(\App\Models\Country::where('is_active', true)->orderBy('name')->get() as $country)
+                <option value="{{ $country->code }}" {{ old('phone_country_code') == $country->code ? 'selected' : '' }}>
+                  {{ $country->phone_code }}
+                </option>
+              @endforeach
+            </select>
+            <input name="phone_number" type="tel" class="form-control" placeholder="Phone Number" value="{{ old('phone_number') }}" required>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-bold">Country</label>
+          <select name="country_code" class="form-select">
+            <option value="">Select Country</option>
+            @foreach(\App\Models\Country::where('is_active', true)->orderBy('name')->get() as $country)
+              <option value="{{ $country->code }}" {{ old('country_code') == $country->code ? 'selected' : '' }}>
+                {{ $country->name }}
+              </option>
+            @endforeach
+          </select>
         </div>
 
         <div class="col-md-6">

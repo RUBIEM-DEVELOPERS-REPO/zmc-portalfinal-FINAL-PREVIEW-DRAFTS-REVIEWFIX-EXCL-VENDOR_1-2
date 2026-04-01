@@ -69,7 +69,7 @@
                 <div class="mt-4 p-3 bg-light rounded-4">
                     <div class="d-flex gap-3 align-items-center">
                         <i class="ri-information-line text-primary h4 mb-0"></i>
-                        <div class="smaller text-muted">A standard audit trail is maintained for all critical actions. The CEO can request detailed logs from the IT department if any spikes occur.</div>
+                        <div class="smaller text-muted">A standard audit trail is maintained for all critical actions. The Director MDG can request detailed logs from the IT department if any spikes occur.</div>
                     </div>
                 </div>
             @endif

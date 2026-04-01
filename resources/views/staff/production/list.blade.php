@@ -38,6 +38,46 @@
     $detailsUrlTemplate = route('staff.applications.details', ['application' => '__ID__']);
   @endphp
 
+  <div class="card shadow-sm mb-3 border-0">
+    <div class="card-body">
+      <form method="GET" class="row g-2 align-items-end">
+        <div class="col-12 col-md-3">
+          <label class="form-label small fw-bold">Search</label>
+          <input type="text" name="q" value="{{ request('q') }}" class="form-control" placeholder="Ref / name / email" />
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label small fw-bold">Request Type</label>
+          <select class="form-select" name="request_type">
+            <option value="">All</option>
+            <option value="new" @selected(request('request_type')==='new')>New</option>
+            <option value="renewal" @selected(request('request_type')==='renewal')>Renewal</option>
+            <option value="replacement" @selected(request('request_type')==='replacement')>Replacement</option>
+          </select>
+        </div>
+        <div class="col-12 col-md-2">
+          <label class="form-label small fw-bold">Scope</label>
+          <select class="form-select" name="scope">
+            <option value="">Both</option>
+            <option value="local" @selected(request('scope')==='local')>Local</option>
+            <option value="foreign" @selected(request('scope')==='foreign')>Foreign</option>
+          </select>
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label small fw-bold">From</label>
+          <input type="date" name="date_from" value="{{ request('date_from') }}" class="form-control" />
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label small fw-bold">To</label>
+          <input type="date" name="date_to" value="{{ request('date_to') }}" class="form-control" />
+        </div>
+        <div class="col-12 col-md-3 mt-3 d-flex gap-2">
+          <button class="btn btn-dark w-100"><i class="ri-filter-3-line me-1"></i>Apply</button>
+          <a class="btn btn-outline-secondary w-100" href="{{ url()->current() }}">Reset</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <div class="zmc-card p-0 shadow-sm border-0">
     <div class="p-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
       <h6 class="fw-bold m-0">
@@ -94,6 +134,12 @@
             $canBatch = in_array($status, ['production_queue','card_generated','certificate_generated'], true);
           @endphp
 
+          @php
+            $optName = $app->applicant?->name 
+                       ?? ($app->form_data['physical_applicant_name'] ?? null) 
+                       ?? ($app->form_data['media_house_name'] ?? null) 
+                       ?? '—';
+          @endphp
           <tr>
             @if(($mode ?? '') === 'printing')
               <td>
@@ -102,7 +148,7 @@
             @endif
             <td class="text-muted small">{{ $rowNo }}</td>
             <td class="fw-bold text-dark">{{ $ref }}</td>
-            <td>{{ $app->applicant?->name ?? '—' }}</td>
+            <td>{{ ((string)$optName !== '') ? $optName : '—' }}</td>
             <td class="small text-uppercase">{{ $app->collection_region ?? '—' }}</td>
             <td>
               <span class="badge rounded-pill bg-{{ $badge }} px-3">

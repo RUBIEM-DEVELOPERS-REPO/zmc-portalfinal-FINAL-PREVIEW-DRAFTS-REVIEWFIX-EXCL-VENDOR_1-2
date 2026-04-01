@@ -29,10 +29,19 @@ class PaynowController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 
-        if ($application->status !== Application::ACCOUNTS_REVIEW) {
+        $allowedStatuses = [
+            Application::SUBMITTED,
+            Application::ACCOUNTS_REVIEW,
+            Application::APPROVED_AWAITING_PAYMENT,
+            Application::PAYMENT_REJECTED,
+            Application::AWAITING_ACCOUNTS_VERIFICATION,
+            Application::REGISTRAR_APPROVED_PENDING_REG_FEE,
+        ];
+
+        if (!in_array($application->status, $allowedStatuses, true)) {
             return response()->json([
                 'success' => false,
-                'message' => 'This application is not awaiting payment.'
+                'message' => 'Payment cannot be initiated for this application at its current stage.'
             ], 400);
         }
 
@@ -82,10 +91,19 @@ class PaynowController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 
-        if ($application->status !== Application::ACCOUNTS_REVIEW) {
+        $allowedStatuses = [
+            Application::SUBMITTED,
+            Application::ACCOUNTS_REVIEW,
+            Application::APPROVED_AWAITING_PAYMENT,
+            Application::PAYMENT_REJECTED,
+            Application::AWAITING_ACCOUNTS_VERIFICATION,
+            Application::REGISTRAR_APPROVED_PENDING_REG_FEE,
+        ];
+
+        if (!in_array($application->status, $allowedStatuses, true)) {
             return response()->json([
                 'success' => false,
-                'message' => 'This application is not awaiting payment.'
+                'message' => 'Payment cannot be initiated for this application at its current stage.'
             ], 400);
         }
 
@@ -166,6 +184,18 @@ class PaynowController extends Controller
                     'status' => Application::PAID_CONFIRMED,
                     'last_action_at' => now(),
                 ]);
+
+                // Send Digital Receipt
+                try {
+                    if ($application->applicant) {
+                        $application->applicant->notify(new \App\Notifications\PaymentReceiptNotification($application));
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Failed to send digital receipt notification via checkStatus', [
+                        'application_id' => $application->id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
 
                 Log::info('Payment confirmed via polling', [
                     'application_id' => $application->id,
@@ -249,6 +279,18 @@ class PaynowController extends Controller
                         'last_action_at' => now(),
                     ]);
 
+                    // Send Digital Receipt
+                    try {
+                        if ($application->applicant) {
+                            $application->applicant->notify(new \App\Notifications\PaymentReceiptNotification($application));
+                        }
+                    } catch (\Exception $e) {
+                        Log::error('Failed to send digital receipt notification via callback', [
+                            'application_id' => $application->id,
+                            'error' => $e->getMessage()
+                        ]);
+                    }
+
                     Log::info('Paynow payment confirmed (verified via poll)', [
                         'application_id' => $application->id,
                         'reference' => $reference,
@@ -290,6 +332,18 @@ class PaynowController extends Controller
                             'status' => Application::PAID_CONFIRMED,
                             'last_action_at' => now(),
                         ]);
+
+                        // Send Digital Receipt
+                        try {
+                            if ($application->applicant) {
+                                $application->applicant->notify(new \App\Notifications\PaymentReceiptNotification($application));
+                            }
+                        } catch (\Exception $e) {
+                            Log::error('Failed to send digital receipt notification via return', [
+                                'application_id' => $application->id,
+                                'error' => $e->getMessage()
+                            ]);
+                        }
 
                         $portalRoute = $application->application_type === 'accreditation'
                             ? 'accreditation.home'

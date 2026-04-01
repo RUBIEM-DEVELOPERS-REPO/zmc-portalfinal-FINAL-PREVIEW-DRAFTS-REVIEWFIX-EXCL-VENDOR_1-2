@@ -7,17 +7,10 @@
   <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
     <div>
       <h4 class="fw-bold m-0" style="font-size:22px; color:#1e293b;">{{ $title ?? 'Applications' }}</h4>
-      <div class="text-muted mt-1" style="font-size:13px;"><i class="ri-information-line me-1"></i>Use filters (same style as Auditor) and export CSV / Print to PDF.</div>
+      <div class="text-muted mt-1" style="font-size:13px;"><i class="ri-information-line me-1"></i>Use filters to refine the list of applications.</div>
     </div>
 
-    <div class="d-flex gap-2">
-      <a href="{{ route('staff.officer.applications.export', ['list' => $list] + request()->query()) }}" class="btn btn-white border shadow-sm btn-sm px-3">
-        <i class="ri-download-2-line me-1"></i> Export CSV
-      </a>
-      <button type="button" onclick="window.print()" class="btn btn-white border shadow-sm btn-sm px-3">
-        <i class="ri-printer-line me-1"></i> Export PDF
-      </button>
-    </div>
+
   </div>
 
   {{-- Type tabs (Accreditations vs Registrations) --}}
@@ -29,13 +22,7 @@
     <a class="btn btn-sm {{ $activeType==='accreditation' ? 'btn-dark' : 'btn-outline-dark' }}" href="{{ request()->fullUrlWithQuery(['application_type' => 'accreditation']) }}">Accreditations</a>
     <a class="btn btn-sm {{ $activeType==='registration' ? 'btn-dark' : 'btn-outline-dark' }}" href="{{ request()->fullUrlWithQuery(['application_type' => 'registration']) }}">Media House Registrations</a>
 
-    @if(($list ?? '') === 'rejected')
-      <span class="mx-2 text-muted">|</span>
-      @php $activeStatus = request('status'); @endphp
-      <a class="btn btn-sm {{ $activeStatus===\App\Models\Application::OFFICER_REJECTED ? 'btn-danger' : 'btn-outline-danger' }}" href="{{ request()->fullUrlWithQuery(['status' => \App\Models\Application::OFFICER_REJECTED]) }}">Rejected</a>
-      <a class="btn btn-sm {{ $activeStatus===\App\Models\Application::RETURNED_TO_OFFICER ? 'btn-warning' : 'btn-outline-warning' }}" href="{{ request()->fullUrlWithQuery(['status' => \App\Models\Application::RETURNED_TO_OFFICER]) }}">Returned</a>
-      <a class="btn btn-sm {{ !$activeStatus ? 'btn-dark' : 'btn-outline-dark' }}" href="{{ request()->fullUrlWithQuery(['status' => null]) }}">Both</a>
-    @endif
+
   </div>
 
   {{-- Filters --}}
@@ -49,12 +36,21 @@
         </div>
 
         <div class="col-12 col-md-3">
-          <label class="form-label small fw-bold">Application Type</label>
-          <select class="form-select" name="bucket">
+          <label class="form-label small fw-bold">Request Type</label>
+          <select class="form-select" name="request_type">
             <option value="">All</option>
-            @foreach(($bucketLabels ?? []) as $k => $lbl)
-              <option value="{{ $k }}" @selected(request('bucket')===$k)>{{ $lbl }}</option>
-            @endforeach
+            <option value="new" @selected(request('request_type')==='new')>New</option>
+            <option value="renewal" @selected(request('request_type')==='renewal')>Renewal</option>
+            <option value="replacement" @selected(request('request_type')==='replacement')>Replacement</option>
+          </select>
+        </div>
+
+        <div class="col-12 col-md-2">
+          <label class="form-label small fw-bold">Scope</label>
+          <select class="form-select" name="scope">
+            <option value="">Both</option>
+            <option value="local" @selected(request('scope')==='local')>Local</option>
+            <option value="foreign" @selected(request('scope')==='foreign')>Foreign</option>
           </select>
         </div>
 
@@ -66,6 +62,26 @@
         <div class="col-6 col-md-2">
           <label class="form-label small fw-bold">To</label>
           <input type="date" name="date_to" value="{{ request('date_to') }}" class="form-control" />
+        </div>
+
+        <div class="col-6 col-md-2">
+          <label class="form-label small fw-bold">Month</label>
+          <select name="month" class="form-select">
+            <option value="">All</option>
+            @foreach(range(1,12) as $m)
+              <option value="{{ $m }}" @selected(request('month') == $m)>{{ date('F', mktime(0,0,0,$m,1)) }}</option>
+            @endforeach
+          </select>
+        </div>
+
+        <div class="col-6 col-md-2">
+          <label class="form-label small fw-bold">Year</label>
+          <select name="year" class="form-select">
+            <option value="">All</option>
+            @foreach(range(date('Y'), date('Y')-5) as $y)
+              <option value="{{ $y }}" @selected(request('year') == $y)>{{ $y }}</option>
+            @endforeach
+          </select>
         </div>
 
 
@@ -91,9 +107,13 @@
               <th>Ref</th>
               <th>Applicant</th>
               <th>Type</th>
+              @if(($list ?? '') !== 'new')
               <th>Status</th>
+              @endif
               <th>Submitted</th>
+              @if(($list ?? '') !== 'new')
               <th>Category</th>
+              @endif
               <th class="text-end">Action</th>
             </tr>
           </thead>
@@ -108,9 +128,13 @@
                 <td>
                   <span class="badge bg-dark">{{ $app->applicationTypeLabel() }}</span>
                 </td>
-                <td class="text-capitalize">{{ str_replace('_',' ', $app->status) }}</td>
-                <td class="small">{{ optional($app->created_at)->format('d M Y') }}</td>
+                @if(($list ?? '') !== 'new')
+                <td class="text-capitalize">{{ str_replace('_',' ', $app->status === 'officer_rejected' ? 'returned_for_correction' : $app->status) }}</td>
+                @endif
+                <td class="small">{{ optional($app->created_at)->format('d M Y, H:i') }}</td>
+                @if(($list ?? '') !== 'new')
                 <td class="small">{{ $app->categoryLabel() ?? '—' }}</td>
+                @endif
                 <td class="text-end">
   <div class="zmc-action-strip justify-content-end">
 
@@ -156,14 +180,14 @@
       <i class="fa-solid fa-check"></i>
     </a>
 
-    {{-- Message --}}
+    {{-- Seek Guidance --}}
     <a
-      href="{{ route('staff.officer.applications.show', $app) }}#message"
+      href="{{ route('staff.officer.applications.show', $app) }}#forward-to-registrar"
       class="btn btn-sm zmc-icon-btn btn-outline-secondary"
       data-bs-toggle="tooltip" data-bs-placement="top"
-      title="Message"
+      title="Seek Guidance from Registrar"
     >
-      <i class="fa-regular fa-envelope"></i>
+      <i class="fa-solid fa-share"></i>
     </a>
 
   </div>

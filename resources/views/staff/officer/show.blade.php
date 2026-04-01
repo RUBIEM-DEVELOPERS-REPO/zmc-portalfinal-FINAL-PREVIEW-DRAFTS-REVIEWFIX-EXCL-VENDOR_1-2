@@ -46,7 +46,7 @@
             <div><b>Email:</b> {{ $application->applicant?->email ?? '—' }}</div>
             <div><b>Region for collection:</b> {{ $application->collection_region }}</div>
             <div class="mt-2">
-              <b>Status:</b> <span class="badge bg-info">{{ str_replace('_',' ', $application->status) }}</span>
+              <b>Status:</b> <span class="badge bg-info">{{ str_replace('_',' ', $application->status === 'officer_rejected' ? 'returned_for_correction' : $application->status) }}</span>
             </div>
           </div>
         </div>
@@ -115,7 +115,7 @@
                       @endphp
                       <span class="badge bg-{{ $pReqBadge }}">{{ ucfirst($pReqType) }}</span>
                     </td>
-                    <td><span class="badge bg-secondary">{{ ucwords(str_replace('_', ' ', $prevApp->status)) }}</span></td>
+                    <td><span class="badge bg-secondary">{{ ucwords(str_replace('_', ' ', $prevApp->status === 'officer_rejected' ? 'returned_for_correction' : $prevApp->status)) }}</span></td>
                     <td class="small text-muted">{{ $prevApp->created_at?->format('d M Y') ?? '—' }}</td>
                   </tr>
                 @endforeach
@@ -170,7 +170,7 @@
             <button class="btn btn-warning w-100">Return to Applicant</button>
           </form>
 
-          <form method="POST" action="{{ route('staff.officer.applications.forward-to-registrar', $application) }}" class="mb-3">
+          <form method="POST" action="{{ route('staff.officer.applications.forward-to-registrar', $application) }}" class="mb-3" id="forward-to-registrar">
             @csrf
             <label class="form-label fw-semibold">Forward to Registrar — reason (required)</label>
             <textarea class="form-control mb-2" name="forward_reason" rows="3" required placeholder="Waiver, special case, etc."></textarea>

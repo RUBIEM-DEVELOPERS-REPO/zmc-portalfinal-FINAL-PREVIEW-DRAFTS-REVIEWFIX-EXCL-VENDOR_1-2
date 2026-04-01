@@ -4,705 +4,528 @@ namespace App\Http\Controllers\Staff;
 
 use App\Http\Controllers\Controller;
 use App\Models\Application;
-use App\Models\ActivityLog;
-use App\Models\Payment;
-use App\Models\PrintLog;
-use App\Models\DocumentVersion;
-use App\Models\Notice;
-use App\Models\Event;
-use App\Models\News;
-use App\Models\Reminder;
-use App\Services\ApplicationWorkflow;
-use App\Services\ActivityLogger;
+use App\Models\AccreditationRecord;
+use App\Models\RegistrationRecord;
+use App\Models\Activity;
+use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class RegistrarController extends Controller
 {
+    /**
+     * Display registrar dashboard.
+     */
     public function dashboard(Request $request)
     {
         $user = Auth::user();
-        $today = now()->startOfDay();
-        $thisWeek = now()->startOfWeek();
-
+        
+        // Updated KPIs according to new requirements
         $kpis = [
-            'awaiting_registrar' => Application::whereIn('status', [
-                    Application::REGISTRAR_REVIEW,
-                    Application::APPROVED_AWAITING_PAYMENT,
-                    Application::FORWARDED_TO_REGISTRAR,
-                ])
-                ->where(function($q) use ($user) {
-                    $q->whereNull('assigned_officer_id')
-                      ->orWhere('assigned_officer_id', $user->id);
-                })->count(),
-            'approved_today' => Application::where('status', Application::ACCOUNTS_REVIEW)->where('last_action_at', '>=', $today)->count(),
-            'approved_this_week' => Application::where('status', Application::ACCOUNTS_REVIEW)->where('last_action_at', '>=', $thisWeek)->count(),
-            'returned_to_officer' => Application::where('status', Application::RETURNED_TO_OFFICER)->count(),
-            'category_mismatches' => ActivityLog::where('action', 'registrar_reassign_category')->where('created_at', '>=', $thisWeek)->count(),
-            'certificates_generated_today' => DocumentVersion::where('document_type', 'certificate')->where('created_at', '>=', $today)->count(),
-            'prints_today' => PrintLog::where('created_at', '>=', $today)->count(),
-            'flagged_reprints' => Application::where('print_count', '>', 1)->count(),
-            'awaiting_payment_approval' => Application::where('status', Application::APPROVED_AWAITING_PAYMENT)
-                ->where(function($q) use ($user) {
-                    $q->whereNull('assigned_officer_id')
-                      ->orWhere('assigned_officer_id', $user->id);
-                })
+            'total_applications' => Application::count(),
+            'awaiting_review' => Application::where('registrar_reviewed', false)
+                ->where('status', Application::OFFICER_APPROVED)
                 ->count(),
-            'forwarded_to_registrar' => Application::where('status', Application::FORWARDED_TO_REGISTRAR)->count(),
-            'fix_requests' => Application::where('status', Application::REGISTRAR_FIX_REQUEST)->count(),
+            'returned_for_correction' => Application::where('status', Application::CORRECTION_REQUESTED)
+                ->count(),
+            'forwarded_to_registrar' => Application::where('status', Application::FORWARDED_TO_REGISTRAR)
+                ->count(),
+            'new_this_week' => Application::where('created_at', '>=', now()->startOfWeek())->count(),
         ];
 
-        $query = Application::query()
-            ->with(['applicant', 'lastActionBy'])
-            ->withCount('printLogs');
-
-        $query->where(function($q) use ($user) {
-            $q->whereNull('assigned_officer_id')
-              ->orWhere('assigned_officer_id', $user->id);
-        });
-
-        $query->where(function($q) use ($user) {
-            $q->whereNull('locked_at')
-              ->orWhere('locked_at', '<=', now()->subHours(2))
-              ->orWhere('locked_by', $user->id);
-        });
-
-        if ($request->filled('type')) {
-            $query->where('application_type', $request->type);
-        }
-        if ($request->filled('classification')) {
-            $query->where('journalist_scope', $request->classification);
-        }
-        if ($request->filled('residency')) {
-            $query->where('residency_type', $request->residency);
-        }
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-        if ($request->filled('search')) {
-            $s = $request->search;
-            $query->where(function($q) use ($s) {
-                $q->where('reference', 'like', "%$s%")
-                  ->orWhereHas('applicant', function($aq) use ($s) {
-                      $aq->where('name', 'like', "%$s%");
-                  });
-            });
-        }
-        if ($request->filled('date_from')) {
-            $query->whereDate('created_at', '>=', $request->date_from);
-        }
-        if ($request->filled('date_to')) {
-            $query->whereDate('created_at', '<=', $request->date_to);
-        }
-
-        if (!$request->filled('status')) {
-            $query->whereIn('status', [
-                Application::PAID_CONFIRMED,
-                Application::REGISTRAR_REVIEW,
-                Application::REGISTRAR_APPROVED,
-                Application::RETURNED_TO_OFFICER,
-                Application::ACCOUNTS_REVIEW,
-                Application::APPROVED_AWAITING_PAYMENT,
-                Application::FORWARDED_TO_REGISTRAR,
-                Application::REGISTRAR_FIX_REQUEST,
-            ]);
-        }
-
-        $applications = $query->latest()->paginate(20)->withQueryString();
-
-        $activity = ActivityLog::query()
-            ->whereIn('action', [
-                'registrar_approve',
-                'registrar_reject',
-                'registrar_return_to_accounts',
-                'registrar_reassign_category',
-                'registrar_approve_for_payment',
-                'registrar_fix_request',
-                'registrar_push_to_accounts',
-                'accounts_confirm_paid',
-                'officer_approve',
-                'application_submitted',
-            ])
-            ->with(['user', 'entity'])
-            ->latest()
-            ->limit(15)
-            ->get();
-
-        return view('staff.registrar.dashboard', compact('applications', 'kpis', 'activity'));
-    }
-
-    public function incomingQueue(Request $request)
-    {
-        $query = Application::query()
-            ->with(['applicant', 'assignedOfficer', 'payments'])
-            ->whereIn('status', [
-                Application::REGISTRAR_REVIEW,
-                Application::APPROVED_AWAITING_PAYMENT,
-                Application::FORWARDED_TO_REGISTRAR,
-            ]);
-
-        if ($request->filled('search')) {
-            $s = $request->search;
-            $query->where(function($q) use ($s) {
-                $q->where('reference', 'like', "%$s%")
-                  ->orWhereHas('applicant', function($aq) use ($s) {
-                      $aq->where('name', 'like', "%$s%");
-                  });
-            });
-        }
-
-        $applications = $query->latest('last_action_at')->paginate(20);
-
-        return view('staff.registrar.incoming_queue', compact('applications'));
-    }
-
-    public function approveForPayment(Request $request, Application $application)
-    {
-        $data = $request->validate([
-            'decision_notes' => ['nullable', 'string', 'max:5000'],
-        ]);
-
-        $from = $application->status;
-
-        ApplicationWorkflow::transition($application, Application::ACCOUNTS_REVIEW, 'registrar_approve_for_payment', [
-            'notes' => $data['decision_notes'] ?? null,
-        ]);
-
-        $this->safeSet($application, [
-            'registrar_reviewed_at' => now(),
-            'registrar_reviewed_by' => Auth::id(),
-            'decision_notes' => $data['decision_notes'] ?? $application->decision_notes,
-        ]);
-
-        $this->audit('registrar_approve_for_payment', $application, $from, $application->status, [
-            'notes' => $data['decision_notes'] ?? null,
-        ]);
-
-        return back()->with('success', 'Application approved for payment and forwarded to Accounts.');
-    }
-
-    public function applicationsList(Request $request, string $type, string $bucket)
-    {
-        abort_unless(in_array($type, ['accreditation', 'registration'], true), 404);
-
-        $statusMap = [
-            'new' => [Application::PAID_CONFIRMED],
-            'under-review' => [Application::REGISTRAR_REVIEW],
-            'approved' => [Application::REGISTRAR_APPROVED],
-            'rejected' => [Application::REGISTRAR_REJECTED],
-            'corrections' => [Application::RETURNED_TO_OFFICER, Application::RETURNED_TO_ACCOUNTS],
+        // Production Stats - Cards Generated Today
+        $productionStats = [
+            'cards_today' => AccreditationRecord::whereDate('created_at', today())->count() + 
+                            RegistrationRecord::whereDate('created_at', today())->count(),
+            'accreditation_cards' => AccreditationRecord::whereDate('created_at', today())->count(),
+            'registration_cards' => RegistrationRecord::whereDate('created_at', today())->count(),
+            'pending_cards' => AccreditationRecord::whereNull('printed_at')->count() + 
+                             RegistrationRecord::whereNull('printed_at')->count(),
         ];
 
-        $statuses = $statusMap[$bucket] ?? [Application::PAID_CONFIRMED, Application::REGISTRAR_REVIEW];
-
-        $applications = Application::query()
-            ->with('applicant')
-            ->withCount('documents')
-            ->where('application_type', $type)
-            ->whereIn('status', $statuses)
-            ->latest()
-            ->paginate(20)
-            ->withQueryString();
-
-        $title = ucfirst($type) . ' • ' . ucwords(str_replace('-', ' ', $bucket));
-
-        return view('staff.registrar.applications_list', compact('applications', 'title', 'type', 'bucket'));
-    }
-
-    public function renewalsList(Request $request, string $bucket)
-    {
-        $base = Application::query()
-            ->with('applicant')
-            ->withCount('documents')
-            ->where('request_type', 'renewal');
-
-        if ($bucket === 'due-soon') {
-            $base->whereIn('status', [
-                Application::PAID_CONFIRMED,
-                Application::REGISTRAR_REVIEW,
-                Application::REGISTRAR_APPROVED,
-                Application::ISSUED,
-            ]);
-        } elseif ($bucket === 'submitted') {
-            $base->whereIn('status', [
-                Application::PAID_CONFIRMED,
-                Application::REGISTRAR_REVIEW,
-            ]);
-        } elseif ($bucket === 'renewed-expired') {
-            $base->whereIn('status', [
-                Application::REGISTRAR_APPROVED,
-                Application::ISSUED,
-            ]);
-        }
-
-        $applications = $base->latest()->paginate(20)->withQueryString();
-
-        $title = 'Renewals (AP5) • ' . ucwords(str_replace('-', ' ', $bucket));
-
-        return view('staff.registrar.applications_list', compact('applications', 'title'));
-    }
-
-    public function placeholder(string $title, string $hint = '')
-    {
-        return view('staff.registrar.placeholder', compact('title', 'hint'));
-    }
-
-    public function show(Application $application)
-    {
-        if (!$application->claim(auth()->user())) {
-            $lockerName = $application->lockedBy ? $application->lockedBy->name : 'another official';
-            return redirect()->back()->with('error', "This application is currently being worked on by {$lockerName}.");
-        }
-
-        $application->load(['applicant', 'documents', 'messages', 'workflowLogs', 'payments', 'printLogs', 'documentVersions', 'lockedBy']);
-
-        $auditTrail = ActivityLog::where('entity_type', get_class($application))
-            ->where('entity_id', $application->id)
-            ->with('user')
-            ->latest()
-            ->get();
-
-        $previousApplications = collect();
-        if ($application->applicant_user_id) {
-            $previousApplications = Application::where('applicant_user_id', $application->applicant_user_id)
-                ->where('id', '!=', $application->id)
-                ->latest()
-                ->get();
-        }
-
-        return view('staff.registrar.show', compact('application', 'auditTrail', 'previousApplications'));
-    }
-
-    public function reassignCategory(Request $request, Application $application)
-    {
-        $data = $request->validate([
-            'category_code' => 'required|string',
-            'reason' => 'required|string|max:1000',
-        ]);
-
-        $oldCategory = $application->accreditation_category_code ?? $application->media_house_category_code;
-
-        if ($application->application_type === 'registration') {
-            $application->media_house_category_code = $data['category_code'];
-        } else {
-            $application->accreditation_category_code = $data['category_code'];
-        }
-
-        $application->save();
-
-        ActivityLogger::log('registrar_reassign_category', $application, $application->status, $application->status, [
-            'old_category' => $oldCategory,
-            'new_category' => $data['category_code'],
-            'reason' => $data['reason'],
-        ]);
-
-        return back()->with('success', 'Category reassigned successfully.');
-    }
-
-    public function approve(Request $request, Application $application)
-    {
-        $data = $request->validate([
-            'decision_notes' => ['nullable', 'string', 'max:5000'],
-            'category_code'  => ['required', 'string', 'max:10'],
-            'registrar_letter' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
-        ]);
-
-        $from = $application->status;
-
-        if ($application->application_type === 'registration') {
-            $allowed = array_keys(Application::massMediaCategories());
-            abort_unless(in_array($data['category_code'], $allowed, true), 422, 'Invalid media house category.');
-            $application->media_house_category_code = $data['category_code'];
-
-            if ($request->hasFile('registrar_letter')) {
-                $path = $request->file('registrar_letter')->store('documents/registrar_letters', 'public');
-                $application->registrar_letter_path = $path;
-            }
-
-            if (empty($application->registrar_letter_path)) {
-                return back()->withErrors(['registrar_letter' => 'Official registrar letter must be uploaded for media house registration approval.']);
-            }
-
-            if (!empty($data['decision_notes'])) {
-                $application->decision_notes = $data['decision_notes'];
-            }
-            $application->save();
-
-            ApplicationWorkflow::transition($application, Application::REGISTRAR_APPROVED_PENDING_REG_FEE, 'registrar_approve_pending_reg_fee', [
-                'decision_notes' => $data['decision_notes'] ?? null,
-                'category_code'  => $data['category_code'],
-            ]);
-        } else {
-            $allowed = array_keys(Application::accreditationCategories());
-            abort_unless(in_array($data['category_code'], $allowed, true), 422, 'Invalid accreditation category.');
-            $application->accreditation_category_code = $data['category_code'];
-
-            if (!empty($data['decision_notes'])) {
-                $application->decision_notes = $data['decision_notes'];
-            }
-            $application->save();
-
-            ApplicationWorkflow::transition($application, Application::ACCOUNTS_REVIEW, 'registrar_approve_for_payment', [
-                'decision_notes' => $data['decision_notes'] ?? null,
-                'category_code'  => $data['category_code'],
-            ]);
-        }
-
-        $this->safeSet($application, [
-            'registrar_reviewed_at' => now(),
-            'registrar_reviewed_by' => Auth::id(),
-        ]);
-
-        $this->audit('registrar_approve', $application, $from, $application->status, [
-            'category_code' => $data['category_code'],
-        ]);
-
-        $successMsg = $application->application_type === 'registration'
-            ? 'Approved. Pending registration fee payment.'
-            : 'Approved and sent to Accounts for payment.';
-
-        return back()->with('success', $successMsg);
-    }
-
-    public function reject(Request $request, Application $application)
-    {
-        $data = $request->validate([
-            'decision_notes' => ['required', 'string', 'max:5000'],
-        ]);
-
-        $from = $application->status;
-
-        $this->safeSet($application, [
-            'rejection_reason' => $data['decision_notes'],
-            'decision_notes' => $data['decision_notes'],
-        ]);
-
-        ApplicationWorkflow::transition($application, Application::REGISTRAR_REJECTED, 'registrar_reject', [
-            'reason' => $data['decision_notes'],
-        ]);
-
-        $application->refresh();
-
-        $this->audit('registrar_reject', $application, $from, $application->status, [
-            'reason' => $data['decision_notes'],
-        ]);
-
-        return back()->with('success', 'Rejected.');
-    }
-
-    public function returnToAccounts(Request $request, Application $application)
-    {
-        $data = $request->validate([
-            'decision_notes' => ['required', 'string', 'max:5000'],
-        ]);
-
-        $from = $application->status;
-
-        ApplicationWorkflow::transition($application, Application::RETURNED_TO_ACCOUNTS, 'registrar_return_to_accounts', [
-            'notes' => $data['decision_notes'],
-        ]);
-
-        $this->safeSet($application, ['decision_notes' => $data['decision_notes']]);
-
-        $application->refresh();
-
-        $this->audit('registrar_return_to_accounts', $application, $from, $application->status, [
-            'notes' => $data['decision_notes'],
-        ]);
-
-        return back()->with('success', 'Returned to Accounts/Payments.');
-    }
-
-    public function raiseFixRequest(Request $request, Application $application)
-    {
-        $data = $request->validate([
-            'message' => ['required', 'string', 'max:5000'],
-        ]);
-
-        $from = $application->status;
-
-        ApplicationWorkflow::transition($application, Application::REGISTRAR_FIX_REQUEST, 'registrar_fix_request', [
-            'message' => $data['message'],
-        ]);
-
-        $this->safeSet($application, [
-            'correction_notes' => $data['message'],
-        ]);
-
-        $this->audit('registrar_fix_request', $application, $from, Application::REGISTRAR_FIX_REQUEST, [
-            'message' => $data['message'],
-        ]);
-
-        return back()->with('success', 'Fix request sent to Accreditation Officer.');
-    }
-
-    public function pushToAccounts(Request $request, Application $application)
-    {
-        $data = $request->validate([
-            'notes' => ['nullable', 'string', 'max:5000'],
-        ]);
-
-        abort_unless($application->status === Application::FORWARDED_TO_REGISTRAR, 422, 'Application must be in forwarded_to_registrar status.');
-
-        $from = $application->status;
-
-        ApplicationWorkflow::transition($application, Application::PENDING_ACCOUNTS_FROM_REGISTRAR, 'registrar_push_to_accounts', [
-            'notes' => $data['notes'] ?? null,
-        ]);
-
-        $this->audit('registrar_push_to_accounts', $application, $from, Application::PENDING_ACCOUNTS_FROM_REGISTRAR, [
-            'notes' => $data['notes'] ?? null,
-        ]);
-
-        return back()->with('success', 'Application pushed to Accounts for processing.');
-    }
-
-    public function accountsOversight(Request $request)
-    {
-        $paymentsQueue = Application::whereIn('status', [
-                Application::ACCOUNTS_REVIEW,
-                Application::AWAITING_ACCOUNTS_VERIFICATION,
-                Application::PENDING_ACCOUNTS_FROM_REGISTRAR,
-            ])
-            ->with(['applicant', 'payments'])
-            ->latest('last_action_at')
-            ->paginate(20, ['*'], 'queue_page');
-
-        $recentPayments = Payment::with(['application.applicant'])
-            ->latest()
-            ->limit(50)
-            ->get();
-
-        $paymentStats = [
-            'total_payments' => Payment::count(),
-            'confirmed' => Payment::where('status', 'paid')->count(),
-            'pending' => Payment::where('status', 'pending')->count(),
-            'rejected' => Payment::where('status', 'rejected')->count(),
+        // Records Stats
+        $recordsStats = [
+            'accredited_count' => AccreditationRecord::count(),
+            'registered_count' => RegistrationRecord::count(),
         ];
 
-        $paymentLogs = ActivityLog::whereIn('action', [
-                'accounts_confirm_paid',
-                'accounts_reject_payment',
-                'proof_approved',
-                'proof_rejected',
-                'waiver_approved',
-                'waiver_rejected',
+        // Recent Activities - Officer and Accountant activities only
+        $recentActivities = Activity::with(['user'])
+            ->whereIn('activity_type', [
+                'application_approved',
+                'application_rejected',
+                'payment_confirmed',
                 'payment_verified',
+                'card_generated',
+                'certificate_issued'
             ])
-            ->with(['user', 'entity'])
-            ->latest()
-            ->limit(30)
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get()
+            ->map(function ($activity) {
+                return [
+                    'title' => $this->getActivityTitle($activity),
+                    'description' => $this->getActivityDescription($activity),
+                    'time' => $activity->created_at->diffForHumans(),
+                    'icon' => $this->getActivityIcon($activity),
+                    'color' => $this->getActivityColor($activity),
+                ];
+            });
+
+        return view('staff.registrar.dashboard', compact('kpis', 'productionStats', 'recordsStats', 'recentActivities'));
+    }
+
+    /**
+     * Display applications list for registrar with new structure.
+     */
+    public function applications(Request $request)
+    {
+        $query = Application::with(['applicant', 'assignedOfficer']);
+
+        // Apply status filter according to new requirements
+        if ($request->filled('status')) {
+            switch ($request->status) {
+                case 'awaiting_review':
+                    $query->where('registrar_reviewed', false)
+                          ->where('status', Application::OFFICER_APPROVED);
+                    break;
+                case 'forwarded':
+                    $query->where('status', Application::FORWARDED_TO_REGISTRAR);
+                    break;
+                case 'returned':
+                    $query->where('status', Application::CORRECTION_REQUESTED);
+                    break;
+            }
+        }
+
+        // Apply advanced filters
+        if ($request->filled('application_type')) {
+            $query->where('application_type', $request->application_type);
+        }
+
+        if ($request->filled('request_type')) {
+            $query->where('request_type', $request->request_type);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('applicant', function ($subQ) use ($search) {
+                    $subQ->where('name', 'like', "%{$search}%")
+                         ->orWhere('email', 'like', "%{$search}%");
+                })
+                ->orWhere('reference', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('reference')) {
+            $query->where('reference', 'like', "%{$request->reference}%");
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('submitted_at', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('submitted_at', '<=', $request->date_to);
+        }
+
+        if ($request->filled('payment_status')) {
+            if ($request->payment_status === 'paid') {
+                $query->where('payment_status', 'paid');
+            } else {
+                $query->where('payment_status', '!=', 'paid');
+            }
+        }
+
+        $applications = $query->orderBy('submitted_at', 'desc')->paginate(20);
+
+        return view('staff.registrar.applications', compact('applications'));
+    }
+
+    /**
+     * Mark application as reviewed by registrar.
+     */
+    public function markAsReviewed(Request $request, $id)
+    {
+        $application = Application::findOrFail($id);
+        
+        $application->update([
+            'registrar_reviewed' => true,
+            'registrar_reviewed_at' => now(),
+            'registrar_reviewed_by' => Auth::id(),
+        ]);
+
+        \App\Services\ActivityLogger::log('registrar_reviewed_application', $application, null, null, [
+            'registrar_id' => Auth::id(),
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Application marked as reviewed']);
+    }
+
+    /**
+     * Flag application anomaly.
+     */
+    public function flagAnomaly(Request $request, $id)
+    {
+        $request->validate([
+            'anomaly_description' => ['required', 'string', 'max:1000'],
+        ]);
+
+        $application = Application::findOrFail($id);
+        
+        $application->update([
+            'has_anomaly' => true,
+            'anomaly_description' => $request->anomaly_description,
+            'anomaly_flagged_by' => Auth::id(),
+            'anomaly_flagged_at' => now(),
+        ]);
+
+        \App\Services\ActivityLogger::log('application_anomaly_flagged', $application, null, null, [
+            'registrar_id' => Auth::id(),
+            'anomaly_description' => $request->anomaly_description,
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Anomaly flagged successfully']);
+    }
+
+    /**
+     * Send guidance to accreditation officer for complex applications.
+     */
+    public function sendGuidance(Request $request, $id)
+    {
+        $request->validate([
+            'guidance_note' => ['required', 'string', 'max:1000'],
+        ]);
+
+        $application = Application::findOrFail($id);
+        
+        // Create guidance record
+        $guidance = \App\Models\GuidanceNote::create([
+            'application_id' => $application->id,
+            'registrar_id' => Auth::id(),
+            'officer_id' => $application->assigned_officer_id,
+            'note' => $request->guidance_note,
+            'status' => 'sent',
+        ]);
+
+        // Update application status
+        $application->update([
+            'status' => Application::OFFICER_REVIEW,
+            'registrar_guidance_sent' => true,
+            'registrar_guidance_sent_at' => now(),
+        ]);
+
+        \App\Services\ActivityLogger::log('guidance_sent_to_officer', $application, null, null, [
+            'registrar_id' => Auth::id(),
+            'officer_id' => $application->assigned_officer_id,
+            'guidance_id' => $guidance->id,
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Guidance sent successfully']);
+    }
+
+    /**
+     * Send message to accreditation officer.
+     */
+    public function sendMessage(Request $request, $id)
+    {
+        $request->validate([
+            'message' => ['required', 'string', 'max:1000'],
+        ]);
+
+        $application = Application::findOrFail($id);
+        
+        // Create message record
+        $message = \App\Models\OfficerMessage::create([
+            'application_id' => $application->id,
+            'sender_id' => Auth::id(),
+            'receiver_id' => $application->assigned_officer_id,
+            'message' => $request->message,
+            'sender_type' => 'registrar',
+        ]);
+
+        \App\Services\ActivityLogger::log('message_sent_to_officer', $application, null, null, [
+            'registrar_id' => Auth::id(),
+            'officer_id' => $application->assigned_officer_id,
+            'message_id' => $message->id,
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Message sent successfully']);
+    }
+
+    /**
+     * Display operational reports - Officer activities only.
+     */
+    public function reports(Request $request)
+    {
+        $dateFrom = $request->date_from ?? now()->subMonth()->format('Y-m-d');
+        $dateTo = $request->date_to ?? now()->format('Y-m-d');
+
+        // Officer activities statistics only
+        $officerStats = DB::table('activities')
+            ->join('users', 'activities.user_id', '=', 'users.id')
+            ->where('activities.created_at', '>=', $dateFrom)
+            ->where('activities.created_at', '<=', $dateTo)
+            ->whereIn('activities.activity_type', [
+                'application_approved',
+                'application_rejected',
+                'correction_requested',
+                'forwarded_to_registrar'
+            ])
+            ->selectRaw('
+                users.name as officer_name,
+                COUNT(*) as total_activities,
+                SUM(CASE WHEN activities.activity_type = "application_approved" THEN 1 ELSE 0 END) as approved_count,
+                SUM(CASE WHEN activities.activity_type = "application_rejected" THEN 1 ELSE 0 END) as rejected_count,
+                SUM(CASE WHEN activities.activity_type = "correction_requested" THEN 1 ELSE 0 END) as correction_count,
+                SUM(CASE WHEN activities.activity_type = "forwarded_to_registrar" THEN 1 ELSE 0 END) as guidance_count
+            ')
+            ->groupBy('users.id', 'users.name')
+            ->orderBy('total_activities', 'desc')
             ->get();
 
-        $waiverApplications = Application::whereNotNull('waiver_path')
-            ->with('applicant')
-            ->latest()
-            ->limit(20)
-            ->get();
+        // Application processing times
+        $processingTimes = Application::where('submitted_at', '>=', $dateFrom)
+            ->where('submitted_at', '<=', $dateTo)
+            ->whereNotNull('approved_at')
+            ->get()
+            ->map(function ($app) {
+                return [
+                    'reference' => $app->reference,
+                    'type' => $app->application_type,
+                    'submitted_at' => $app->submitted_at,
+                    'approved_at' => $app->approved_at,
+                    'processing_days' => $app->submitted_at->diffInDays($app->approved_at),
+                ];
+            });
 
-        return view('staff.registrar.accounts_oversight', compact(
-            'paymentsQueue',
-            'recentPayments',
-            'paymentStats',
-            'paymentLogs',
-            'waiverApplications'
+        // Monthly trends for accreditation and registration only
+        $monthlyTrends = Application::selectRaw('
+            strftime("%Y-%m", submitted_at) as month,
+            COUNT(*) as total,
+            SUM(CASE WHEN application_type = "accreditation" THEN 1 ELSE 0 END) as accreditation_count,
+            SUM(CASE WHEN application_type = "registration" THEN 1 ELSE 0 END) as registration_count,
+            SUM(CASE WHEN status = "approved" THEN 1 ELSE 0 END) as approved_count
+        ')
+        ->where('submitted_at', '>=', $dateFrom)
+        ->where('submitted_at', '<=', $dateTo)
+        ->groupBy('month')
+        ->orderBy('month')
+        ->get();
+
+        // Prepare data for the trend chart
+        $months = [];
+        $approvedTrend = [];
+        $returnedTrend = [];
+        foreach ($monthlyTrends as $t) {
+            $months[] = date('M Y', strtotime($t->month . '-01'));
+            $approvedTrend[] = (int) $t->approved_count;
+            // For 'returned', we'll sum correction_requested and returned_to_applicant
+            $returnedTrend[] = Application::whereIn('status', [Application::CORRECTION_REQUESTED, Application::RETURNED_TO_APPLICANT])
+                ->whereRaw('strftime("%Y-%m", submitted_at) = ?', [$t->month])
+                ->count();
+        }
+
+        return view('staff.registrar.reports', compact(
+            'officerStats', 
+            'processingTimes', 
+            'monthlyTrends', 
+            'dateFrom', 
+            'dateTo',
+            'months',
+            'approvedTrend',
+            'returnedTrend'
         ));
     }
 
-    public function remindersIndex(Request $request)
+    /**
+     * Display downloads page - Accreditation and Registration only.
+     */
+    public function downloads(Request $request)
     {
-        $reminders = Reminder::with('creator')
-            ->latest()
+        // Get accreditation and registration related downloads only
+        $downloads = \App\Models\Download::whereIn('category', ['accreditation', 'registration'])
+            ->orderBy('created_at', 'desc')
             ->paginate(20);
 
-        return view('staff.registrar.reminders', compact('reminders'));
+        return view('staff.registrar.downloads', compact('downloads'));
     }
 
-    public function createReminder(Request $request)
+    /**
+     * Export applications data.
+     */
+    public function exportApplications(Request $request)
     {
-        $data = $request->validate([
-            'target_type' => ['required', 'in:user,media_house'],
-            'target_id' => ['required', 'integer'],
-            'message' => ['required', 'string', 'max:5000'],
-            'reminder_type' => ['required', 'string', 'max:100'],
-        ]);
+        $query = Application::with(['applicant', 'assignedOfficer']);
 
-        $reminder = Reminder::create([
-            'target_type' => $data['target_type'],
-            'target_id' => $data['target_id'],
-            'message' => $data['message'],
-            'reminder_type' => $data['reminder_type'],
-            'created_by' => Auth::id(),
-        ]);
-
-        ActivityLogger::log('registrar_create_reminder', $reminder, null, null, [
-            'target_type' => $data['target_type'],
-            'target_id' => $data['target_id'],
-            'reminder_type' => $data['reminder_type'],
-        ]);
-
-        return back()->with('success', 'Reminder created successfully.');
-    }
-
-    public function sendRenewalReminders(Request $request)
-    {
-        $data = $request->validate([
-            'record_type' => ['required', 'in:accreditation,registration'],
-            'record_ids' => ['nullable', 'array'],
-            'record_ids.*' => ['integer'],
-        ]);
-
-        $count = 0;
-        $type = $data['record_type'];
-        $ids = $data['record_ids'] ?? [];
-
-        if ($type === 'accreditation' && class_exists(\App\Models\AccreditationRecord::class)) {
-            $query = \App\Models\AccreditationRecord::query()->with('holder');
-            if (!empty($ids)) {
-                $query->whereIn('id', $ids);
-            } else {
-                $cutoff = now()->addDays(90);
-                $query->whereNotNull('expires_at')
-                      ->where('expires_at', '>=', now())
-                      ->where('expires_at', '<=', $cutoff);
-            }
-            $records = $query->get();
-            foreach ($records as $record) {
-                if ($record->holder) {
-                    activity()
-                        ->causedBy(Auth::user())
-                        ->performedOn($record)
-                        ->withProperties(['holder_email' => $record->holder->email])
-                        ->log('renewal_reminder_sent');
-                    $count++;
-                }
-            }
-        } elseif ($type === 'registration' && class_exists(\App\Models\RegistrationRecord::class)) {
-            $query = \App\Models\RegistrationRecord::query()->with('contact');
-            if (!empty($ids)) {
-                $query->whereIn('id', $ids);
-            } else {
-                $cutoff = now()->addDays(90);
-                $query->whereNotNull('expires_at')
-                      ->where('expires_at', '>=', now())
-                      ->where('expires_at', '<=', $cutoff);
-            }
-            $records = $query->get();
-            foreach ($records as $record) {
-                if ($record->contact) {
-                    activity()
-                        ->causedBy(Auth::user())
-                        ->performedOn($record)
-                        ->withProperties(['contact_email' => $record->contact->email])
-                        ->log('renewal_reminder_sent');
-                    $count++;
-                }
+        // Apply same filters as applications method
+        if ($request->filled('status')) {
+            switch ($request->status) {
+                case 'awaiting_review':
+                    $query->where('registrar_reviewed', false)
+                          ->where('status', Application::OFFICER_APPROVED);
+                    break;
+                case 'forwarded':
+                    $query->where('status', Application::FORWARDED_TO_REGISTRAR);
+                    break;
+                case 'returned':
+                    $query->where('status', Application::CORRECTION_REQUESTED);
+                    break;
             }
         }
 
-        return back()->with('success', "Renewal reminders sent to {$count} " . ($type === 'accreditation' ? 'media practitioners' : 'media houses') . ".");
-    }
-
-    private function audit(string $action, Application $application, ?string $from, ?string $to, array $meta = []): void
-    {
-        $payload = array_merge([
-            'actor_role' => session('active_staff_role'),
-            'actor_user_id' => Auth::id(),
-            'from_status' => $from,
-            'to_status' => $to,
-        ], $meta);
-
-        ActivityLogger::log($action, $application, $from, $to, $payload);
-        \App\Support\AuditTrail::log($action, $application, $payload);
-    }
-
-    private function safeSet(Application $application, array $fields): void
-    {
-        foreach ($fields as $k => $v) {
-            if ($this->hasColumn('applications', $k)) {
-                $application->{$k} = $v;
-            }
+        // Apply other filters
+        if ($request->filled('application_type')) {
+            $query->where('application_type', $request->application_type);
         }
-        $application->save();
-    }
-
-    public function reports(Request $request)
-    {
-        $query = Application::query();
-
-        if ($request->filled('date_from')) {
-            $query->whereDate('created_at', '>=', $request->date_from);
+        if ($request->filled('request_type')) {
+            $query->where('request_type', $request->request_type);
         }
-        if ($request->filled('date_to')) {
-            $query->whereDate('created_at', '<=', $request->date_to);
-        }
-
-        $approvals = (clone $query)->where('status', Application::REGISTRAR_APPROVED)->count();
-        $reassignments = ActivityLog::where('action', 'registrar_reassign_category')
-            ->when($request->filled('date_from'), fn($q) => $q->whereDate('created_at', '>=', $request->date_from))
-            ->when($request->filled('date_to'), fn($q) => $q->whereDate('created_at', '<=', $request->date_to))
-            ->count();
-
-        $totalPrints = PrintLog::when($request->filled('date_from'), fn($q) => $q->whereDate('created_at', '>=', $request->date_from))
-            ->when($request->filled('date_to'), fn($q) => $q->whereDate('created_at', '<=', $request->date_to))
-            ->count();
-
-        $edits = DocumentVersion::when($request->filled('date_from'), fn($q) => $q->whereDate('created_at', '>=', $request->date_from))
-            ->when($request->filled('date_to'), fn($q) => $q->whereDate('created_at', '<=', $request->date_to))
-            ->count();
-
-        return view('staff.registrar.reports', compact('approvals', 'reassignments', 'totalPrints', 'edits'));
-    }
-
-    public function auditTrailSearch(Request $request)
-    {
-        $query = ActivityLog::query()->with(['user', 'entity']);
-
         if ($request->filled('search')) {
-            $s = $request->search;
-            $query->where(function($q) use ($s) {
-                $q->where('action', 'like', "%$s%")
-                  ->orWhere('meta', 'like', "%$s%")
-                  ->orWhereHas('user', function($uq) use ($s) {
-                      $uq->where('name', 'like', "%$s%");
-                  });
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('applicant', function ($subQ) use ($search) {
+                    $subQ->where('name', 'like', "%{$search}%")
+                         ->orWhere('email', 'like', "%{$search}%");
+                })
+                ->orWhere('reference', 'like', "%{$search}%");
             });
         }
 
-        $logs = $query->latest()->paginate(50);
-        return view('staff.registrar.audit_trail', compact('logs'));
+        $applications = $query->get();
+
+        $filename = 'registrar_applications_export_' . now()->format('Ymd_His') . '.csv';
+        
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ];
+
+        $callback = function() use ($applications) {
+            $file = fopen('php://output', 'w');
+            
+            // CSV Header
+            fputcsv($file, [
+                'Reference',
+                'Applicant Name',
+                'Email',
+                'Application Type',
+                'Request Type',
+                'Status',
+                'Payment Status',
+                'Submitted Date',
+                'Approved Date',
+                'Registrar Reviewed',
+                'Assigned Officer',
+                'Has Anomaly',
+                'Processing Days'
+            ]);
+
+            foreach ($applications as $app) {
+                fputcsv($file, [
+                    $app->reference,
+                    $app->applicant?->name ?? '',
+                    $app->applicant?->email ?? '',
+                    $app->application_type,
+                    $app->request_type,
+                    $app->statusLabel(),
+                    $app->payment_status,
+                    optional($app->submitted_at)->format('Y-m-d H:i'),
+                    optional($app->approved_at)->format('Y-m-d H:i'),
+                    $app->registrar_reviewed ? 'Yes' : 'No',
+                    $app->assignedOfficer?->name ?? '',
+                    $app->has_anomaly ? 'Yes' : 'No',
+                    $app->approved_at ? $app->submitted_at->diffInDays($app->approved_at) : ''
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
-    private function hasColumn(string $table, string $column): bool
+    /**
+     * Export dashboard report.
+     */
+    public function exportDashboardReport()
     {
-        try { return Schema::hasColumn($table, $column); }
-        catch (\Throwable $e) { return false; }
+        $data = [
+            'export_date' => now()->format('Y-m-d H:i:s'),
+            'total_applications' => Application::count(),
+            'awaiting_review' => Application::where('registrar_reviewed', false)
+                ->where('status', Application::OFFICER_APPROVED)
+                ->count(),
+            'returned_for_correction' => Application::where('status', Application::CORRECTION_REQUESTED)
+                ->count(),
+            'forwarded_to_registrar' => Application::where('status', Application::FORWARDED_TO_REGISTRAR)
+                ->count(),
+            'cards_today' => AccreditationRecord::whereDate('created_at', today())->count() + 
+                            RegistrationRecord::whereDate('created_at', today())->count(),
+        ];
+
+        $filename = 'registrar_dashboard_report_' . now()->format('Ymd_His') . '.json';
+        
+        return response()->json($data, 200, [
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ]);
     }
 
-    public function noticesEvents(Request $request)
+    // Helper methods for activity display
+    private function getActivityTitle($activity)
     {
-        $notices = Notice::query()
-            ->where('is_published', true)
-            ->orderByDesc('published_at')
-            ->paginate(20);
-
-        $events = Event::query()
-            ->where('is_published', true)
-            ->orderBy('starts_at')
-            ->paginate(20);
-
-        return view('staff.registrar.notices_events', compact('notices', 'events'));
+        return match($activity->activity_type) {
+            'application_approved' => 'Application Approved',
+            'application_rejected' => 'Application Rejected',
+            'payment_confirmed' => 'Payment Confirmed',
+            'payment_verified' => 'Payment Verified',
+            'card_generated' => 'Card Generated',
+            'certificate_issued' => 'Certificate Issued',
+            default => 'Activity',
+        };
     }
 
-    public function news(Request $request)
+    private function getActivityDescription($activity)
     {
-        $news = News::query()
-            ->where('is_published', true)
-            ->orderByDesc('published_at')
-            ->paginate(20);
+        $user = $activity->user?->name ?? 'Unknown';
+        
+        return match($activity->activity_type) {
+            'application_approved' => "{$user} approved application",
+            'application_rejected' => "{$user} rejected application",
+            'payment_confirmed' => "{$user} confirmed payment",
+            'payment_verified' => "{$user} verified payment",
+            'card_generated' => "{$user} generated card",
+            'certificate_issued' => "{$user} issued certificate",
+            default => "Activity by {$user}",
+        };
+    }
 
-        return view('staff.registrar.news', compact('news'));
+    private function getActivityIcon($activity)
+    {
+        return match($activity->activity_type) {
+            'application_approved' => 'check-line',
+            'application_rejected' => 'close-line',
+            'payment_confirmed' => 'money-dollar-circle-line',
+            'payment_verified' => 'shield-check-line',
+            'card_generated' => 'bank-card-line',
+            'certificate_issued' => 'award-line',
+            default => 'file-list-3-line',
+        };
+    }
+
+    private function getActivityColor($activity)
+    {
+        return match($activity->activity_type) {
+            'application_approved' => 'success',
+            'application_rejected' => 'danger',
+            'payment_confirmed' => 'primary',
+            'payment_verified' => 'info',
+            'card_generated' => 'warning',
+            'certificate_issued' => 'success',
+            default => 'primary',
+        };
     }
 }

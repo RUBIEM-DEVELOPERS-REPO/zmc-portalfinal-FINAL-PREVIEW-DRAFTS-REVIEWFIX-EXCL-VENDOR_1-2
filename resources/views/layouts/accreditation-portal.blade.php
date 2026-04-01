@@ -210,7 +210,12 @@
       </li>
       <li>
         <a class="{{ request()->routeIs('accreditation.renewals') ? 'active' : '' }}" href="{{ route('accreditation.renewals') }}">
-          <i class="ri-refresh-line"></i> Renewal / Replacement (AP5)
+          <i class="ri-refresh-line"></i> Renewal (AP5)
+        </a>
+      </li>
+      <li>
+        <a class="{{ request()->routeIs('accreditation.replacement') ? 'active' : '' }}" href="{{ route('accreditation.replacement') }}">
+          <i class="ri-file-copy-line"></i> Replacement (AP5)
         </a>
       </li>
       <li>

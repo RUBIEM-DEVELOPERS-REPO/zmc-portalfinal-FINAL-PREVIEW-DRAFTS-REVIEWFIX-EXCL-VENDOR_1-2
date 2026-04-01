@@ -245,7 +245,7 @@ class MediaHousePortalController extends Controller
                     'mime' => $file->getMimeType(),
                     'size' => $file->getSize(),
                     'sha256' => $sha256,
-                    'file_data' => base64_encode(file_get_contents($file->getRealPath())),
+                    'file_data' => null,
                     'status' => 'uploaded'
                 ]
             );
@@ -373,9 +373,10 @@ class MediaHousePortalController extends Controller
         ]);
 
         return response()->json([
-            'success' => true,
-            'message' => 'Application submitted successfully with application fee.',
-            'reference' => $application->reference,
+            'success'        => true,
+            'message'        => 'Application submitted successfully with application fee.',
+            'reference'      => $application->reference,
+            'application_id' => $application->id,
         ]);
     }
 
@@ -451,7 +452,7 @@ class MediaHousePortalController extends Controller
                     'mime' => $file->getMimeType(),
                     'size' => $file->getSize(),
                     'sha256' => $sha256,
-                    'file_data' => base64_encode(file_get_contents($file->getRealPath())),
+                    'file_data' => null,
                     'status' => 'pending',
                 ]
             );
@@ -513,7 +514,7 @@ class MediaHousePortalController extends Controller
 
         $lastRef = Application::where('reference', 'like', $prefix . '%')
             ->where('reference', 'not like', 'DRAFT%')
-            ->orderByRaw("CAST(RIGHT(reference, 4) AS INTEGER) DESC")
+            ->orderBy('reference', 'desc')
             ->value('reference');
 
         $nextNum = $lastRef ? ((int) substr($lastRef, -4) + 1) : 1;
@@ -576,7 +577,7 @@ class MediaHousePortalController extends Controller
                     'mime' => $file->getMimeType(),
                     'size' => $file->getSize(),
                     'sha256' => $sha256,
-                    'file_data' => base64_encode(file_get_contents($file->getRealPath())),
+                    'file_data' => null,
                     'status' => 'pending',
                 ]
             );
@@ -590,6 +591,7 @@ class MediaHousePortalController extends Controller
             'success' => true,
             'message' => 'AP5 submitted successfully',
             'reference' => $application->reference,
+            'application_id' => $application->id,
         ]);
     }
 
@@ -616,7 +618,7 @@ class MediaHousePortalController extends Controller
                 'mime' => $file->getMimeType(),
                 'size' => $file->getSize(),
                 'sha256' => $sha256,
-                'file_data' => base64_encode(file_get_contents($file->getRealPath())),
+                'file_data' => null,
                 'status' => 'pending',
             ]);
         }
@@ -629,7 +631,7 @@ class MediaHousePortalController extends Controller
         $drafts = Application::where('applicant_user_id', $user->id)
             ->where('is_draft', true)
             ->where('application_type', 'registration')
-            ->whereIn('request_type', ['renewal', 'replacement'])
+            ->where('request_type', 'renewal')
             ->orderByDesc('created_at')
             ->get();
 
@@ -640,6 +642,40 @@ class MediaHousePortalController extends Controller
 
         return view('portal.mediahouse.renewals', compact('drafts', 'draft'));
     }
+
+    public function replacement(Request $request)
+    {
+        $user = Auth::user();
+
+        $drafts = Application::where('applicant_user_id', $user->id)
+            ->where('is_draft', true)
+            ->where('application_type', 'registration')
+            ->where('request_type', 'replacement')
+            ->orderByDesc('created_at')
+            ->get();
+
+        $draft = null;
+        if ($request->filled('draft')) {
+            $draft = $drafts->firstWhere('reference', $request->input('draft'));
+        }
+
+        return view('portal.mediahouse.replacement', compact('drafts', 'draft'));
+    }
+
+    public function saveDraftReplacement(Request $request)
+    {
+        // Use the same logic as saveDraftAp5 but force request_type to 'replacement'
+        $request->merge(['request_type' => 'replacement']);
+        return $this->saveDraftAp5($request);
+    }
+
+    public function submitReplacement(Request $request)
+    {
+        // Use the same logic as submitAp5 but force request_type to 'replacement'
+        $request->merge(['request_type' => 'replacement']);
+        return $this->submitAp5($request);
+    }
+
 
     public function lookupRegistrationNumber(string $number)
     {
@@ -684,7 +720,23 @@ class MediaHousePortalController extends Controller
 
     public function payments()
     {
-        return view('portal.mediahouse.payments');
+        $user = Auth::user();
+        $applications = Application::where('applicant_user_id', $user->id)
+            ->where('application_type', 'registration')
+            ->where(function($q) use ($user) {
+                $q->whereNotNull('payment_status')
+                  ->orWhereIn('status', [
+                      \App\Models\Application::AWAITING_ACCOUNTS_VERIFICATION,
+                      \App\Models\Application::PAYMENT_VERIFIED,
+                      \App\Models\Application::PAID_CONFIRMED,
+                      \App\Models\Application::ACCOUNTS_REVIEW,
+                      \App\Models\Application::APPROVED_AWAITING_PAYMENT,
+                  ]);
+            })
+            ->orderByDesc('submitted_at')
+            ->get();
+
+        return view('portal.mediahouse.payments', compact('applications'));
     }
 
     public function notices()
@@ -701,7 +753,12 @@ class MediaHousePortalController extends Controller
             ->limit(20)
             ->get();
 
-        return view('portal.mediahouse.notices', compact('notices', 'events'));
+        $news = \App\Models\News::where('is_published', true)
+            ->orderByDesc('published_at')
+            ->limit(10)
+            ->get();
+
+        return view('portal.mediahouse.notices', compact('notices', 'events', 'news'));
     }
 
     public function howto()

@@ -58,11 +58,24 @@
             margin-bottom: 25px;
             text-decoration: none;
         }
-        .brand img { height: 45px; width: auto; }
+        .brand img { width: 100%; height: 100%; object-fit: contain; display: block; margin: 0; mix-blend-mode: multiply; }
+        .logo-circle {
+            width: 110px;
+            height: 110px;
+            flex-shrink: 0;
+            background: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
         .brand span{
             font-family: Roboto, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
             font-weight: 900;
-            font-size: 20px;
+            font-size: 28px;
             color: var(--text);
             letter-spacing: -0.5px;
             text-transform: uppercase;
@@ -211,7 +224,9 @@
 <div class="wrap">
     {{-- Brand with Logo --}}
     <a href="{{ url('/') }}" class="brand">
-        <img src="{{ asset('zimbabwe_media_commission_transparent_edges.png') }}" alt="ZMC Logo">
+        <div class="logo-circle">
+            <img src="{{ asset('zmc_logo_circular.png') }}" alt="ZMC Logo">
+        </div>
         <span>ZMC Portal</span>
     </a>
 
@@ -272,6 +287,38 @@
             </div>
 
             <div class="field">
+                <label>Phone Number <span style="font-weight:500;color:var(--muted);">(with country code)</span></label>
+                <div class="row">
+                    <div class="col-md-5">
+                        <select name="phone_country_code" class="input" required>
+                            <option value="">Country Code</option>
+                            @foreach(\App\Models\Country::where('is_active', true)->orderBy('name')->get() as $country)
+                                <option value="{{ $country->code }}" {{ old('phone_country_code') == $country->code ? 'selected' : '' }}>
+                                    {{ $country->name }} ({{ $country->phone_code }})
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-7">
+                        <input
+                            type="tel"
+                            name="phone_number"
+                            class="input @error('phone_number') is-invalid @enderror"
+                            placeholder="Phone Number"
+                            value="{{ old('phone_number') }}"
+                            required
+                        >
+                    </div>
+                </div>
+                @error('phone_number')
+                    <div class="error-message">
+                        <i class="ri-error-warning-line"></i>
+                        <span>{{ $message }}</span>
+                    </div>
+                @enderror
+            </div>
+
+            <div class="field">
                 <label for="password">New Password <span style="font-weight:500;color:var(--muted);">(minimum 6 characters)</span></label>
                 <div class="input-group">
                     <input
@@ -322,9 +369,9 @@
             </button>
 
             <div class="footer-text">
-                <a href="{{ route('login') }}">
+                <a href="{{ route('staff.login') }}">
                     <i class="ri-arrow-left-line"></i>
-                    Back to Login
+                    Back to Staff Login
                 </a>
             </div>
         </form>

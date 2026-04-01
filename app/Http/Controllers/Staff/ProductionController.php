@@ -15,6 +15,7 @@ use App\Models\RegistrationRecord;
 use App\Models\CardTemplate;
 use App\Models\PrintLog;
 use Illuminate\Support\Facades\Storage;
+use App\Support\AuditTrail as AuditTrailSupport;
 
 class ProductionController extends Controller
 {
@@ -52,56 +53,182 @@ class ProductionController extends Controller
             });
         }
 
+        // Filter logic identical to Officer dashboard
+        $request = request();
+        if ($rt = $request->query('request_type')) {
+            if (in_array($rt, ['new','renewal','replacement'], true)) $q->where('request_type', $rt);
+        }
+        if ($sc = $request->query('scope')) {
+            if (in_array($sc, ['local','foreign'], true)) {
+                if ($sc === 'local') {
+                    $q->where(function ($w) {
+                        $w->where('journalist_scope', 'local')->orWhereNull('journalist_scope');
+                    });
+                } else {
+                    $q->where('journalist_scope', 'foreign');
+                }
+            }
+        }
+        if ($from = $request->query('date_from')) {
+            $q->whereDate('created_at', '>=', $from);
+        }
+        if ($to = $request->query('date_to')) {
+            $q->whereDate('created_at', '<=', $to);
+        }
+        if ($m = $request->query('month')) {
+            $q->whereMonth('created_at', $m);
+        }
+        if ($y = $request->query('year')) {
+            $q->whereYear('created_at', $y);
+        }
+        if ($search = trim((string)$request->query('q'))) {
+            $q->where(function ($qq) use ($search) {
+                $qq->where('reference', 'like', "%{$search}%")
+                   ->orWhereHas('applicant', function ($u) use ($search) {
+                       $u->where('name','like', "%{$search}%")
+                         ->orWhere('email','like', "%{$search}%");
+                   });
+            });
+        }
+
         return $q;
     }
 
     public function dashboard()
     {
+        $user = Auth::user();
+
+        // Production queue statistics
+        $kpiQueue = (clone $this->baseQuery([
+            Application::PAID_CONFIRMED,
+            Application::PRODUCTION_QUEUE,
+        ]))->count();
+
+        $kpiToPrint = (clone $this->baseQuery([
+            Application::CARD_GENERATED,
+            Application::CERT_GENERATED,
+        ]))->count();
+
+        $kpiPrinted = (clone $this->baseQuery([Application::PRINTED]))->count();
+        $kpiIssued  = (clone $this->baseQuery([Application::ISSUED]))->count();
+
+        $kpiGeneratedToday = (clone $this->baseQuery([Application::CARD_GENERATED, Application::CERT_GENERATED]))
+            ->whereDate('updated_at', today())
+            ->count();
+
+        $kpiIssuedToday = (clone $this->baseQuery([Application::ISSUED]))
+            ->whereDate('updated_at', today())
+            ->count();
+
+        // Main table: show items currently in flux (not yet issued)
         $applications = $this->baseQuery([
-            Application::PAYMENT_VERIFIED,
+            Application::PAID_CONFIRMED,
             Application::PRODUCTION_QUEUE,
             Application::CARD_GENERATED,
             Application::CERT_GENERATED,
             Application::PRINTED,
-            Application::ISSUED,
         ])->paginate(20);
 
-        // KPI counters (region scoped)
-        $kpiQueue       = (clone $this->baseQuery([Application::PAYMENT_VERIFIED, Application::PRODUCTION_QUEUE]))->count();
-        $kpiToPrint     = (clone $this->baseQuery([Application::CARD_GENERATED, Application::CERT_GENERATED]))->count();
-        $kpiPrinted     = (clone $this->baseQuery([Application::PRINTED]))->count();
-        $kpiIssued      = (clone $this->baseQuery([Application::ISSUED]))->count();
-
-        // "Today" counts (created_at as proxy for production events)
-        // Note: for more accuracy, derive from workflow logs/audit trail later.
-        $today = now()->startOfDay();
-        $kpiGeneratedToday = (clone $this->baseQuery([Application::CARD_GENERATED, Application::CERT_GENERATED]))
-            ->where('updated_at', '>=', $today)->count();
-        $kpiIssuedToday = (clone $this->baseQuery([Application::ISSUED]))
-            ->where('updated_at', '>=', $today)->count();
-
         return view('staff.production.dashboard', compact(
-            'applications',
             'kpiQueue',
             'kpiToPrint',
             'kpiPrinted',
             'kpiIssued',
             'kpiGeneratedToday',
-            'kpiIssuedToday'
+            'kpiIssuedToday',
+            'applications'
         ));
     }
 
     /**
-     * Production Queue (Registrar approved → Production).
+     * Production Queue - Applications ready for card/certificate generation
      */
     public function queue()
     {
-        $applications = $this->baseQuery([Application::PAYMENT_VERIFIED, Application::PRODUCTION_QUEUE])->paginate(20);
+        $query = Application::query()
+            ->with(['applicant', 'documents'])
+            ->whereIn('status', [
+                Application::PAID_CONFIRMED,
+                Application::PRODUCTION_QUEUE,
+            ])
+            ->latest();
+
+        // Apply comprehensive filters (same as accreditation officer)
+        $this->applyFilters($query, request());
+
+        $applications = $query->paginate(20)->withQueryString();
+
         return view('staff.production.list', [
             'pageTitle' => 'Production Queue',
-            'pageNote'  => 'Items approved by the Registrar and awaiting production actions.',
+            'pageNote'  => 'All approved applications awaiting production work.',
             'applications' => $applications,
-            'mode' => 'queue',
+            'mode' => 'queue'
+        ]);
+    }
+
+    /**
+     * Apply common filters to production queries
+     */
+    private function applyFilters($query, Request $request)
+    {
+        if ($request->filled('name')) {
+            $search = $request->input('name');
+            $query->whereHas('applicant', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('application_type')) {
+            $query->where('application_type', $request->input('application_type'));
+        }
+
+        if ($request->filled('request_type')) {
+            $query->where('request_type', $request->input('request_type'));
+        }
+
+        if ($request->filled('reference')) {
+            $query->where('reference', 'like', '%' . $request->input('reference') . '%');
+        }
+
+        if ($request->filled('date')) {
+            $query->whereDate('created_at', $request->input('date'));
+        }
+
+        if ($request->filled('month')) {
+            $query->whereMonth('created_at', $request->input('month'));
+        }
+
+        if ($request->filled('year')) {
+            $query->whereYear('created_at', $request->input('year'));
+        }
+
+        return $query;
+    }
+
+    /**
+     * Card Generation - Generate cards/certificates for applications
+     */
+    public function cardGeneration(Request $request)
+    {
+        $query = Application::query()
+            ->with(['applicant', 'documents'])
+            ->whereIn('status', [
+                Application::PRODUCTION_QUEUE,
+                Application::CARD_GENERATED,
+                Application::CERT_GENERATED,
+            ])
+            ->latest();
+
+        // Apply filters
+        $this->applyFilters($query, $request);
+
+        $applications = $query->paginate(20)->withQueryString();
+
+        return view('staff.production.list', [
+            'pageTitle' => 'Card & Certificate Generation',
+            'pageNote'  => 'Bulk generate / preview documents for approved applications.',
+            'applications' => $applications,
+            'mode' => 'generation'
         ]);
     }
 
@@ -491,7 +618,20 @@ class ProductionController extends Controller
         $application->refresh();
         $this->audit('production_print_single', $application, $from, $application->status);
 
-        return back()->with('success', 'Marked as printed.');
+        if ($from !== Application::PRINTED) {
+            try {
+                if ($application->applicant) {
+                    $application->applicant->notify(new \App\Notifications\ReadyForCollectionNotification($application));
+                }
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to send ReadyForCollection notification', [
+                    'application_id' => $application->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+
+        return back()->with('success', 'Marked as printed. Applicant notified.');
     }
 
     public function printBatch(Request $request)
@@ -525,11 +665,24 @@ class ProductionController extends Controller
                     'batch_size' => count($apps),
                 ]);
 
+                if ($from !== Application::PRINTED) {
+                    try {
+                        if ($app->applicant) {
+                            $app->applicant->notify(new \App\Notifications\ReadyForCollectionNotification($app));
+                        }
+                    } catch (\Exception $e) {
+                        \Illuminate\Support\Facades\Log::error('Failed to send ReadyForCollection notification in batch', [
+                            'application_id' => $app->id,
+                            'error' => $e->getMessage()
+                        ]);
+                    }
+                }
+
                 $processed++;
             }
         }
 
-        return back()->with('success', "Batch print processed. Printed: {$processed} item(s).");
+        return back()->with('success', "Batch print processed. Printed: {$processed} item(s). Applicants notified.");
     }
 
     public function markIssued(Request $request, Application $application)
@@ -652,7 +805,7 @@ class ProductionController extends Controller
         ], $meta);
 
         ActivityLogger::log($action, $application, $from, $to, $payload);
-        \App\Support\AuditTrail::log($action, $application, $payload);
+        AuditTrailSupport::log($action, $application, $payload);
     }
 
     /**

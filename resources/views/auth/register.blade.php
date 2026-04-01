@@ -57,14 +57,24 @@
             margin-bottom: 25px;
             text-decoration: none;
         }
-        .brand img {
-            height: 40px; /* Adjust height to fit with text */
-            width: auto;
+        .brand img { width: 100%; height: 100%; object-fit: contain; display: block; margin: 0; mix-blend-mode: multiply; }
+        .logo-circle {
+            width: 110px;
+            height: 110px;
+            flex-shrink: 0;
+            background: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            overflow: hidden;
         }
         .brand span{
             font-family: 'Roboto';
             font-weight: 900;
-            font-size: 20px;
+            font-size: 28px;
             color: var(--text);
             letter-spacing: -0.5px;
             text-transform: uppercase;
@@ -189,7 +199,9 @@
         @endphp
         {{-- BRAND SECTION WITH IMAGE LOGO --}}
         <div class="brand">
-            <img src="{{ asset('zimbabwe_media_commission_transparent_edges.png') }}" alt="ZMC Logo">
+            <div class="logo-circle">
+                <img src="{{ asset('zmc_logo_circular.png') }}" alt="ZMC Logo">
+            </div>
             <span>ZMC PORTAL</span>
         </div>
 
@@ -232,16 +244,13 @@
 
                 <div class="grid">
                     <div>
-                        <label for="phone_country_code">Phone Country Code</label>
-                        <select id="phone_country_code" name="phone_country_code" class="input">
-                            <option value="">Select</option>
-                            <option value="+263" @selected(old('phone_country_code')=='+263')>🇿🇼 +263 (Zimbabwe)</option>
-                            <option value="+27" @selected(old('phone_country_code')=='+27')>🇿🇦 +27 (South Africa)</option>
-                            <option value="+260" @selected(old('phone_country_code')=='+260')>🇿🇲 +260 (Zambia)</option>
-                            <option value="+258" @selected(old('phone_country_code')=='+258')>🇲🇿 +258 (Mozambique)</option>
-                            <option value="+1" @selected(old('phone_country_code')=='+1')>🇺🇸 +1 (US/Canada)</option>
-                            <option value="+44" @selected(old('phone_country_code')=='+44')>🇬🇧 +44 (UK)</option>
-                        </select>
+                        <label for="phone_country_code">Country Code</label>
+                        <x-country-code-select 
+                            name="phone_country_code" 
+                            id="phone_country_code" 
+                            class="input"
+                            :value="old('phone_country_code', '+263')"
+                        />
                         @error('phone_country_code') <div class="error">{{ $message }}</div> @enderror
                     </div>
                     <div>

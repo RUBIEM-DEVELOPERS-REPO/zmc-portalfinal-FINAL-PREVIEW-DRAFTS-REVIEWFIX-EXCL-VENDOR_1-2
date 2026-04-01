@@ -62,19 +62,6 @@
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end border shadow-sm rounded-3">
                                     <li><a class="dropdown-item small" href="{{ route('staff.it.application.overview', $app) }}"><i class="ri-eye-line me-2"></i> View Details</a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li>
-                                        <form action="{{ route('staff.it.application.unlock', $app->id) }}" method="POST">
-                                            @csrf
-                                            <button type="submit" class="dropdown-item small text-warning"><i class="ri-lock-unlock-line me-2"></i> Release Lock</button>
-                                        </form>
-                                    </li>
-                                    <li>
-                                        <form action="{{ route('staff.it.application.reset', $app->id) }}" method="POST">
-                                            @csrf
-                                            <button type="submit" class="dropdown-item small text-danger"><i class="ri-restart-line me-2"></i> Reset to Draft</button>
-                                        </form>
-                                    </li>
                                 </ul>
                             </div>
                         </td>

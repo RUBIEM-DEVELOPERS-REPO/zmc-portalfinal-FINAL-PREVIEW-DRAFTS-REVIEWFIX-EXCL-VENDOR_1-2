@@ -79,6 +79,24 @@ class InitialDataSeeder extends Seeder
                 'role' => 'complaints_officer',
                 'designation' => 'Complaints Officer',
             ],
+            [
+                'name' => 'PR Officer',
+                'email' => 'pr@zmc.org.zw',
+                'role' => 'pr',
+                'designation' => 'Public Relations Officer',
+            ],
+            [
+                'name' => 'Compliance Manager',
+                'email' => 'compliance@zmc.org.zw',
+                'role' => 'public_info_compliance',
+                'designation' => 'Compliance Manager',
+            ],
+            [
+                'name' => 'Research Analyst',
+                'email' => 'research@zmc.org.zw',
+                'role' => 'research_training_standards',
+                'designation' => 'Research & Training Analyst',
+            ],
         ];
 
         foreach ($staff as $s) {
@@ -127,7 +145,7 @@ class InitialDataSeeder extends Seeder
 
     private function seedNotices(): void
     {
-        $adminId = User::where('email', 'superadmin@zmc.org.zw')->value('id') ?? 1;
+        $adminId = User::where('email', 'mupikenipatience@gmail.com')->value('id') ?? 1;
 
         $notices = [
             [
@@ -170,7 +188,7 @@ class InitialDataSeeder extends Seeder
 
     private function seedEvents(): void
     {
-        $adminId = User::where('email', 'superadmin@zmc.org.zw')->value('id') ?? 1;
+        $adminId = User::where('email', 'mupikenipatience@gmail.com')->value('id') ?? 1;
 
         $events = [
             [
@@ -215,7 +233,7 @@ class InitialDataSeeder extends Seeder
 
     private function seedNews(): void
     {
-        $adminId = User::where('email', 'superadmin@zmc.org.zw')->value('id') ?? 1;
+        $adminId = User::where('email', 'mupikenipatience@gmail.com')->value('id') ?? 1;
 
         $news = [
             [
@@ -286,7 +304,7 @@ class InitialDataSeeder extends Seeder
                     'name' => $ta['name'],
                     'password' => Hash::make('Test@12345'),
                     'account_status' => 'active',
-                    'account_type' => $ta['portal_type'],
+                    'account_type' => 'public', // All test users are public users
                 ]
             );
         }
@@ -450,6 +468,7 @@ class InitialDataSeeder extends Seeder
             ['key' => 'registration_fee_media_house_renewal', 'value' => '300'],
             ['key' => 'card_validity_years', 'value' => '1'],
             ['key' => 'application_processing_days', 'value' => '14'],
+            ['key' => 'master_settings', 'value' => json_encode(config('zmc.master_settings'))],
         ];
 
         foreach ($configs as $config) {

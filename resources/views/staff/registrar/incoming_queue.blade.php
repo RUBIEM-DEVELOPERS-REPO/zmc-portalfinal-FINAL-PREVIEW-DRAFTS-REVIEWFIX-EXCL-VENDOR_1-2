@@ -63,285 +63,154 @@
                                     $canApproveForPayment = $app->payment_status !== 'paid' && !$app->registrar_reviewed_at;
                                 @endphp
                                 <div class="d-flex gap-1 justify-content-end">
-                                    {{-- Reassign Category --}}
-                                    <button
-                                        type="button"
-                                        class="btn btn-sm btn-outline-warning rounded-circle p-2 js-open-modal"
-                                        data-target="#reassignModal{{ $app->id }}"
-                                        data-bs-toggle="tooltip"
-                                        title="Reassign Category"
-                                        style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;"
-                                    >
-                                        <i class="fa-solid fa-award"></i>
-                                    </button>
+                                     {{-- Reviewed Toggle --}}
+                                     <form method="POST" action="{{ route('staff.registrar.applications.toggle-reviewed', $app) }}">
+                                         @csrf
+                                         <button type="submit"
+                                             class="btn btn-sm {{ $app->registrar_reviewed_at ? 'btn-success' : 'btn-outline-secondary' }} rounded-circle p-2"
+                                             data-bs-toggle="tooltip"
+                                             title="{{ $app->registrar_reviewed_at ? 'Reviewed ✓ (Click to unmark)' : 'Mark as Reviewed' }}"
+                                             style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;">
+                                             <i class="fa-solid fa-check-double"></i>
+                                         </button>
+                                     </form>
 
-                                    {{-- View --}}
-                                    <button
-                                        type="button"
-                                        class="btn btn-sm btn-outline-primary rounded-circle p-2 js-view-more"
-                                        data-app-id="{{ $app->id }}"
-                                        data-bs-toggle="tooltip"
-                                        title="View Details"
-                                        style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;"
-                                    >
-                                        <i class="fa-regular fa-eye"></i>
-                                    </button>
+                                     {{-- View Details --}}
+                                     <button type="button"
+                                         class="btn btn-sm btn-outline-primary rounded-circle p-2 js-view-more"
+                                         data-app-id="{{ $app->id }}"
+                                         data-bs-toggle="tooltip" title="View Details"
+                                         style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;">
+                                         <i class="fa-regular fa-eye"></i>
+                                     </button>
 
-                                    {{-- Approve (shows appropriate modal based on payment status) --}}
-                                    <button
-                                        type="button"
-                                        class="btn btn-sm btn-outline-success rounded-circle p-2 js-open-modal"
-                                        data-target="{{ $canApproveForPayment ? '#approveForPaymentModal' . $app->id : '#approveModal' . $app->id }}"
-                                        data-bs-toggle="tooltip"
-                                        title="{{ $canApproveForPayment ? 'Approve for Payment' : 'Final Approval' }}"
-                                        style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;"
-                                    >
-                                        <i class="fa-solid fa-check"></i>
-                                    </button>
+                                     {{-- Flag Anomaly --}}
+                                     <button type="button"
+                                         class="btn btn-sm {{ $app->is_flagged ? 'btn-danger' : 'btn-outline-danger' }} rounded-circle p-2 js-open-modal"
+                                         data-target="#flagAnomalyModal{{ $app->id }}"
+                                         data-bs-toggle="tooltip" title="{{ $app->is_flagged ? 'Flagged' : 'Flag Anomaly' }}"
+                                         style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;">
+                                         <i class="fa-solid fa-flag"></i>
+                                     </button>
 
-                                    {{-- Return --}}
-                                    <button
-                                        type="button"
-                                        class="btn btn-sm btn-outline-dark rounded-circle p-2 js-open-modal"
-                                        data-target="#returnModal{{ $app->id }}"
-                                        data-bs-toggle="tooltip"
-                                        title="Return to Accounts"
-                                        style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;"
-                                    >
-                                        <i class="fa-regular fa-comment-dots"></i>
-                                    </button>
+                                     {{-- Message Officer --}}
+                                     <button type="button"
+                                         class="btn btn-sm btn-outline-info rounded-circle p-2 js-open-modal"
+                                         data-target="#msgOfficerModal{{ $app->id }}"
+                                         data-bs-toggle="tooltip" title="Message Accreditation Officer"
+                                         style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;">
+                                         <i class="fa-regular fa-comment-dots"></i>
+                                     </button>
 
-                                    {{-- Reject --}}
-                                    <button
-                                        type="button"
-                                        class="btn btn-sm btn-outline-danger rounded-circle p-2 js-open-modal"
-                                        data-target="#rejectModal{{ $app->id }}"
-                                        data-bs-toggle="tooltip"
-                                        title="Reject"
-                                        style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;"
-                                    >
-                                        <i class="fa-solid fa-xmark"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="text-center py-5 text-muted">No applications awaiting review.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+                                     {{-- Reassign Officer --}}
+                                     <button type="button"
+                                         class="btn btn-sm btn-outline-warning rounded-circle p-2 js-open-modal"
+                                         data-target="#reassignOfficerModal{{ $app->id }}"
+                                         data-bs-toggle="tooltip" title="Reassign to Officer"
+                                         style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;">
+                                         <i class="fa-solid fa-user-gear"></i>
+                                     </button>
+                                 </div>
+                             </td>
+                         </tr>
+                     @empty
+                         <tr>
+                             <td colspan="7" class="text-center py-5 text-muted">No applications awaiting review.</td>
+                         </tr>
+                     @endforelse
+                 </tbody>
+             </table>
+         </div>
 
-        @if($applications->hasPages())
-        <div class="p-3 border-top">
-            {{ $applications->links() }}
-        </div>
-        @endif
-    </div>
+         @if($applications->hasPages())
+         <div class="p-3 border-top">
+             {{ $applications->links() }}
+         </div>
+         @endif
+     </div>
 
-    {{-- Action Modals for each application --}}
-    @foreach($applications as $app)
-        @php
-            $ref = $app->reference ?? ('APP-' . str_pad((int)$app->id, 5, '0', STR_PAD_LEFT));
-            $isRegistration = ($app->application_type ?? '') === 'registration';
-            $cats = $isRegistration ? \App\Models\Application::massMediaCategories() : \App\Models\Application::accreditationCategories();
-            $label = $isRegistration ? 'Mass Media Category' : 'Accreditation Category';
-            $currentCat = $isRegistration ? $app->media_house_category_code : $app->accreditation_category_code;
-        @endphp
+     {{-- Supervisory Modals for each application --}}
+     @foreach($applications as $app)
+         @php $ref = $app->reference ?? ('APP-' . str_pad((int)$app->id, 5, '0', STR_PAD_LEFT)); @endphp
 
-        {{-- Reassign Category Modal --}}
-        <div class="modal fade" id="reassignModal{{ $app->id }}" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <form class="modal-content" method="POST" action="{{ route('staff.registrar.applications.reassign-category', $app) }}">
-                    @csrf
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            <i class="fa-solid fa-award me-2"></i>
-                            Reassign Category
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="alert alert-warning small">
-                            <i class="fa-solid fa-triangle-exclamation me-1"></i>
-                            <strong>{{ $ref }}</strong> - Change the assigned category for this application.
-                        </div>
+         {{-- Flag Anomaly Modal --}}
+         <div class="modal fade" id="flagAnomalyModal{{ $app->id }}" tabindex="-1" aria-hidden="true">
+             <div class="modal-dialog modal-dialog-centered">
+                 <form class="modal-content" method="POST" action="{{ route('staff.registrar.applications.flag-anomaly', $app) }}">
+                     @csrf
+                     <div class="modal-header bg-danger text-white">
+                         <h5 class="modal-title"><i class="fa-solid fa-flag me-2"></i> Flag Anomaly — {{ $ref }}</h5>
+                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                     </div>
+                     <div class="modal-body">
+                         <label class="form-label small fw-bold">Nature of Anomaly / Concern <span class="text-danger">*</span></label>
+                         <textarea name="flag_notes" class="form-control" rows="4" required
+                             placeholder="Describe the issue clearly…">{{ $app->flag_notes }}</textarea>
+                     </div>
+                     <div class="modal-footer">
+                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                         <button type="submit" class="btn btn-danger"><i class="fa-solid fa-flag me-1"></i>Submit Flag</button>
+                     </div>
+                 </form>
+             </div>
+         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Current Category</label>
-                            <input type="text" class="form-control" value="{{ $currentCat ?? 'NOT ASSIGNED' }}" readonly>
-                        </div>
+         {{-- Message Officer Modal --}}
+         <div class="modal fade" id="msgOfficerModal{{ $app->id }}" tabindex="-1" aria-hidden="true">
+             <div class="modal-dialog modal-dialog-centered">
+                 <form class="modal-content" method="POST" action="{{ route('staff.registrar.applications.message-officer', $app) }}">
+                     @csrf
+                     <div class="modal-header bg-info text-white">
+                         <h5 class="modal-title"><i class="fa-regular fa-comment-dots me-2"></i> Message Officer — {{ $ref }}</h5>
+                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                     </div>
+                     <div class="modal-body">
+                         <label class="form-label small fw-bold">Message / Guidance <span class="text-danger">*</span></label>
+                         <textarea name="message" class="form-control" rows="4" required
+                             placeholder="Type your guidance or note for the officer…"></textarea>
+                     </div>
+                     <div class="modal-footer">
+                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                         <button type="submit" class="btn btn-info text-white"><i class="fa-solid fa-paper-plane me-1"></i>Send Message</button>
+                     </div>
+                 </form>
+             </div>
+         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">New {{ $label }} <span class="text-danger">*</span></label>
-                            <select name="category_code" class="form-select" required>
-                                <option value="">-- Select new category --</option>
-                                @foreach($cats as $code => $name)
-                                    <option value="{{ $code }}" {{ $currentCat == $code ? 'selected' : '' }}>
-                                        {{ $code }} - {{ $name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Reason for Reassignment <span class="text-danger">*</span></label>
-                            <textarea name="reason" class="form-control" rows="3" required placeholder="State why the category is being changed..."></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-warning">
-                            <i class="fa-solid fa-rotate me-1"></i>Reassign Category
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        {{-- Approve For Payment Modal --}}
-        <div class="modal fade" id="approveForPaymentModal{{ $app->id }}" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <form class="modal-content" method="POST" action="{{ route('staff.registrar.applications.approve-for-payment', $app) }}">
-                    @csrf
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            <i class="ri-money-dollar-circle-line me-2"></i>
-                            Approve for Payment
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="alert alert-info small">
-                            <i class="ri-information-line me-1"></i>
-                            <strong>{{ $ref }}</strong> - This will forward the application to Accounts for payment processing.
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Notes for Accounts (Optional)</label>
-                            <textarea name="decision_notes" class="form-control" rows="3" placeholder="Add any notes for Accounts..."></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-success">
-                            <i class="ri-check-line me-1"></i>Forward to Accounts
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        {{-- Approve Modal (Final Approval) --}}
-        <div class="modal fade" id="approveModal{{ $app->id }}" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <form class="modal-content" method="POST" action="{{ route('staff.registrar.applications.approve', $app) }}">
-                    @csrf
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            <i class="ri-check-double-line me-2"></i>
-                            Final Approval
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="alert alert-success small">
-                            <i class="ri-information-line me-1"></i>
-                            <strong>{{ $ref }}</strong> - This will move the application to Production for card/certificate generation.
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">{{ $label }} <span class="text-danger">*</span></label>
-                            <select name="category_code" class="form-select" required>
-                                <option value="">-- Select category --</option>
-                                @foreach($cats as $code => $name)
-                                    <option value="{{ $code }}" {{ $currentCat == $code ? 'selected' : '' }}>
-                                        {{ $code }} - {{ $name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Notes (Optional)</label>
-                            <textarea name="decision_notes" class="form-control" rows="3" placeholder="Add any notes..."></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-success">
-                            <i class="ri-check-line me-1"></i>Approve & Send to Production
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        {{-- Return Modal --}}
-        <div class="modal fade" id="returnModal{{ $app->id }}" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <form class="modal-content" method="POST" action="{{ route('staff.registrar.applications.return', $app) }}">
-                    @csrf
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            <i class="ri-arrow-go-back-line me-2"></i>
-                            Return to Accounts
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="alert alert-warning small">
-                            <i class="ri-alert-line me-1"></i>
-                            <strong>{{ $ref }}</strong> - This will send the application back to Accounts/Payments.
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Return Reason <span class="text-danger">*</span></label>
-                            <textarea name="decision_notes" class="form-control" rows="4" required placeholder="Specify what needs to be corrected or verified..."></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-warning">
-                            <i class="ri-arrow-go-back-line me-1"></i>Return to Accounts
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        {{-- Reject Modal --}}
-        <div class="modal fade" id="rejectModal{{ $app->id }}" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <form class="modal-content" method="POST" action="{{ route('staff.registrar.applications.reject', $app) }}">
-                    @csrf
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            <i class="ri-close-circle-line me-2"></i>
-                            Reject Application
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="alert alert-danger small">
-                            <i class="ri-error-warning-line me-1"></i>
-                            <strong>{{ $ref }}</strong> - This will permanently reject the application. The applicant will be notified.
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Rejection Reason <span class="text-danger">*</span></label>
-                            <textarea name="decision_notes" class="form-control" rows="4" required placeholder="Provide a clear reason for the applicant..."></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-danger">
-                            <i class="ri-close-line me-1"></i>Confirm Rejection
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    @endforeach
+         {{-- Reassign Officer Modal --}}
+         <div class="modal fade" id="reassignOfficerModal{{ $app->id }}" tabindex="-1" aria-hidden="true">
+             <div class="modal-dialog modal-dialog-centered">
+                 <form class="modal-content" method="POST" action="{{ route('staff.registrar.applications.reassign-category', $app) }}">
+                     @csrf
+                     <div class="modal-header">
+                         <h5 class="modal-title"><i class="fa-solid fa-user-gear me-2"></i> Reassign to Officer — {{ $ref }}</h5>
+                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                     </div>
+                     <div class="modal-body">
+                         <div class="mb-3">
+                             <label class="form-label small fw-bold">Select Accreditation Officer <span class="text-danger">*</span></label>
+                             <select name="officer_id" class="form-select" required>
+                                 <option value="">-- Select Officer --</option>
+                                 @foreach($officers as $off)
+                                     <option value="{{ $off->id }}" {{ $app->assigned_officer_id == $off->id ? 'selected' : '' }}>
+                                         {{ $off->name }}{{ $off->region ? ' ('.$off->region.')' : '' }}
+                                     </option>
+                                 @endforeach
+                             </select>
+                         </div>
+                         <div class="mb-3">
+                             <label class="form-label small fw-bold">Reason for Reassignment</label>
+                             <textarea name="reason" class="form-control" rows="3" placeholder="Why is this being reassigned?"></textarea>
+                         </div>
+                     </div>
+                     <div class="modal-footer">
+                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                         <button type="submit" class="btn btn-warning"><i class="fa-solid fa-arrows-rotate me-1"></i>Reassign</button>
+                     </div>
+                 </form>
+             </div>
+         </div>
+     @endforeach
 </div>
 
 {{-- Global Details Modal (View) --}}

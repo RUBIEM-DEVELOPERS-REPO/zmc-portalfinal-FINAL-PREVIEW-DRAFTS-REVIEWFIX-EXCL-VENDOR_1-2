@@ -12,15 +12,15 @@ class NewsController extends Controller
 {
     public function __construct()
     {
-        // View access: Super Admin, IT Admin, Director
+        // View access: Super Admin, IT Admin, Director, PR
         // Create/update/delete is restricted in the action methods.
-        $this->middleware(['auth', 'role:super_admin|it_admin|director']);
+        $this->middleware(['auth', 'role:super_admin|it_admin|director|pr']);
     }
 
     public function index()
     {
         // Role-gated instead of permission-gated to avoid 403s when permissions are not yet seeded/cached.
-        abort_unless(auth()->user()?->hasAnyRole(['super_admin','it_admin','director']), 403);
+        abort_unless(auth()->user()?->hasAnyRole(['super_admin','it_admin','director','pr']), 403);
 
         $items = News::orderByDesc('published_at')->orderByDesc('id')->paginate(15);
         return view('admin.news.index', compact('items'));
@@ -52,7 +52,7 @@ class NewsController extends Controller
 
     public function store(Request $request)
     {
-        abort_unless(auth()->user()?->hasAnyRole(['super_admin','it_admin']), 403);
+        abort_unless(auth()->user()?->hasAnyRole(['super_admin','it_admin','pr']), 403);
 
         $data = $request->validate([
             'title' => ['required','string','max:200'],
@@ -78,7 +78,7 @@ class NewsController extends Controller
 
     public function update(Request $request, News $news)
     {
-        abort_unless(auth()->user()?->hasAnyRole(['super_admin','it_admin']), 403);
+        abort_unless(auth()->user()?->hasAnyRole(['super_admin','it_admin','pr']), 403);
 
         $data = $request->validate([
             'title' => ['required','string','max:200'],
@@ -107,7 +107,7 @@ class NewsController extends Controller
 
     public function destroy(News $news)
     {
-        abort_unless(auth()->user()?->hasAnyRole(['super_admin','it_admin']), 403);
+        abort_unless(auth()->user()?->hasAnyRole(['super_admin','it_admin','pr']), 403);
 
         $id = $news->id;
         if ($news->image_path) Storage::disk('public')->delete($news->image_path);

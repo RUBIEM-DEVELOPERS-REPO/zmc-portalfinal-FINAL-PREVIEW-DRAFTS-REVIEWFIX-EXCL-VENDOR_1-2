@@ -23,6 +23,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'auditor',
             'director',
             'complaints_officer',
+            'pr',
+            'public_info_compliance',
+            'research_training_standards',
         ];
 
         foreach ($roles as $role) {

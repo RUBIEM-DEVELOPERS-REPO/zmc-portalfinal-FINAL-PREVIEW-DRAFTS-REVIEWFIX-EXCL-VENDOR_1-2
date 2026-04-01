@@ -24,6 +24,10 @@ class DownloadsController extends Controller
      */
     public function csv(Request $request, string $type): StreamedResponse
     {
+        if (session('active_staff_role') === 'it_admin') {
+            abort(403, 'IT Personnel are restricted to View Only access. CSV exports are disabled.');
+        }
+
         $filename = $type . '-' . now()->format('Y-m-d_His') . '.csv';
 
         $query = match ($type) {

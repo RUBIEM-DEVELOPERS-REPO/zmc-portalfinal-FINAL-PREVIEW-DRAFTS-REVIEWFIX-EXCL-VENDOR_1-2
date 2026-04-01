@@ -674,7 +674,7 @@
         <div class="form-container">
           <div class="form-header">
             <h1>Application for Registration of a Mass Media Service</h1>
-            <p>Zimbabwe Media Commission Act (2020), Statutory Instrument 169C (Registration, Accreditation and Levy) Regulations (2002)</p>
+            <p>Statutory Instrument 169C (Registration, Accreditation and Levy) Regulations (2002)</p>
           </div>
 
           <div class="form-steps-container">
@@ -1241,7 +1241,7 @@
         <div class="form-container">
           <div class="form-header">
             <h1>Application for Renewal of Registration, Accreditation or Permission</h1>
-            <p>Zimbabwe Media Commission Act (2020), Statutory Instrument 169C (Registration, Accreditation and Levy) Regulations (2002)</p>
+            <p>Statutory Instrument 169C (Registration, Accreditation and Levy) Regulations (2002)</p>
           </div>
 
           <div class="form-steps-container">

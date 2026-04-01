@@ -1,12 +1,12 @@
 @extends('layouts.portal')
 
-@section('title', 'Renewal / Replacement (AP5)')
-@section('page_title', 'RENEWAL / REPLACEMENT (AP5)')
+@section('title', 'Renewal (AP5)')
+@section('page_title', 'RENEWAL (AP5)')
 
 @section('content')
 <div id="renewal-page">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="fw-bold text-dark m-0" style="font-size:18px;">Renewal / Replacement of Accreditation Card (AP5)</h4>
+    <h4 class="fw-bold text-dark m-0" style="font-size:18px;">Renewal of Accreditation Card (AP5)</h4>
     <a class="btn btn-secondary" href="{{ route('accreditation.home') }}">
       <i class="ri-arrow-left-line me-1"></i>Back to Tracker
     </a>
@@ -49,8 +49,8 @@
 
   <div class="form-container">
     <div class="form-header">
-      <h1>Application for Renewal or Replacement of Accreditation</h1>
-      <p>Zimbabwe Media Commission Act (2020), Statutory Instrument 169C (Registration, Accreditation and Levy) Regulations (2002)</p>
+      <h1>Application for Renewal of Accreditation</h1>
+      <p>Statutory Instrument 169C (Registration, Accreditation and Levy) Regulations (2002)</p>
     </div>
 
     <div class="form-steps-container">
@@ -72,47 +72,18 @@
 
         {{-- STEP 1: TYPE --}}
         <div class="step-content active" id="ap5-step-1">
-          <h3 class="step-title">Select Application Type</h3>
+          <h3 class="step-title">Renewal Application</h3>
           <div class="current-step-info">
             <i class="ri-information-line me-2"></i>
-            Choose Renewal or Replacement. For Replacement, select the reason.
+            This is for annual renewal of your accreditation card.
           </div>
 
-          <div class="app-type-container mt-3">
-            <div class="app-type-cards">
-              <div class="app-type-card" data-type="renewal">
-                <i class="ri-refresh-line"></i>
-                <h4>Renewal</h4>
-                <p>Annual renewal of your accreditation card.</p>
-              </div>
-
-              <div class="app-type-card" data-type="replacement">
-                <i class="ri-exchange-line"></i>
-                <h4>Replacement</h4>
-                <p>Lost / damaged / stolen card replacement.</p>
-              </div>
-            </div>
+          <div class="alert alert-info mt-3">
+            <i class="ri-information-line me-2"></i>
+            This form is for <strong>Renewal</strong> of your accreditation card only. If you need a <strong>Replacement</strong> for a lost, damaged, or stolen card, please use the separate Replacement link in the sidebar.
           </div>
 
-          <input type="hidden" id="ap5_type" name="request_type" required>
-
-          <div id="ap5-replacement-reason" style="display:none; margin-top:20px;">
-            <label class="form-label required">Reason for Replacement</label>
-            <div class="checkbox-group">
-              <div class="checkbox-item">
-                <input type="radio" id="ap5-reason-lost" name="replacement_reason" value="lost">
-                <label for="ap5-reason-lost">Lost</label>
-              </div>
-              <div class="checkbox-item">
-                <input type="radio" id="ap5-reason-damaged" name="replacement_reason" value="damaged">
-                <label for="ap5-reason-damaged">Damaged</label>
-              </div>
-              <div class="checkbox-item">
-                <input type="radio" id="ap5-reason-stolen" name="replacement_reason" value="stolen">
-                <label for="ap5-reason-stolen">Stolen</label>
-              </div>
-            </div>
-          </div>
+          <input type="hidden" id="ap5_type" name="request_type" value="renewal" required>
         </div>
 
         {{-- STEP 2: ACCREDITATION NUMBER LOOKUP --}}
@@ -120,18 +91,52 @@
           <h3 class="step-title">Accreditation Number Lookup</h3>
           <div class="current-step-info">
             <i class="ri-information-line me-2"></i>
-            Enter your previous accreditation number to retrieve your record.
+            Enter your accreditation number and ID/Passport to verify your identity.
+          </div>
+
+          <div class="form-row">
+            <div class="form-field">
+              <label class="form-label required">Applicant Type</label>
+              <div class="checkbox-group">
+                <div class="checkbox-item">
+                  <input type="radio" id="ap5-scope-local" name="journalist_scope" value="local" @checked(($draft->journalist_scope ?? ($draft->form_data['journalist_scope'] ?? 'local')) === 'local')>
+                  <label for="ap5-scope-local">Local (Zimbabwean)</label>
+                </div>
+                <div class="checkbox-item">
+                  <input type="radio" id="ap5-scope-foreign" name="journalist_scope" value="foreign" @checked(($draft->journalist_scope ?? ($draft->form_data['journalist_scope'] ?? '')) === 'foreign')>
+                  <label for="ap5-scope-foreign">Foreign</label>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="form-row">
             <div class="form-field">
               <label class="form-label required">Accreditation Number</label>
               <div class="d-flex gap-2">
-                <input type="text" class="form-control" name="accreditation_number" id="ap5_accreditation_number" placeholder="e.g. J12345678E" required>
+                <input type="text" class="form-control" name="accreditation_number" id="ap5_accreditation_number" placeholder="e.g. J12345678E" value="{{ $draft->form_data['accreditation_number'] ?? '' }}" required>
                 <button type="button" class="btn btn-primary" id="ap5LookupBtn" style="white-space:nowrap;">
                   <i class="ri-search-line me-1"></i>Look Up
                 </button>
               </div>
+            </div>
+          </div>
+
+          {{-- Local: National ID --}}
+          <div class="form-row" id="ap5-id-local-row">
+            <div class="form-field">
+              <label class="form-label required">National ID Number</label>
+              <input type="text" class="form-control" name="national_id_number" id="ap5_national_id" placeholder="e.g. 63-123456A78" value="{{ $draft->form_data['national_id_number'] ?? '' }}" required>
+              <small class="text-muted">Must match the ID on your original application.</small>
+            </div>
+          </div>
+
+          {{-- Foreign: Passport --}}
+          <div class="form-row" id="ap5-id-foreign-row" style="display:none;">
+            <div class="form-field">
+              <label class="form-label required">Passport Number</label>
+              <input type="text" class="form-control" name="passport_number" id="ap5_passport_no" placeholder="e.g. AB1234567" value="{{ $draft->form_data['passport_number'] ?? '' }}">
+              <small class="text-muted">Must match the passport on your original application.</small>
             </div>
           </div>
 
@@ -183,16 +188,33 @@
               </div>
               <div class="form-row">
                 <div class="form-field">
+                  <label class="form-label">New Other Names</label>
+                  <input type="text" class="form-control change-field" data-field="other_names" placeholder="Leave blank if unchanged">
+                </div>
+                <div class="form-field">
                   <label class="form-label">New Gender</label>
                   <select class="form-control change-field" data-field="gender">
                     <option value="">No change</option>
                     <option value="male">Male</option>
                     <option value="female">Female</option>
+                    <option value="other">Other</option>
                   </select>
                 </div>
+              </div>
+              <div class="form-row">
                 <div class="form-field">
                   <label class="form-label">New Nationality</label>
                   <input type="text" class="form-control change-field" data-field="nationality" placeholder="Leave blank if unchanged">
+                </div>
+                <div class="form-field">
+                  <label class="form-label">New Marital Status</label>
+                  <select class="form-control change-field" data-field="marital_status">
+                    <option value="">No change</option>
+                    <option value="single">Single</option>
+                    <option value="married">Married</option>
+                    <option value="divorced">Divorced</option>
+                    <option value="widowed">Widowed</option>
+                  </select>
                 </div>
               </div>
               <div class="form-row">
@@ -201,8 +223,71 @@
                   <input type="text" class="form-control change-field" data-field="id_or_passport" placeholder="Leave blank if unchanged">
                 </div>
                 <div class="form-field">
+                  <label class="form-label">New Driver's Licence</label>
+                  <input type="text" class="form-control change-field" data-field="drivers_licence" placeholder="Leave blank if unchanged">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-field">
+                  <label class="form-label">New Physical Address</label>
+                  <input type="text" class="form-control change-field" data-field="address" placeholder="Leave blank if unchanged">
+                </div>
+                <div class="form-field">
+                  <label class="form-label">New Phone Number</label>
+                  <input type="text" class="form-control change-field" data-field="phone" placeholder="Leave blank if unchanged">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-field">
+                  <label class="form-label">New Email Address</label>
+                  <input type="email" class="form-control change-field" data-field="email" placeholder="Leave blank if unchanged">
+                </div>
+                <div class="form-field">
                   <label class="form-label">New Designation</label>
                   <input type="text" class="form-control change-field" data-field="designation" placeholder="Leave blank if unchanged">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-field">
+                  <label class="form-label">New Media House</label>
+                  <input type="text" class="form-control change-field" data-field="media_house" placeholder="Leave blank if unchanged">
+                </div>
+                <div class="form-field">
+                  <label class="form-label">New Medium Type</label>
+                  <select class="form-control change-field" data-field="medium_type">
+                    <option value="">No change</option>
+                    <option value="news_agency">News Agency</option>
+                    <option value="newspaper">Newspaper</option>
+                    <option value="television">Television</option>
+                    <option value="radio">Radio</option>
+                    <option value="magazine">Magazine</option>
+                    <option value="online_media">Online Media</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-field">
+                  <label class="form-label">New Employer Address</label>
+                  <input type="text" class="form-control change-field" data-field="employer_address" placeholder="Leave blank if unchanged">
+                </div>
+                <div class="form-field">
+                  <label class="form-label">New Employer Phone</label>
+                  <input type="text" class="form-control change-field" data-field="employer_phone" placeholder="Leave blank if unchanged">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-field">
+                  <label class="form-label">Criminal Conviction (New)</label>
+                  <select class="form-control change-field" data-field="criminal_conviction">
+                    <option value="">No change</option>
+                    <option value="no">No</option>
+                    <option value="yes">Yes</option>
+                  </select>
+                </div>
+                <div class="form-field">
+                  <label class="form-label">Criminal Details (If applicable)</label>
+                  <textarea class="form-control change-field" data-field="criminal_details" rows="2" placeholder="Leave blank if unchanged"></textarea>
                 </div>
               </div>
               <div class="form-row">
@@ -310,46 +395,14 @@
           </div>
         </div>
 
-        {{-- STEP 4: PAYMENT & DECLARATION --}}
+        {{-- STEP 4: DECLARATION & SUBMIT --}}
         <div class="step-content" id="ap5-step-4">
-          <h3 class="step-title">Payment & Declaration</h3>
-          <div class="current-step-info"><i class="ri-information-line me-2"></i>Choose a payment method and confirm submission.</div>
+          <h3 class="step-title">Declaration & Submit</h3>
+          <div class="current-step-info"><i class="ri-information-line me-2"></i>Review and confirm your application before submitting.</div>
 
-          <div class="card shadow-sm mb-3">
-            <div class="card-body">
-              <h6 class="fw-bold mb-3"><i class="ri-bank-card-line me-2"></i>Payment Method</h6>
-              <div class="checkbox-group mb-3">
-                <div class="checkbox-item">
-                  <input type="radio" id="ap5-pay-paynow" name="payment_method" value="paynow" checked>
-                  <label for="ap5-pay-paynow">PayNow Reference</label>
-                </div>
-                <div class="checkbox-item">
-                  <input type="radio" id="ap5-pay-proof" name="payment_method" value="proof_upload">
-                  <label for="ap5-pay-proof">Upload Proof of Payment</label>
-                </div>
-              </div>
-
-              <div id="ap5-paynow-section">
-                <div class="form-field">
-                  <label class="form-label">PayNow Reference Number</label>
-                  <input type="text" class="form-control" name="paynow_reference" placeholder="Enter PayNow reference">
-                </div>
-              </div>
-
-              <div id="ap5-proof-section" style="display:none;">
-                <div class="form-field">
-                  <label class="form-label">Upload Payment Proof</label>
-                  <div class="upload-area">
-                    <i class="ri-bank-card-line"></i>
-                    <h5>Upload Proof of Payment</h5>
-                    <p>PDF / JPG / PNG</p>
-                    <input type="file" name="payment_proof" accept=".pdf,.jpg,.jpeg,.png" style="display:none;">
-                    <button type="button" class="upload-btn">Choose File</button>
-                  </div>
-                  <div class="uploaded-files"></div>
-                </div>
-              </div>
-            </div>
+          <div class="alert alert-info mb-3">
+            <i class="ri-bank-card-line me-2"></i>
+            After submitting, you will be prompted to pay the renewal fee via <strong>PayNow</strong> or by uploading <strong>proof of payment</strong>.
           </div>
 
           <div class="alert alert-warning">
@@ -400,12 +453,19 @@
     </div>
   </div>
 </div>
+
+{{-- Payment Modal (shown after successful submission) --}}
+<x-payment-modal
+  modal-id="ap5PaymentModal"
+  description="Accreditation Renewal Fee"
+  currency="USD"
+/>
 @endsection
 
 @push('scripts')
 <script>
-  let ap5Step = 1;
-  let ap5Type = '';
+  let ap5Step = {{ $draft->form_data['current_step'] ?? 1 }};
+  let ap5Type = '{{ $draft->request_type ?? "renewal" }}';
   let ap5LookupData = null;
   let ap5LookupDone = false;
 
@@ -419,6 +479,7 @@
 
   const ap5PrevBtn = document.getElementById('ap5PrevBtn');
   const ap5NextBtn = document.getElementById('ap5NextBtn');
+  const ap5SaveDraftBtn = document.getElementById('ap5SaveDraftBtn');
 
   const replacementReasonBlock = document.getElementById('ap5-replacement-reason');
   const renewalDocs = document.getElementById('ap5-renewal-docs');
@@ -428,7 +489,67 @@
     return !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
   }
 
+  async function autoSave() {
+      const form = document.getElementById('ap5Form');
+      const fd = new FormData(form);
+      const dataObj = {};
+      fd.forEach((v, k) => { if(!(v instanceof File)) dataObj[k] = v; });
+      fd.append('form_data', JSON.stringify(dataObj));
+      fd.append('current_step', ap5Step);
+      
+      try {
+          await fetch('{{ route("accreditation.renewals.saveDraft") }}', {
+              method: 'POST',
+              body: fd,
+              headers: { 
+                  'X-Requested-With': 'XMLHttpRequest',
+                  'X-CSRF-TOKEN': document.querySelector('input[name="_token"]')?.value 
+              }
+          });
+      } catch(e) {
+          console.error('Auto-save failed', e);
+      }
+  }
+
+  setInterval(() => {
+      if (ap5Step > 1 && ap5Step < ap5Contents.length) {
+          autoSave();
+      }
+  }, 60000);
+
+  async function autoSave() {
+      const form = document.getElementById('ap5Form');
+      const fd = new FormData(form);
+      const dataObj = {};
+      fd.forEach((v, k) => { if(!(v instanceof File)) dataObj[k] = v; });
+      fd.append('form_data', JSON.stringify(dataObj));
+      fd.append('current_step', ap5Step);
+      
+      try {
+          await fetch('{{ route("accreditation.renewals.saveDraft") }}', {
+              method: 'POST',
+              body: fd,
+              headers: { 
+                  'X-Requested-With': 'XMLHttpRequest',
+                  'X-CSRF-TOKEN': '{{ csrf_token() }}'
+              }
+          });
+          console.log('AP5 Draft auto-saved');
+      } catch(e) {
+          console.error('Auto-save failed', e);
+      }
+  }
+
+  setInterval(() => {
+      if (ap5Step > 1 && ap5Step < ap5Contents.length) {
+          autoSave();
+      }
+  }, 60000);
+
   function ap5Show(step){
+    ap5Step = step;
+    ap5Step = step;
+    document.getElementById('ap5_current_step').value = step;
     ap5Contents.forEach((el, idx) => el.classList.toggle('active', idx === (step-1)));
 
     ap5Steps.forEach(s => {
@@ -485,17 +606,20 @@
 
   function ap5Validate(step){
     if(step === 1){
-      if(!ap5Type){ alert('Please select Renewal or Replacement'); return false; }
-      if(ap5Type === 'replacement'){
-        const reason = document.querySelector('input[name="replacement_reason"]:checked');
-        if(!reason){ alert('Please select a reason for replacement'); return false; }
-      }
       return true;
     }
 
     if(step === 2){
       const num = document.getElementById('ap5_accreditation_number')?.value?.trim();
       if(!num){ alert('Please enter your accreditation number.'); return false; }
+      const scope = document.querySelector('input[name="journalist_scope"]:checked')?.value || 'local';
+      const idVal = scope === 'local'
+        ? document.getElementById('ap5_national_id')?.value?.trim()
+        : document.getElementById('ap5_passport_no')?.value?.trim();
+      if(!idVal){
+        alert(scope === 'local' ? 'Please enter your National ID Number.' : 'Please enter your Passport Number.');
+        return false;
+      }
       if(!ap5LookupDone){ alert('Please look up your accreditation number first.'); return false; }
       return true;
     }
@@ -570,6 +694,16 @@
     const num = document.getElementById('ap5_accreditation_number')?.value?.trim();
     if(!num){ alert('Please enter an accreditation number.'); return; }
 
+    const scope = document.querySelector('input[name="journalist_scope"]:checked')?.value || 'local';
+    const idVal = scope === 'local'
+      ? document.getElementById('ap5_national_id')?.value?.trim()
+      : document.getElementById('ap5_passport_no')?.value?.trim();
+
+    if(!idVal){
+      alert(scope === 'local' ? 'Please enter your National ID Number.' : 'Please enter your Passport Number.');
+      return;
+    }
+
     const loading = document.getElementById('ap5-lookup-loading');
     const errorDiv = document.getElementById('ap5-lookup-error');
     const resultDiv = document.getElementById('ap5-lookup-result');
@@ -594,6 +728,17 @@
         return;
       }
 
+      const recordId = (data.record.id_or_passport || '').replace(/[\s\-]/g, '').toUpperCase();
+      const enteredId = idVal.replace(/[\s\-]/g, '').toUpperCase();
+      if(recordId && enteredId && recordId !== enteredId){
+        errorDiv.textContent = scope === 'local'
+          ? 'National ID Number does not match our records. Please check and try again.'
+          : 'Passport Number does not match our records. Please check and try again.';
+        errorDiv.style.display = 'block';
+        loading.style.display = 'none';
+        return;
+      }
+
       ap5LookupData = data.record;
 
       const tbody = document.querySelector('#ap5-record-table tbody');
@@ -605,7 +750,7 @@
         ['Gender', data.record.gender],
         ['Date of Birth', data.record.dob],
         ['Nationality', data.record.nationality],
-        ['ID / Passport', data.record.id_or_passport],
+        [scope === 'local' ? 'National ID' : 'Passport No.', data.record.id_or_passport],
         ['Employment Type', data.record.employment_type],
         ['Status', data.record.status],
         ['Issued', data.record.issued_at],
@@ -618,6 +763,8 @@
 
       resultDiv.style.display = 'block';
       loading.style.display = 'none';
+      ap5LookupDone = true;
+      ap5NextBtn.style.display = 'inline-block';
 
     } catch(e) {
       console.error(e);
@@ -627,19 +774,13 @@
     }
   }
 
-  function ap5CollectChanges(){
-    const changes = {};
-    document.querySelectorAll('.change-field').forEach(el => {
-      const val = el.value?.trim();
-      if(val) changes[el.dataset.field] = val;
-    });
-    return changes;
-  }
-
   async function submitAp5(){
     const form = document.getElementById('ap5Form');
     const fd = new FormData(form);
     fd.set('request_type', ap5Type);
+
+    const btn = document.getElementById('ap5ConfirmSubmitBtn');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Submitting...'; }
 
     try{
       const res = await fetch('{{ route("accreditation.submitAp5") }}', {
@@ -655,14 +796,33 @@
 
       if(!res.ok){
         alert(data.message || 'Submission failed. Please check required fields.');
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ri-check-line"></i> Confirm & Submit'; }
         return;
       }
 
-      alert('AP5 submitted successfully! Reference: ' + (data.reference || '—'));
-      window.location.href = "{{ route('accreditation.home') }}";
+      // Hide review modal
+      const reviewModal = bootstrap.Modal.getInstance(document.getElementById('ap5ReviewModal'));
+      if (reviewModal) reviewModal.hide();
+
+      // Show payment modal
+      const appId = data.application_id;
+      if (appId) {
+        initPaymentModal('ap5PaymentModal', appId, {
+          initiate: '{{ url("/payments") }}/' + appId + '/initiate',
+          initiateMobile: '{{ url("/payments") }}/' + appId + '/initiate-mobile',
+          status: '{{ url("/payments") }}/' + appId + '/status',
+          proof: '{{ url("/payments") }}/' + appId + '/upload-proof',
+        });
+        const payModal = new bootstrap.Modal(document.getElementById('ap5PaymentModal'));
+        payModal.show();
+      } else {
+        alert('Application submitted! Reference: ' + (data.reference || '—'));
+        window.location.href = "{{ route('accreditation.home') }}";
+      }
     }catch(e){
       console.error(e);
       alert('Network error submitting AP5.');
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ri-check-line"></i> Confirm & Submit'; }
     }
   }
 
@@ -683,41 +843,66 @@
 
   function buildReviewHtml(){
     const fd = new FormData(document.getElementById('ap5Form'));
-    const files = listSelectedFiles();
     const rows = [
-      ['Application Type', ap5Type || '-'],
+      ['Application Type', ap5Type.toUpperCase()],
+      ['ID / Passport', fd.get('journalist_scope') === 'local' ? fd.get('national_id_number') : fd.get('passport_number')],
       ['Accreditation Number', fd.get('accreditation_number') || '-'],
-      ['Changes', fd.get('has_changes') === 'yes' ? 'Yes' : 'No'],
-      ['Payment Method', fd.get('payment_method') || '-'],
+      ['Has Changes?', fd.get('has_changes') === 'yes' ? 'Yes' : 'No'],
     ];
 
-    const table = `
-      <div class="table-responsive">
-        <table class="table table-sm">
+    if(fd.get('has_changes') === 'yes' && fd.get('changes_data')) {
+      try {
+        const changes = JSON.parse(fd.get('changes_data'));
+        Object.keys(changes).forEach(k => {
+          rows.push([`Change: ${k.replaceAll('_',' ')}`, changes[k]]);
+        });
+      } catch(e) {}
+    }
+
+    let html = `
+      <div class="table-responsive mb-3">
+        <table class="table table-sm table-bordered">
           <tbody>
-            ${rows.map(r=>`<tr><th style="width:38%">${r[0]}</th><td>${(r[1]||'-')}</td></tr>`).join('')}
+            ${rows.map(r=>`<tr><th class="bg-light" style="width:40%">${r[0]}</th><td>${(r[1]||'-')}</td></tr>`).join('')}
           </tbody>
         </table>
       </div>`;
 
-    const filesHtml = files.length ? `
-      <div class="mt-3">
-        <h6 class="fw-bold mb-2">Uploaded Documents</h6>
-        <div class="list-group">
-          ${files.map(f=>`
-            <div class="list-group-item d-flex align-items-center">
-              <i class="ri-file-text-line text-primary me-3 fs-5"></i>
-              <div>
-                <div class="fw-semibold">${f.label}</div>
-                <small class="text-muted">${f.name} (${f.size})</small>
+    // Add Document Previews
+    html += `<h6 class="fw-bold mb-2">Uploaded Documents</h6><div class="row g-2">`;
+    let hasDocs = false;
+    document.querySelectorAll('#ap5Form input[type="file"]').forEach(inp => {
+      if (inp.files && inp.files[0]) {
+        hasDocs = true;
+        const f = inp.files[0];
+        const label = (inp.getAttribute('name') || 'document').replaceAll('_',' ');
+        const id = 'prev-' + inp.name;
+        
+        html += `
+          <div class="col-6">
+            <div class="card p-1 text-center h-100">
+              <div id="${id}" style="height:100px; background:#f0f0f0; display:flex; align-items:center; justify-content:center; overflow:hidden; border-radius:4px;" class="mb-1">
+                <i class="ri-file-text-line fs-2 text-muted"></i>
               </div>
-              <i class="ri-checkbox-circle-fill text-success ms-auto"></i>
+              <div class="extra-small fw-bold text-truncate">${label}</div>
             </div>
-          `).join('')}
-        </div>
-      </div>` : `<div class="alert alert-danger mt-3 mb-0">No documents selected.</div>`;
+          </div>`;
 
-    return table + filesHtml;
+        if(f.type.startsWith('image/')) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const el = document.getElementById(id);
+            if(el) el.innerHTML = `<img src="${e.target.result}" style="max-width:100%; max-height:100%; object-fit:contain;">`;
+          };
+          reader.readAsDataURL(f);
+        }
+      }
+    });
+
+    if(!hasDocs) html += `<div class="col-12"><div class="alert alert-warning py-2 small">No new documents uploaded.</div></div>`;
+    html += `</div>`;
+
+    return html;
   }
 
   async function saveDraftAp5(){
@@ -770,14 +955,6 @@
     r.addEventListener('change', () => { applyAp5DocRequirements(); });
   });
 
-  document.querySelectorAll('input[name="payment_method"]').forEach(r => {
-    r.addEventListener('change', () => {
-      const val = document.querySelector('input[name="payment_method"]:checked')?.value;
-      document.getElementById('ap5-paynow-section').style.display = (val === 'paynow') ? 'block' : 'none';
-      document.getElementById('ap5-proof-section').style.display = (val === 'proof_upload') ? 'block' : 'none';
-    });
-  });
-
   ap5PrevBtn.addEventListener('click', () => {
     ap5Step = Math.max(1, ap5Step - 1);
     ap5Show(ap5Step);
@@ -806,8 +983,24 @@
   });
 
   document.addEventListener('DOMContentLoaded', () => {
-    ap5Show(1);
+    ap5Show(ap5Step);
     setupUploads(document.getElementById('renewal-page'));
+
+    // Toggle National ID / Passport field based on scope
+    document.querySelectorAll('input[name="journalist_scope"]').forEach(r => {
+      r.addEventListener('change', () => {
+        const isLocal = r.value === 'local';
+        document.getElementById('ap5-id-local-row').style.display = isLocal ? '' : 'none';
+        document.getElementById('ap5-id-foreign-row').style.display = isLocal ? 'none' : '';
+        document.getElementById('ap5_national_id').required = isLocal;
+        document.getElementById('ap5_passport_no').required = !isLocal;
+        // Reset lookup state when scope changes
+        ap5LookupDone = false;
+        document.getElementById('ap5-lookup-result').style.display = 'none';
+        document.getElementById('ap5-lookup-error').style.display = 'none';
+        ap5NextBtn.style.display = 'none';
+      });
+    });
 
     document.getElementById('ap5LookupBtn')?.addEventListener('click', () => { ap5DoLookup(); });
 

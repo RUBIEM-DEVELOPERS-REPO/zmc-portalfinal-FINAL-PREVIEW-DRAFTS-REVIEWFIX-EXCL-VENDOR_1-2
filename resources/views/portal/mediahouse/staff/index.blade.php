@@ -30,48 +30,95 @@
     </div>
   @endif
 
-  <div class="zmc-card p-0 shadow-sm border-0">
-    <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
-      <h6 class="fw-bold m-0"><i class="ri-group-line me-2" style="color:var(--zmc-accent)"></i>Linked Staff</h6>
-    </div>
+  <form action="{{ route('mediahouse.batch.initiate') }}" method="POST" id="batchStaffForm">
+    @csrf
+    <div class="zmc-card p-0 shadow-sm border-0">
+      <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold m-0"><i class="ri-group-line me-2" style="color:var(--zmc-accent)"></i>Linked Staff</h6>
+        <div id="batchActionHeader" style="display:none;">
+           <span class="badge bg-primary me-2" id="selectedCount">0 selected</span>
+           <button type="submit" class="btn btn-primary btn-sm px-3">
+             <i class="ri-repeat-line me-1"></i> Initiate Batch Renewal
+           </button>
+        </div>
+      </div>
 
-    <div class="table-responsive">
-      <table class="table table-hover align-middle mb-0 zmc-mini-table">
-        <thead>
-          <tr>
-            <th><i class="ri-user-line me-1"></i> Name</th>
-            <th><i class="ri-mail-line me-1"></i> Email</th>
-            <th><i class="ri-briefcase-line me-1"></i> Role</th>
-            <th><i class="ri-calendar-line me-1"></i> Date Linked</th>
-            <th class="text-end">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          @forelse($staff as $member)
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 zmc-mini-table">
+          <thead>
             <tr>
-              <td class="fw-bold text-dark">{{ $member->journalist->name }}</td>
-              <td>{{ $member->journalist->email }}</td>
-              <td>{{ $member->role ?? '—' }}</td>
-              <td class="small text-muted">{{ $member->created_at->format('d M Y') }}</td>
-              <td class="text-end">
-                <form action="{{ route('mediahouse.staff.unlink', $member) }}" method="POST" onsubmit="return confirm('Are you sure you want to unlink this journalist?')">
-                  @csrf
-                  @method('DELETE')
-                  <button type="submit" class="btn btn-sm btn-outline-danger zmc-icon-btn" title="Unlink">
-                    <i class="ri-link-unlink"></i>
-                  </button>
-                </form>
-              </td>
+              <th style="width: 40px;">
+                <input type="checkbox" id="selectAllStaff" class="form-check-input">
+              </th>
+              <th><i class="ri-user-line me-1"></i> Name</th>
+              <th><i class="ri-mail-line me-1"></i> Email</th>
+              <th><i class="ri-briefcase-line me-1"></i> Role</th>
+              <th><i class="ri-calendar-line me-1"></i> Date Linked</th>
+              <th class="text-end">Action</th>
             </tr>
-          @empty
-            <tr>
-              <td colspan="5" class="text-center py-5 text-muted">No linked staff found.</td>
-            </tr>
-          @endforelse
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            @forelse($staff as $member)
+              <tr>
+                <td>
+                  <input type="checkbox" name="journalist_ids[]" value="{{ $member->journalist_user_id }}" class="form-check-input staff-checkbox">
+                </td>
+                <td class="fw-bold text-dark">{{ $member->journalist->name }}</td>
+                <td>{{ $member->journalist->email }}</td>
+                <td>{{ $member->role ?? '—' }}</td>
+                <td class="small text-muted">{{ $member->created_at->format('d M Y') }}</td>
+                <td class="text-end">
+                  <div class="d-flex justify-content-end gap-2">
+                    <form action="{{ route('mediahouse.staff.unlink', $member) }}" method="POST" onsubmit="return confirm('Are you sure you want to unlink this journalist?')">
+                      @csrf
+                      @method('DELETE')
+                      <button type="submit" class="btn btn-sm btn-outline-danger zmc-icon-btn" title="Unlink">
+                        <i class="ri-link-unlink"></i>
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            @empty
+              <tr>
+                <td colspan="6" class="text-center py-5 text-muted">No linked staff found.</td>
+              </tr>
+            @endforelse
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
+  </form>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const selectAll = document.getElementById('selectAllStaff');
+      const checkboxes = document.querySelectorAll('.staff-checkbox');
+      const batchHeader = document.getElementById('batchActionHeader');
+      const countLabel = document.getElementById('selectedCount');
+
+      function updateUI() {
+        const checked = document.querySelectorAll('.staff-checkbox:checked');
+        if (checked.length > 0) {
+          batchHeader.style.display = 'block';
+          countLabel.textContent = checked.length + ' selected';
+        } else {
+          batchHeader.style.display = 'none';
+        }
+      }
+
+      if (selectAll) {
+        selectAll.addEventListener('change', function() {
+          checkboxes.forEach(cb => cb.checked = selectAll.checked);
+          updateUI();
+        });
+      }
+
+      checkboxes.forEach(cb => {
+        cb.addEventListener('change', updateUI);
+      });
+    });
+  </script>
 
 </div>
 

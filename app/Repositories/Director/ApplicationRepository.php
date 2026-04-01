@@ -67,11 +67,13 @@ class ApplicationRepository
     {
         $startDate = now()->subMonths($months)->startOfMonth();
         
+        $monthFormat = DB::getDriverName() === 'pgsql' ? "TO_CHAR(created_at, 'YYYY-MM')" : "strftime('%Y-%m', created_at)";
+
         return Application::select(
-            DB::raw("TO_CHAR(created_at, 'YYYY-MM') as month"),
+            DB::raw("$monthFormat as month"),
             DB::raw("COUNT(*) as total_submitted"),
             DB::raw("SUM(CASE WHEN status = 'issued' THEN 1 ELSE 0 END) as total_approved"),
-            DB::raw("SUM(CASE WHEN status LIKE '%rejected%' THEN 1 ELSE 0 END) as total_rejected")
+            DB::raw("SUM(CASE WHEN status LIKE '%rejected%' THEN 1 ELSE 0 END) as total_returned")
         )
         ->where('created_at', '>=', $startDate)
         ->whereNotNull('created_at')

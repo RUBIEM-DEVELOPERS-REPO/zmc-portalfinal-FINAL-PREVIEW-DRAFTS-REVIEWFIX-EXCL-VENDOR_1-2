@@ -62,7 +62,7 @@
                     <span class="fw-bold">Level 2</span>
                 </div>
                 <div class="d-flex justify-content-between p-2 rounded-2 bg-white-10">
-                    <span>Registrar Approval</span>
+                    <span>Registrar Reviews</span>
                     <span class="fw-bold">Level 3</span>
                 </div>
                 <div class="d-flex justify-content-between p-2 rounded-2 bg-white-10">

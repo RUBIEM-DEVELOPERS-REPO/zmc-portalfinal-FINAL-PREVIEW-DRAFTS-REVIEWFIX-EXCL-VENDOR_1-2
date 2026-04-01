@@ -117,13 +117,7 @@
                 <label class="form-label required">Phone No.</label>
                 <div class="d-flex gap-2">
                   <select class="form-control" name="contact_phone_country_code" style="max-width:160px;" required>
-                    <option value="">Code</option>
-                    <option value="+263">+263 (ZW)</option>
-                    <option value="+27">+27 (ZA)</option>
-                    <option value="+260">+260 (ZM)</option>
-                    <option value="+258">+258 (MZ)</option>
-                    <option value="+1">+1 (US/CA)</option>
-                    <option value="+44">+44 (UK)</option>
+                    @include('partials.country-codes-options')
                   </select>
                   <input type="text" class="form-control" name="contact_phone" placeholder="e.g. 771234567" required>
                 </div>
@@ -158,14 +152,14 @@
                 <label class="form-label required">Mass Media Category</label>
                 <select class="form-control" name="mass_media_category" required>
                   <option value="">Select</option>
-                  <option>Community Media</option>
-                  <option>Advertising Agency as Media Service</option>
-                  <option>Local Office for Foreign Media Service</option>
-                  <option>National Media Service Publishing Newspaper</option>
-                  <option>Internet Based Media Service</option>
-                  <option>Production House as Media Service</option>
-                  <option>Media Service Fitting Multiple Categories</option>
-                  <option>Media Service in Film and Video Production</option>
+                  <option value="MC">MC — Community Media</option>
+                  <option value="MA">MA — Advertising Agency as Media Service</option>
+                  <option value="MF">MF — Local Office for Foreign Media Service</option>
+                  <option value="MN">MN — National Media Service Publishing Newspaper</option>
+                  <option value="DG">DG — Internet Based Media Service</option>
+                  <option value="MP">MP — Production House as Media Service</option>
+                  <option value="MS">MS — Media Service Fitting Multiple Categories</option>
+                  <option value="MV">MV — Media Service in Film and Video Production</option>
                 </select>
               </div>
 
@@ -649,6 +643,14 @@
               </label>
             </div>
           </div>
+
+          <div class="section-card mt-3">
+            <div class="form-field">
+              <label class="form-label required">Date &amp; Time</label>
+              <input type="text" class="form-control" name="declaration_date" id="ap1_declaration_date" readonly required>
+              <small class="text-muted">Automatically set when you submit the application</small>
+            </div>
+          </div>
         </div>
 
         {{-- BUTTONS --}}
@@ -674,10 +676,18 @@
   {{-- REVIEW MODAL --}}
   <div class="modal fade" id="ap1ReviewModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title"><i class="ri-file-search-line me-2"></i>Review Your Registration</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      <div class="modal-content border-0 shadow-lg" style="border-radius:16px;overflow:hidden;">
+        <div class="modal-header border-0" style="background:linear-gradient(135deg,#1e7e34,#28a745);padding:20px 24px;">
+          <div class="d-flex align-items-center gap-3">
+            <div style="width:40px;height:40px;background:rgba(255,255,255,0.2);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+              <i class="ri-file-search-line text-white" style="font-size:20px;"></i>
+            </div>
+            <div>
+              <h5 class="modal-title fw-bold text-white m-0">Review Your Registration</h5>
+              <p class="m-0 text-white" style="opacity:.8;font-size:12px;">Please verify all details before submitting</p>
+            </div>
+          </div>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body" id="ap1ReviewContent"></div>
         <div class="modal-body border-top pt-3" id="ap1AppFeeSection">
@@ -739,6 +749,114 @@
           <button type="button" class="btn btn-primary" id="ap1ConfirmSubmitBtn">
             <i class="ri-send-plane-line me-2"></i>Confirm & Submit
           </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {{-- Payment Modal (shown after successful submission) --}}
+  <input type="hidden" id="ap1PayModalAppId" value="">
+  <div class="modal fade" id="ap1PaymentModal" tabindex="-1" data-bs-backdrop="static" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:520px;">
+      <div class="modal-content border-0 shadow-lg" style="border-radius:16px;overflow:hidden;">
+        <div class="modal-header border-0 pb-0" style="background:linear-gradient(135deg,#1e7e34,#28a745);padding:24px 28px 20px;">
+          <div class="d-flex align-items-center gap-3">
+            <div style="width:44px;height:44px;background:rgba(255,255,255,0.2);border-radius:12px;display:flex;align-items:center;justify-content:center;">
+              <i class="ri-checkbox-circle-line text-white" style="font-size:22px;"></i>
+            </div>
+            <div>
+              <h5 class="modal-title fw-bold text-white m-0">Application Submitted!</h5>
+              <p class="m-0 text-white" style="opacity:.8;font-size:13px;">Ref: <span id="ap1PayModalRef"></span></p>
+            </div>
+          </div>
+        </div>
+        <div class="modal-body p-0">
+          <div style="padding:20px 28px 0;">
+            <div class="alert alert-success mb-3" style="border-radius:10px;font-size:13px;">
+              <i class="ri-checkbox-circle-line me-2"></i>
+              Your application has been submitted. Please proceed to pay the registration fee to complete the process.
+            </div>
+            <div class="d-flex gap-2 mb-4" id="ap1PayTabs">
+              <button type="button" class="pay-tab-btn active" data-tab="paynow"
+                style="flex:1;padding:10px;border:2px solid #28a745;border-radius:10px;background:#f0fdf4;color:#1e7e34;font-weight:600;font-size:13px;cursor:pointer;">
+                <i class="ri-smartphone-line me-1"></i>PayNow
+              </button>
+              <button type="button" class="pay-tab-btn" data-tab="proof"
+                style="flex:1;padding:10px;border:2px solid #e5e7eb;border-radius:10px;background:#fff;color:#6b7280;font-weight:600;font-size:13px;cursor:pointer;">
+                <i class="ri-file-upload-line me-1"></i>Upload Proof
+              </button>
+            </div>
+          </div>
+          <div class="pay-tab-content" id="ap1PaymentModal-tab-paynow" style="padding:0 28px 24px;">
+            <div class="alert alert-info mb-3" style="border-radius:10px;font-size:13px;">
+              <i class="ri-information-line me-2"></i>
+              You will be redirected to PayNow. Once payment is confirmed, your portal updates automatically.
+            </div>
+            <button type="button" class="btn btn-success w-100 py-2 mb-3" id="ap1PayNowWebBtn" style="border-radius:10px;font-weight:600;">
+              <i class="ri-external-link-line me-2"></i>Pay with PayNow (Card / ZimSwitch)
+            </button>
+            <div class="d-flex align-items-center gap-2 mb-3">
+              <hr style="flex:1;margin:0;"><span class="text-muted" style="font-size:12px;">or mobile money</span><hr style="flex:1;margin:0;">
+            </div>
+            <div class="d-flex gap-2 mb-2">
+              <input type="tel" class="form-control" id="ap1MobilePhone" placeholder="07XXXXXXXX" maxlength="10" style="border-radius:8px;font-size:13px;">
+              <select class="form-select" id="ap1MobileMethod" style="max-width:130px;border-radius:8px;font-size:13px;">
+                <option value="ecocash">EcoCash</option>
+                <option value="onemoney">OneMoney</option>
+              </select>
+            </div>
+            <button type="button" class="btn btn-outline-success w-100 py-2 mb-3" id="ap1PayNowMobileBtn" style="border-radius:10px;font-weight:600;font-size:13px;">
+              <i class="ri-smartphone-line me-2"></i>Send Mobile Payment Request
+            </button>
+            <div id="ap1PollArea" style="display:none;" class="alert alert-warning">
+              <div class="d-flex align-items-center gap-2">
+                <div class="spinner-border spinner-border-sm text-warning" role="status"></div>
+                <span id="ap1PollMsg">Waiting for payment confirmation...</span>
+              </div>
+              <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="ap1PollCheckBtn">
+                <i class="ri-refresh-line me-1"></i>Check Status
+              </button>
+            </div>
+          </div>
+          <div class="pay-tab-content" id="ap1PaymentModal-tab-proof" style="display:none;padding:0 28px 24px;">
+            <div class="alert alert-warning mb-3" style="border-radius:10px;font-size:13px;">
+              <i class="ri-alert-line me-2"></i>
+              An Accounts Officer will verify your proof and generate a digitally stamped receipt.
+            </div>
+            <div class="row g-2">
+              <div class="col-6">
+                <label class="form-label" style="font-size:12px;font-weight:600;">First Name *</label>
+                <input type="text" class="form-control form-control-sm" id="ap1ProofFname" style="border-radius:8px;">
+              </div>
+              <div class="col-6">
+                <label class="form-label" style="font-size:12px;font-weight:600;">Surname *</label>
+                <input type="text" class="form-control form-control-sm" id="ap1ProofLname" style="border-radius:8px;">
+              </div>
+              <div class="col-6">
+                <label class="form-label" style="font-size:12px;font-weight:600;">Payment Date *</label>
+                <input type="date" class="form-control form-control-sm" id="ap1ProofDate" style="border-radius:8px;">
+              </div>
+              <div class="col-6">
+                <label class="form-label" style="font-size:12px;font-weight:600;">Amount Paid (USD) *</label>
+                <input type="number" step="0.01" min="0" class="form-control form-control-sm" id="ap1ProofAmount" style="border-radius:8px;">
+              </div>
+              <div class="col-12">
+                <label class="form-label" style="font-size:12px;font-weight:600;">Bank / Payment Method *</label>
+                <input type="text" class="form-control form-control-sm" id="ap1ProofBank" placeholder="e.g. CBZ / EcoCash" style="border-radius:8px;">
+              </div>
+              <div class="col-12">
+                <label class="form-label" style="font-size:12px;font-weight:600;">Upload Proof (PDF/JPG/PNG) *</label>
+                <input type="file" class="form-control form-control-sm" id="ap1ProofFile" accept=".pdf,.jpg,.jpeg,.png" style="border-radius:8px;">
+              </div>
+            </div>
+            <button type="button" class="btn btn-warning w-100 py-2 mt-3" id="ap1ProofSubmitBtn" style="border-radius:10px;font-weight:600;color:#fff;">
+              <i class="ri-upload-cloud-line me-2"></i>Submit Proof of Payment
+            </button>
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0 d-flex justify-content-between" style="padding:0 28px 20px;">
+          <p class="text-muted m-0" style="font-size:11px;"><i class="ri-shield-check-line me-1 text-success"></i>Secured by PayNow Zimbabwe</p>
+          <a href="{{ route('mediahouse.portal') }}" class="btn btn-sm btn-outline-secondary">Pay Later</a>
         </div>
       </div>
     </div>
@@ -1274,14 +1392,13 @@
 
   function showReviewModal() {
     const fd = getFormData();
-
     const scope = (fd.registration_scope === 'foreign') ? 'Foreign Media House' : 'Local Media House';
     const regionText = document.querySelector('select[name="collection_region"]')?.selectedOptions?.[0]?.text || '-';
 
     const directorsHtml = (fd.directors || []).length ? `
       <div class="table-responsive">
-        <table class="table table-sm table-bordered align-middle">
-          <thead>
+        <table class="table table-sm table-bordered align-middle" style="font-size:12px;">
+          <thead class="table-light">
             <tr>
               <th>#</th><th>Name</th><th>Surname</th><th>Nationality</th><th>Occupation</th><th>%</th>
               <th>Other Directorships</th><th>Public/Political Office</th><th>Other Shareholdings</th>
@@ -1297,9 +1414,9 @@
                 <td>${escapeHtml(d.nationality||'-')}</td>
                 <td>${escapeHtml(d.occupation||'-')}</td>
                 <td>${escapeHtml(d.shareholding_percent||'-')}</td>
-                <td>${escapeHtml(d.other_directorships||'-')} ${d.companies_concerned ? '— ' + escapeHtml(d.companies_concerned) : ''}</td>
-                <td>${escapeHtml(d.public_political_office||'-')} ${d.public_political_details ? '— ' + escapeHtml(d.public_political_details) : ''}</td>
-                <td>${escapeHtml(d.other_shareholdings||'-')} ${d.other_shareholdings_details ? '— ' + escapeHtml(d.other_shareholdings_details) : ''}</td>
+                <td>${escapeHtml(d.other_directorships||'-')}${d.companies_concerned ? ' — '+escapeHtml(d.companies_concerned) : ''}</td>
+                <td>${escapeHtml(d.public_political_office||'-')}${d.public_political_details ? ' — '+escapeHtml(d.public_political_details) : ''}</td>
+                <td>${escapeHtml(d.other_shareholdings||'-')}${d.other_shareholdings_details ? ' — '+escapeHtml(d.other_shareholdings_details) : ''}</td>
                 <td>${escapeHtml(d.broadcasting_act_shareholding||'-')}</td>
                 <td>${escapeHtml(d.postal_telecom_act_shareholding||'-')}</td>
                 <td>${escapeHtml(d.advertising_agency_shareholding||'-')}</td>
@@ -1308,12 +1425,12 @@
           </tbody>
         </table>
       </div>
-    ` : `<div class="alert alert-light border mb-0">No directors/shareholding rows provided.</div>`;
+    ` : `<div class="alert alert-light border mb-0 small">No directors/shareholding rows provided.</div>`;
 
     const smHtml = (fd.senior_managers || []).length ? `
       <div class="table-responsive">
-        <table class="table table-sm table-bordered align-middle">
-          <thead><tr><th>#</th><th>Name</th><th>Surname</th><th>Nationality</th><th>Qualifications</th></tr></thead>
+        <table class="table table-sm table-bordered align-middle" style="font-size:12px;">
+          <thead class="table-light"><tr><th>#</th><th>Name</th><th>Surname</th><th>Nationality</th><th>Qualifications</th></tr></thead>
           <tbody>
             ${(fd.senior_managers || []).map((m,i)=>`
               <tr>
@@ -1327,119 +1444,124 @@
           </tbody>
         </table>
       </div>
-    ` : `<div class="alert alert-light border mb-0">No senior manager rows provided.</div>`;
+    ` : `<div class="alert alert-light border mb-0 small">No senior manager rows provided.</div>`;
 
     const radioBlock = (fd.mass_media_activity === 'Radio') ? `
-      <div class="mt-2">
-        <div><strong>Radio Titles Published:</strong> ${escapeHtml(fd.radio_titles_published||'-')}</div>
-        <div><strong>Frequency:</strong> ${escapeHtml(fd.radio_frequency||'-')}</div>
-        <div><strong>Circulation Figures:</strong> ${escapeHtml(fd.radio_circulation_figures||'-')}</div>
-        <div><strong>General News:</strong> ${escapeHtml(fd.radio_general_news||'-')}</div>
-        <div><strong>Specialized Information:</strong> ${escapeHtml(fd.radio_specialized_info||'-')}</div>
-        <div><strong>Details:</strong> ${escapeHtml(fd.radio_specialized_details||'-')}</div>
+      <div class="rv-grid mt-2">
+        <div class="rv-field"><span class="rv-label">Titles Published</span><span class="rv-value">${escapeHtml(fd.radio_titles_published||'-')}</span></div>
+        <div class="rv-field"><span class="rv-label">Frequency</span><span class="rv-value">${escapeHtml(fd.radio_frequency||'-')}</span></div>
+        <div class="rv-field"><span class="rv-label">Circulation Figures</span><span class="rv-value">${escapeHtml(fd.radio_circulation_figures||'-')}</span></div>
+        <div class="rv-field"><span class="rv-label">General News</span><span class="rv-value">${escapeHtml(fd.radio_general_news||'-')}</span></div>
+        <div class="rv-field"><span class="rv-label">Specialized Info</span><span class="rv-value">${escapeHtml(fd.radio_specialized_info||'-')}</span></div>
+        <div class="rv-field"><span class="rv-label">Details</span><span class="rv-value">${escapeHtml(fd.radio_specialized_details||'-')}</span></div>
       </div>
     ` : '';
 
     const reviewHtml = `
-      <div class="review-section">
-        <h6 class="fw-bold border-bottom pb-2 mb-3"><i class="ri-building-2-line me-2"></i>Registration Type</h6>
-        <p><strong>Type:</strong> ${escapeHtml(scope)}</p>
-      </div>
+      <style>
+        .rv-section { background: white; border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1rem; border: 1px solid #e2e8f0; }
+        .rv-section-title { display: flex; align-items: center; gap: 0.6rem; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #1e7e34; margin-bottom: 1rem; padding-bottom: 0.6rem; border-bottom: 2px solid #f1f5f9; }
+        .rv-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem 1.5rem; }
+        .rv-grid.cols-1 { grid-template-columns: 1fr; }
+        .rv-field { display: flex; flex-direction: column; padding: 0.35rem 0; }
+        .rv-label { font-size: 0.72rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.15rem; }
+        .rv-value { font-size: 0.88rem; color: #1e293b; font-weight: 500; }
+        .rv-badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; background: #dcfce7; color: #166534; }
+        .rv-declaration { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 1rem; font-size: 0.85rem; color: #166534; }
+      </style>
 
-      <div class="review-section mt-4">
-        <h6 class="fw-bold border-bottom pb-2 mb-3"><i class="ri-user-3-line me-2"></i>Contact Person</h6>
-        <div class="row">
-          <div class="col-6"><p><strong>Name:</strong> ${escapeHtml(fd.contact_name||'-')}</p></div>
-          <div class="col-6"><p><strong>Surname:</strong> ${escapeHtml(fd.contact_surname||'-')}</p></div>
-          <div class="col-12"><p><strong>Address:</strong> ${escapeHtml(fd.contact_address||'-')}</p></div>
-          <div class="col-6"><p><strong>Phone:</strong> ${escapeHtml((fd.contact_phone_country_code||'') + ' ' + (fd.contact_phone||'-'))}</p></div>
-          <div class="col-6"><p><strong>Email:</strong> ${escapeHtml(fd.contact_email||'-')}</p></div>
-          <div class="col-12"><p><strong>Collection Office:</strong> ${escapeHtml(regionText)}</p></div>
+      <div class="rv-section">
+        <div class="rv-section-title"><i class="ri-building-2-line"></i> Registration Type</div>
+        <div class="rv-grid">
+          <div class="rv-field"><span class="rv-label">Type</span><span class="rv-value"><span class="rv-badge">${escapeHtml(scope)}</span></span></div>
+          <div class="rv-field"><span class="rv-label">Collection Office</span><span class="rv-value">${escapeHtml(regionText)}</span></div>
         </div>
       </div>
 
-      <div class="review-section mt-4">
-        <h6 class="fw-bold border-bottom pb-2 mb-3"><i class="ri-organization-chart me-2"></i>Organization Details</h6>
-        <p><strong>Mass Media Category:</strong> ${escapeHtml(fd.mass_media_category||'-')}</p>
-        
-        <div class="registration-local-only" ${fd.registration_scope === 'foreign' ? 'style="display:none;"' : ''}>
-            <p><strong>Mass Media Activity:</strong> ${escapeHtml(fd.mass_media_activity||'-')} ${fd.mass_media_activity==='Other' ? ('— ' + escapeHtml(fd.mass_media_activity_other||'')) : ''}</p>
-            ${radioBlock}
+      <div class="rv-section">
+        <div class="rv-section-title"><i class="ri-user-3-line"></i> Contact Person</div>
+        <div class="rv-grid">
+          <div class="rv-field"><span class="rv-label">Name</span><span class="rv-value">${escapeHtml(fd.contact_name||'-')}</span></div>
+          <div class="rv-field"><span class="rv-label">Surname</span><span class="rv-value">${escapeHtml(fd.contact_surname||'-')}</span></div>
+          <div class="rv-field"><span class="rv-label">Phone</span><span class="rv-value">${escapeHtml((fd.contact_phone_country_code||'')+' '+(fd.contact_phone||'-'))}</span></div>
+          <div class="rv-field"><span class="rv-label">Email</span><span class="rv-value">${escapeHtml(fd.contact_email||'-')}</span></div>
+          <div class="rv-field cols-1"><span class="rv-label">Address</span><span class="rv-value">${escapeHtml(fd.contact_address||'-')}</span></div>
         </div>
+      </div>
 
-        <div class="registration-foreign-only" ${fd.registration_scope !== 'foreign' ? 'style="display:none;"' : ''}>
-            <p><strong>Media House Type:</strong> ${escapeHtml(fd.foreign_media_type||'-')}</p>
-            <p><strong>Organization Name:</strong> ${escapeHtml(fd.org_name||'-')}</p>
-            <p><strong>Head Office Address:</strong> ${escapeHtml(fd.org_head_office||'-')}</p>
-            <p><strong>Mailing Address:</strong> ${escapeHtml(fd.org_mailing_address||'-')}</p>
-            
-            <div class="mt-3 p-3 border rounded bg-light">
-                <h6 class="fw-bold border-bottom pb-1 mb-2"><i class="ri-hotel-line me-2"></i>Representative Office</h6>
-                <p><strong>Office Name:</strong> ${escapeHtml(fd.rep_office_name||'-')}</p>
-                <p><strong>Physical Address:</strong> ${escapeHtml(fd.rep_office_address||'-')}</p>
-                <p><strong>Email:</strong> ${escapeHtml(fd.rep_office_email||'-')}</p>
-                <div class="mb-2"><strong>Activities Description:</strong><br>${escapeHtml(fd.rep_office_activities||'-')}</div>
-                <p><strong>Wholly Owned:</strong> ${escapeHtml(fd.rep_office_wholly_owned||'-')}</p>
-                
-                ${(fd.rep_office_shareholders || []).length ? `
-                    <div class="table-responsive mt-2">
-                        <table class="table table-sm table-bordered bg-white">
-                            <thead><tr><th>Shareholder Name</th><th>Share %</th></tr></thead>
-                            <tbody>
-                                ${(fd.rep_office_shareholders || []).map(s => `
-                                    <tr><td>${escapeHtml(s.name)}</td><td>${escapeHtml(s.percent)}%</td></tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                ` : ''}
+      <div class="rv-section">
+        <div class="rv-section-title"><i class="ri-organization-chart"></i> Organization Details</div>
+        <div class="rv-grid">
+          <div class="rv-field"><span class="rv-label">Mass Media Category</span><span class="rv-value">${escapeHtml(fd.mass_media_category||'-')}</span></div>
+          ${fd.registration_scope !== 'foreign' ? `
+            <div class="rv-field"><span class="rv-label">Mass Media Activity</span><span class="rv-value">${escapeHtml(fd.mass_media_activity||'-')}${fd.mass_media_activity==='Other' ? ' — '+escapeHtml(fd.mass_media_activity_other||'') : ''}</span></div>
+          ` : `
+            <div class="rv-field"><span class="rv-label">Media House Type</span><span class="rv-value">${escapeHtml(fd.foreign_media_type||'-')}</span></div>
+            <div class="rv-field"><span class="rv-label">Organization Name</span><span class="rv-value">${escapeHtml(fd.org_name||'-')}</span></div>
+            <div class="rv-field"><span class="rv-label">Head Office</span><span class="rv-value">${escapeHtml(fd.org_head_office||'-')}</span></div>
+            <div class="rv-field"><span class="rv-label">Mailing Address</span><span class="rv-value">${escapeHtml(fd.org_mailing_address||'-')}</span></div>
+          `}
+        </div>
+        ${radioBlock}
+        ${fd.registration_scope === 'foreign' ? `
+          <div class="mt-3 p-3 border rounded" style="background:#f8fafc;">
+            <div class="rv-section-title" style="font-size:0.78rem;"><i class="ri-hotel-line"></i> Representative Office</div>
+            <div class="rv-grid">
+              <div class="rv-field"><span class="rv-label">Office Name</span><span class="rv-value">${escapeHtml(fd.rep_office_name||'-')}</span></div>
+              <div class="rv-field"><span class="rv-label">Email</span><span class="rv-value">${escapeHtml(fd.rep_office_email||'-')}</span></div>
+              <div class="rv-field"><span class="rv-label">Physical Address</span><span class="rv-value">${escapeHtml(fd.rep_office_address||'-')}</span></div>
+              <div class="rv-field"><span class="rv-label">Wholly Owned</span><span class="rv-value">${escapeHtml(fd.rep_office_wholly_owned||'-')}</span></div>
+              <div class="rv-field cols-1"><span class="rv-label">Activities</span><span class="rv-value">${escapeHtml(fd.rep_office_activities||'-')}</span></div>
             </div>
-        </div>
+          </div>
+        ` : ''}
       </div>
 
-      <div class="review-section mt-4">
-        <h6 class="fw-bold border-bottom pb-2 mb-3"><i class="ri-team-line me-2"></i>Directors & Shareholding</h6>
+      <div class="rv-section">
+        <div class="rv-section-title"><i class="ri-team-line"></i> Directors &amp; Shareholding</div>
         ${directorsHtml}
       </div>
 
-      <div class="review-section mt-4">
-        <h6 class="fw-bold border-bottom pb-2 mb-3"><i class="ri-user-star-line me-2"></i>CEO</h6>
-        <div class="row">
-          <div class="col-6"><p><strong>Name:</strong> ${escapeHtml(fd.ceo_name||'-')}</p></div>
-          <div class="col-6"><p><strong>Surname:</strong> ${escapeHtml(fd.ceo_surname||'-')}</p></div>
-          <div class="col-6"><p><strong>Nationality:</strong> ${escapeHtml(fd.ceo_nationality||'-')}</p></div>
-          <div class="col-6"><p><strong>Qualifications:</strong> ${escapeHtml(fd.ceo_qualifications||'-')}</p></div>
-          <div class="col-12"><p><strong>Experience:</strong> ${escapeHtml(fd.ceo_experience||'-')}</p></div>
+      <div class="rv-section">
+        <div class="rv-section-title"><i class="ri-user-star-line"></i> Chief Executive Officer</div>
+        <div class="rv-grid">
+          <div class="rv-field"><span class="rv-label">Name</span><span class="rv-value">${escapeHtml(fd.ceo_name||'-')}</span></div>
+          <div class="rv-field"><span class="rv-label">Surname</span><span class="rv-value">${escapeHtml(fd.ceo_surname||'-')}</span></div>
+          <div class="rv-field"><span class="rv-label">Nationality</span><span class="rv-value">${escapeHtml(fd.ceo_nationality||'-')}</span></div>
+          <div class="rv-field"><span class="rv-label">Qualifications</span><span class="rv-value">${escapeHtml(fd.ceo_qualifications||'-')}</span></div>
+          <div class="rv-field cols-1"><span class="rv-label">Experience</span><span class="rv-value">${escapeHtml(fd.ceo_experience||'-')}</span></div>
         </div>
       </div>
 
-      <div class="review-section mt-4">
-        <h6 class="fw-bold border-bottom pb-2 mb-3"><i class="ri-team-line me-2"></i>Senior Managers</h6>
+      <div class="rv-section">
+        <div class="rv-section-title"><i class="ri-team-line"></i> Senior Managers</div>
         ${smHtml}
       </div>
 
-      <div class="review-section mt-4">
-        <h6 class="fw-bold border-bottom pb-2 mb-3"><i class="ri-questionnaire-line me-2"></i>Questions</h6>
-        <p><strong>Convicted offence:</strong> ${escapeHtml(fd.q_convicted||'-')} ${fd.q_convicted_details ? '— ' + escapeHtml(fd.q_convicted_details) : ''}</p>
-        <p><strong>Judgment debt:</strong> ${escapeHtml(fd.q_judgment_debt||'-')} ${fd.q_judgment_debt_details ? '— ' + escapeHtml(fd.q_judgment_debt_details) : ''}</p>
-        <p><strong>Insolvency:</strong> a=${escapeHtml(fd.q_insolvent_a||'-')}, b=${escapeHtml(fd.q_insolvent_b||'-')}, c=${escapeHtml(fd.q_insolvent_c||'-')}, d=${escapeHtml(fd.q_insolvent_d||'-')}</p>
-        <p><strong>Insolvency details:</strong> ${escapeHtml(fd.q_insolvent_details||'-')}</p>
-        ${fd.other_relevant_info ? `<div class="mt-2 text-muted small"><strong>Other Relevant Information:</strong><br>${escapeHtml(fd.other_relevant_info)}</div>` : ''}
+      <div class="rv-section">
+        <div class="rv-section-title"><i class="ri-questionnaire-line"></i> Compliance Questions</div>
+        <div class="rv-grid">
+          <div class="rv-field"><span class="rv-label">Convicted Offence</span><span class="rv-value">${escapeHtml(fd.q_convicted||'-')}${fd.q_convicted_details ? ' — '+escapeHtml(fd.q_convicted_details) : ''}</span></div>
+          <div class="rv-field"><span class="rv-label">Judgment Debt</span><span class="rv-value">${escapeHtml(fd.q_judgment_debt||'-')}${fd.q_judgment_debt_details ? ' — '+escapeHtml(fd.q_judgment_debt_details) : ''}</span></div>
+          <div class="rv-field"><span class="rv-label">Insolvency (a/b/c/d)</span><span class="rv-value">${escapeHtml(fd.q_insolvent_a||'-')} / ${escapeHtml(fd.q_insolvent_b||'-')} / ${escapeHtml(fd.q_insolvent_c||'-')} / ${escapeHtml(fd.q_insolvent_d||'-')}</span></div>
+          ${fd.q_insolvent_details ? `<div class="rv-field"><span class="rv-label">Insolvency Details</span><span class="rv-value">${escapeHtml(fd.q_insolvent_details)}</span></div>` : ''}
+          ${fd.other_relevant_info ? `<div class="rv-field cols-1"><span class="rv-label">Other Relevant Info</span><span class="rv-value">${escapeHtml(fd.other_relevant_info)}</span></div>` : ''}
+        </div>
       </div>
 
-      <div class="review-section mt-4">
-        <h6 class="fw-bold border-bottom pb-2 mb-3"><i class="ri-attachment-2 me-2"></i>Uploads</h6>
+      <div class="rv-section">
+        <div class="rv-section-title"><i class="ri-attachment-2"></i> Uploaded Documents</div>
         ${buildDocsPreviewHtml()}
       </div>
 
-      <div class="review-section mt-4">
-        <h6 class="fw-bold border-bottom pb-2 mb-3"><i class="ri-checkbox-circle-line me-2"></i>Declaration</h6>
-        <p><strong>Agreed:</strong> ${fd.declaration_agreed ? 'Yes' : 'No'}</p>
-      </div>
-
-      <div class="alert alert-warning mt-4 mb-0">
-        <i class="ri-information-line me-2"></i>
-        Please review all information carefully before submitting.
+      <div class="rv-section">
+        <div class="rv-section-title"><i class="ri-shield-check-line"></i> Declaration</div>
+        <div class="rv-declaration">
+          <i class="ri-double-quotes-l" style="color:#1e7e34;font-size:1.25rem;"></i>
+          <p class="mb-2 mt-1">I declare that all the information given above, to the best of my knowledge is true and complete.</p>
+          <div class="rv-field"><span class="rv-label">Agreed</span><span class="rv-value">${fd.declaration_agreed ? '<span class="rv-badge">Yes — Confirmed</span>' : '<span style="color:#dc2626;">Not confirmed</span>'}</span></div>
+          <div class="rv-field mt-1"><span class="rv-label">Date &amp; Time Submitted</span><span class="rv-value">${escapeHtml(fd.ap1_declaration_date || fd.declaration_date || '-')}</span></div>
+        </div>
       </div>
     `;
 
@@ -1532,6 +1654,16 @@
   }
 
   async function submitApplication() {
+    // Auto-populate declaration date and time
+    const now = new Date();
+    const dateTimeString = now.toLocaleString('en-GB', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+      hour12: false
+    });
+    const declField = document.getElementById('ap1_declaration_date');
+    if (declField) declField.value = dateTimeString;
+
     const data = getFormData();
     const region = document.querySelector('select[name="collection_region"]')?.value || '';
     const btn = document.getElementById('ap1ConfirmSubmitBtn');
@@ -1543,6 +1675,9 @@
       alert('Application fee is required. Please provide a PayNow reference or upload proof of payment.');
       return;
     }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 min timeout
 
     try {
       btn.disabled = true;
@@ -1578,6 +1713,7 @@
         method: 'POST',
         headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
         body: fd,
+        signal: controller.signal,
       });
 
       if (!res.ok) {
@@ -1589,15 +1725,30 @@
       const json = await res.json();
       if (json.success) {
         bootstrap.Modal.getInstance(document.getElementById('ap1ReviewModal'))?.hide();
-        alert('Application submitted successfully! Reference: ' + json.reference);
-        window.location.href = "{{ route('mediahouse.portal') }}";
+
+        // Show payment modal
+        const appId = json.application_id;
+        if (appId) {
+          document.getElementById('ap1PayModalAppId').value = appId;
+          document.getElementById('ap1PayModalRef').textContent = json.reference;
+          const payModal = new bootstrap.Modal(document.getElementById('ap1PaymentModal'));
+          payModal.show();
+        } else {
+          alert('Application submitted successfully! Reference: ' + json.reference);
+          window.location.href = "{{ route('mediahouse.portal') }}";
+        }
       } else {
         alert(json.message || 'Failed to submit.');
       }
     } catch (e) {
-      console.error(e);
-      alert('An error occurred while submitting: ' + e.message);
+      if (e.name === 'AbortError') {
+        alert('Submission timed out after 2 minutes. Please check your connection and try again.');
+      } else {
+        console.error(e);
+        alert('An error occurred while submitting: ' + e.message);
+      }
     } finally {
+      clearTimeout(timeoutId);
       btn.disabled = false;
       btn.innerHTML = '<i class="ri-send-plane-line me-2"></i>Confirm & Submit';
     }
@@ -1806,4 +1957,148 @@
   .upload-area p{font-size:12px;color:#64748b;margin:4px 0 10px;}
   .upload-btn{border:1px solid #cbd5e1;background:#fff;border-radius:10px;padding:8px 12px;font-weight:700;}
 </style>
+
+<script>
+// ===== AP1 Payment Modal JS =====
+(function(){
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}';
+  let ap1PollInterval = null;
+
+  document.querySelectorAll('#ap1PayTabs .pay-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#ap1PayTabs .pay-tab-btn').forEach(b => {
+        b.style.borderColor = '#e5e7eb'; b.style.background = '#fff'; b.style.color = '#6b7280';
+      });
+      btn.style.borderColor = '#28a745'; btn.style.background = '#f0fdf4'; btn.style.color = '#1e7e34';
+      document.querySelectorAll('#ap1PaymentModal .pay-tab-content').forEach(c => c.style.display = 'none');
+      const tab = document.getElementById('ap1PaymentModal-tab-' + btn.dataset.tab);
+      if (tab) tab.style.display = 'block';
+    });
+  });
+
+  function getAppId() { return document.getElementById('ap1PayModalAppId')?.value; }
+
+  document.getElementById('ap1PayNowWebBtn')?.addEventListener('click', async () => {
+    const appId = getAppId(); if (!appId) return;
+    const btn = document.getElementById('ap1PayNowWebBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Connecting...';
+    try {
+      const res = await fetch('/payments/' + appId + '/initiate', {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (data.success && data.redirect_url) {
+        window.location.href = data.redirect_url;
+      } else {
+        alert(data.message || 'PayNow initiation failed. Please try again or use Upload Proof.');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ri-external-link-line me-2"></i>Pay with PayNow (Card / ZimSwitch)';
+      }
+    } catch(e) {
+      alert('Network error. Please try again.');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ri-external-link-line me-2"></i>Pay with PayNow (Card / ZimSwitch)';
+    }
+  });
+
+  document.getElementById('ap1PayNowMobileBtn')?.addEventListener('click', async () => {
+    const appId = getAppId();
+    const phone = document.getElementById('ap1MobilePhone')?.value?.trim();
+    const method = document.getElementById('ap1MobileMethod')?.value;
+    if (!phone || !/^0[7][0-9]{8}$/.test(phone)) {
+      alert('Please enter a valid Zimbabwean mobile number (07XXXXXXXX).');
+      return;
+    }
+    const btn = document.getElementById('ap1PayNowMobileBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
+    try {
+      const res = await fetch('/payments/' + appId + '/initiate-mobile', {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, method }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (data.success) {
+        document.getElementById('ap1PollArea').style.display = 'block';
+        ap1PollInterval = setInterval(() => ap1CheckStatus(), 5000);
+      } else {
+        alert(data.message || 'Mobile payment failed. Please try again.');
+      }
+    } catch(e) { alert('Network error.'); }
+    finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ri-smartphone-line me-2"></i>Send Mobile Payment Request';
+    }
+  });
+
+  document.getElementById('ap1PollCheckBtn')?.addEventListener('click', () => ap1CheckStatus());
+
+  async function ap1CheckStatus() {
+    const appId = getAppId(); if (!appId) return;
+    try {
+      const res = await fetch('/payments/' + appId + '/status', { headers: { 'Accept': 'application/json' } });
+      const data = await res.json().catch(() => ({}));
+      const msg = document.getElementById('ap1PollMsg');
+      if (data.status === 'paid') {
+        if (ap1PollInterval) clearInterval(ap1PollInterval);
+        if (msg) msg.textContent = 'Payment confirmed! Redirecting...';
+        setTimeout(() => window.location.href = "{{ route('mediahouse.portal') }}", 1500);
+      } else if (data.status === 'failed') {
+        if (ap1PollInterval) clearInterval(ap1PollInterval);
+        if (msg) msg.textContent = 'Payment failed. Please try again.';
+      } else {
+        if (msg) msg.textContent = 'Waiting for confirmation... (' + (data.status || 'pending') + ')';
+      }
+    } catch(e) { /* silent */ }
+  }
+
+  document.getElementById('ap1ProofSubmitBtn')?.addEventListener('click', async () => {
+    const appId  = getAppId();
+    const fname  = document.getElementById('ap1ProofFname')?.value?.trim();
+    const lname  = document.getElementById('ap1ProofLname')?.value?.trim();
+    const date   = document.getElementById('ap1ProofDate')?.value;
+    const amount = document.getElementById('ap1ProofAmount')?.value;
+    const bank   = document.getElementById('ap1ProofBank')?.value?.trim();
+    const file   = document.getElementById('ap1ProofFile')?.files?.[0];
+    if (!fname || !lname || !date || !amount || !bank || !file) {
+      alert('Please fill in all required fields and upload your proof of payment.');
+      return;
+    }
+    const fd = new FormData();
+    fd.append('proof_first_name', fname);
+    fd.append('proof_last_name', lname);
+    fd.append('proof_payment_date', date);
+    fd.append('proof_amount_paid', amount);
+    fd.append('proof_bank_name', bank);
+    fd.append('proof_file', file);
+    const btn = document.getElementById('ap1ProofSubmitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Uploading...';
+    try {
+      const res = await fetch('/payments/' + appId + '/upload-proof', {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+        body: fd,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (data.ok) {
+        bootstrap.Modal.getInstance(document.getElementById('ap1PaymentModal'))?.hide();
+        alert('Proof submitted! An Accounts Officer will verify it and generate your receipt.');
+        window.location.href = "{{ route('mediahouse.portal') }}";
+      } else {
+        alert(data.message || 'Upload failed. Please try again.');
+      }
+    } catch(e) { alert('Network error.'); }
+    finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ri-upload-cloud-line me-2"></i>Submit Proof of Payment';
+    }
+  });
+})();
+</script>
+
 @endpush

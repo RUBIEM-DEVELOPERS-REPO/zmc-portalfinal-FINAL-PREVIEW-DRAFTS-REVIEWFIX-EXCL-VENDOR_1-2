@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use App\Notifications\StaffAccountSetupNotification;
 
 class UserAccessController extends Controller
 {
@@ -72,7 +73,8 @@ class UserAccessController extends Controller
     public function create()
     {
         $roles = Role::orderBy('name')->get();
-        return view('admin.users.create', compact('roles'));
+        $regions = \App\Models\Region::where('is_active', true)->orderBy('name')->get();
+        return view('admin.users.create', compact('roles', 'regions'));
     }
 
     public function store(Request $request)
@@ -82,27 +84,76 @@ class UserAccessController extends Controller
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:6'],
             'designation' => ['nullable', 'string', 'max:255'],
+            'phone_country_code' => ['required', 'string', 'exists:countries,code'],
+            'phone_number' => ['required', 'string', 'min:6', 'max:20'],
+            'country_code' => ['nullable', 'string', 'exists:countries,code'],
+            'regions' => ['nullable', 'array'],
+            'regions.*' => ['integer', 'exists:regions,id'],
             'roles' => ['nullable', 'array'],
             'roles.*' => ['string'],
         ]);
 
+        $setupToken = \Illuminate\Support\Str::random(64);
+        $tempPassword = \Illuminate\Support\Str::random(12);
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
-            'password' => Hash::make($data['password']),
+            'password' => Hash::make($tempPassword), // Use temporary password
             'designation' => $data['designation'] ?? null,
-            'approved_at' => now(),
-            'approved_by' => auth()->id(),
-            'account_status' => 'active',
-            // Accounts created by Super Admin are STAFF users
+            'phone_country_code' => $data['phone_country_code'],
+            'phone_number' => $data['phone_number'],
+            'country_code' => $data['country_code'] ?? $data['phone_country_code'],
+            'setup_token' => $setupToken,
             'account_type' => 'staff',
         ]);
 
+        // Force account_status to pending_setup (override migration default)
+        $user->account_status = 'pending_setup';
+        $user->save();
+
         $user->syncRoles($data['roles'] ?? []);
 
-        \App\Support\AuditTrail::log('account_created_by_superadmin', $user, ['roles' => $data['roles'] ?? []]);
+        // Assign regions to the user
+        if (!empty($data['regions'])) {
+            $user->assignedRegions()->sync($data['regions']);
+        }
 
-        return redirect()->route('admin.users.staff')->with('success', 'User created.');
+        // Send Setup Notification with temporary password
+        $user->notify(new \App\Notifications\StaffAccountSetupNotification($setupToken, $tempPassword));
+
+        $action = (auth()->user() && auth()->user()->hasRole('super_admin')) ? 'account_created_by_superadmin' : 'account_created_by_it_admin';
+        \App\Support\AuditTrail::log($action, $user, ['roles' => $data['roles'] ?? []]);
+
+        return redirect()->route('admin.users.staff')->with('success', 'User created and invite sent.');
+    }
+
+    public function destroy(User $user)
+    {
+        // Prevent super admin from deleting themselves
+        if (auth()->user()->id === $user->id) {
+            return redirect()->back()->with('error', 'You cannot delete your own account.');
+        }
+
+        // Only super admin can delete users
+        if (!auth()->user()->hasRole('super_admin')) {
+            return redirect()->back()->with('error', 'Only Super Admin can delete users.');
+        }
+
+        // Prevent deletion of super admin users (except by themselves)
+        if ($user->hasRole('super_admin')) {
+            return redirect()->back()->with('error', 'Super Admin users cannot be deleted.');
+        }
+
+        // Log the deletion
+        \App\Support\AuditTrail::log('user_deleted', $user, [
+            'deleted_by' => auth()->user()->id,
+            'deleted_at' => now()
+        ]);
+
+        // Delete the user
+        $user->delete();
+
+        return redirect()->route('admin.users.staff')->with('success', 'User deleted successfully.');
     }
 
     public function editAccess(User $user)
@@ -146,7 +197,8 @@ class UserAccessController extends Controller
         $user->syncRoles($data['roles'] ?? []);
         $user->syncPermissions($data['permissions'] ?? []);
 
-        \App\Support\AuditTrail::log('user_access_updated', $user, [
+        $action = auth()->user()->hasRole('super_admin') ? 'user_access_updated_by_superadmin' : 'user_access_updated_by_it_admin';
+        \App\Support\AuditTrail::log($action, $user, [
             'roles' => $data['roles'] ?? [],
             'permissions' => $data['permissions'] ?? []
         ]);

@@ -109,24 +109,10 @@
         </div>
       </div>
 
-      <div class="card shadow-sm border-0 mt-3">
-        <div class="card-body">
-          <h6 class="fw-bold">Admin actions</h6>
-          <div class="text-muted small mb-2">These actions are logged to <code>application_audit_logs</code>.</div>
-
-          <form class="d-flex flex-wrap gap-2" method="POST" action="{{ route('staff.it.application.unlock', $application) }}">
-            @csrf
-            <input type="text" name="reason" class="form-control form-control-sm" placeholder="Reason (required for audit)" style="max-width: 380px;" />
-            <button class="btn btn-sm btn-outline-warning" type="submit"><i class="ri-lock-unlock-line me-1"></i>Unlock</button>
-          </form>
-
-          <form class="d-flex flex-wrap gap-2 mt-2" method="POST" action="{{ route('staff.it.application.reset', $application) }}">
-            @csrf
-            <input type="text" name="reason" class="form-control form-control-sm" placeholder="Reason (required for audit)" style="max-width: 380px;" />
-            <button class="btn btn-sm btn-outline-danger" type="submit"><i class="ri-refresh-line me-1"></i>Reset to Draft</button>
-          </form>
-        </div>
-      </div>
+          <div class="alert alert-info border-0 rounded-4 small">
+            <i class="ri-information-line me-1"></i>
+            IT Admin has read-only oversight. Operational actions (Unlock/Reset) are restricted.
+          </div>
     </div>
   </div>
 </div>

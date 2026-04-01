@@ -12,9 +12,18 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Services\Director\FinancialAnalyticsService;
+use App\Services\Director\ComplianceMonitoringService;
+use App\Services\Director\AccreditationAnalyticsService;
 
 class AuditorController extends Controller
 {
+    public function __construct(
+        private FinancialAnalyticsService $financialService,
+        private ComplianceMonitoringService $complianceService,
+        private AccreditationAnalyticsService $accreditationService
+    ) {}
+
     /**
      * Auditor dashboard (KPIs)
      */
@@ -47,26 +56,6 @@ class AuditorController extends Controller
         $proofsApproved  = (clone $base)->where('proof_status', 'approved')->count();
         $paynowConfirmed = (clone $base)->whereNotNull('paynow_confirmed_at')->count();
 
-        $irregularApprovedWithoutPayment = (clone $base)
-            ->whereIn('status', [
-                Application::PAID_CONFIRMED,
-                Application::PRODUCTION_QUEUE,
-                Application::CARD_GENERATED,
-                Application::CERT_GENERATED,
-                Application::PRINTED,
-                Application::ISSUED,
-            ])
-            ->where(function ($w) {
-                $w->whereNull('paynow_confirmed_at')
-                  ->where(function ($x) {
-                      $x->whereNull('proof_status')->orWhere('proof_status', '!=', 'approved');
-                  })
-                  ->where(function ($x) {
-                      $x->whereNull('waiver_status')->orWhere('waiver_status', '!=', 'approved');
-                  });
-            })
-            ->count();
-
         $recentFlags = AuditFlag::query()->latest()->limit(10)->get();
 
         // System-wide activity feed (all roles)
@@ -76,11 +65,104 @@ class AuditorController extends Controller
             ->limit(12)
             ->get();
 
+        // Trend Analytics
+        $trendRange = request()->get('trend_range', '12_months');
+        $trendCutoff = now()->subMonths(12);
+        $currentRangeLabel = 'Last 12 Months';
+
+        switch ($trendRange) {
+            case '30_days': $trendCutoff = now()->subDays(30); $currentRangeLabel = 'Last 30 Days'; break;
+            case '90_days': $trendCutoff = now()->subDays(90); $currentRangeLabel = 'Last 90 Days'; break;
+            case '6_months': $trendCutoff = now()->subMonths(6); $currentRangeLabel = 'Last 6 Months'; break;
+            case 'this_year': $trendCutoff = now()->startOfYear(); $currentRangeLabel = 'This Year (' . date('Y') . ')'; break;
+            case 'all_time': $trendCutoff = now()->subYears(10); $currentRangeLabel = 'All Time'; break;
+        }
+
+        $accreditationTrends = [];
+        $registrationTrends = [];
+        $trendLabels = [];
+
+        try {
+            $trends = Application::selectRaw("strftime('%Y-%m', created_at) as month, 
+                SUM(CASE WHEN application_type = 'accreditation' THEN 1 ELSE 0 END) as acc_count,
+                SUM(CASE WHEN application_type = 'registration' THEN 1 ELSE 0 END) as reg_count")
+                ->where('created_at', '>=', $trendCutoff)
+                ->groupBy('month')
+                ->orderBy('month')
+                ->get();
+
+            foreach ($trends as $t) {
+                $trendLabels[] = date('M Y', strtotime($t->month . '-01'));
+                $accreditationTrends[] = (int) $t->acc_count;
+                $registrationTrends[] = (int) $t->reg_count;
+            }
+        } catch (\Exception $e) {}
+
+        // Financial intelligence (transferred from Director)
+        $aging = $this->financialService->getOutstandingPaymentsAging();
+        $waiversStat = $this->financialService->getWaiverStatistics();
+        $revenueTrendData = $this->financialService->getMonthlyRevenueTrend();
+        $revenueTrend = $revenueTrendData['current_year'] ?? collect([]);
+        $breakdown = [
+            'service' => $this->financialService->getRevenueByServiceType()
+        ];
+        $waivers = (object)[
+            'count' => $waiversStat['count'],
+            'waived_amount' => $waiversStat['total_value']
+        ];
+
+        // Compliance intelligence (transferred from Director)
+        $categoryReassignmentsStat = $this->complianceService->getCategoryReassignments();
+        $manualOverridesStat = $this->complianceService->getManualOverrides();
+        $certificateEditsStat = $this->complianceService->getCertificateEdits();
+        $reopenedApplicationsStat = $this->complianceService->getReopenedApplications();
+        $printStatistics = $this->complianceService->getPrintStatistics();
+        $excessiveReprints = $this->complianceService->getExcessiveReprints();
+
+        $auditSnapshot = [
+            'category_reassignments' => $categoryReassignmentsStat['total'] ?? 0,
+            'manual_payment_overrides' => $manualOverridesStat['total'] ?? 0,
+            'certificate_edits' => $certificateEditsStat['total'] ?? 0,
+            'reopened_applications' => $reopenedApplicationsStat['total'] ?? 0,
+        ];
+        $reprints = [
+            'total' => ($printStatistics['total_prints'] ?? 0) + ($printStatistics['total_reprints'] ?? 0),
+            'reprints' => $printStatistics['total_reprints'] ?? 0,
+            'top_staff' => $excessiveReprints['by_staff'] ?? collect([]),
+        ];
+        $suspicious = $this->complianceService->getSuspiciousActivityAlerts();
+
+        // Performance ratios (for Auditor overview)
+        $ratios = $this->accreditationService->getApprovalRatioByApplicationType();
+        $ratio = [
+            'journalist' => $ratios['accreditation'] ?? 0,
+            'mass_media' => $ratios['registration'] ?? 0,
+        ];
+        $categories = $this->accreditationService->getCategoryDistribution();
+        $monthlyTrends = $this->accreditationService->getMonthlyTrends(12);
+
+        // Prepare variables for partials (financial_summary & compliance)
+        $paymentSummary = [
+            'Paid' => $paynowConfirmed, // Simplified for overview
+            'Failed' => 0 
+        ];
+        $kpis = [
+            'pending_waivers' => Application::where('waiver_status', 'pending')->count()
+        ];
+        $paymentReconciliation = [
+            'pending_proofs' => Application::where('proof_status', 'pending')->count()
+        ];
+
         return view('staff.auditor.dashboard', compact(
             'from','to',
             'totalApplications','approvedCount','rejectedCount',
             'waiversApproved','proofsApproved','paynowConfirmed',
-            'irregularApprovedWithoutPayment','recentFlags','activity'
+            'recentFlags','activity',
+            'trendLabels', 'accreditationTrends', 'registrationTrends', 'currentRangeLabel',
+            'aging', 'waivers', 'revenueTrend', 'breakdown',
+            'auditSnapshot', 'reprints', 'printStatistics', 'suspicious',
+            'ratio', 'categories', 'monthlyTrends', 'activeTab',
+            'paymentSummary', 'kpis', 'paymentReconciliation'
         ));
     }
 

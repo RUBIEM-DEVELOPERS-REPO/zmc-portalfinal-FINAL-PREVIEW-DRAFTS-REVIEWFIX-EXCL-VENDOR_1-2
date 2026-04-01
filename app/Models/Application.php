@@ -37,6 +37,8 @@ class Application extends Model
 
     // Registrar
     public const REGISTRAR_REVIEW     = 'registrar_review';
+    public const AWAITING_REG_FEE     = 'awaiting_reg_fee';
+    public const AWAITING_BATCH_PAYMENT = 'awaiting_batch_payment';
     public const REGISTRAR_APPROVED   = 'registrar_approved';
     public const REGISTRAR_REJECTED   = 'registrar_rejected';
     public const RETURNED_TO_OFFICER  = 'returned_to_officer';
@@ -130,7 +132,8 @@ class Application extends Model
 
         'registrar_reviewed_at',
         'registrar_reviewed_by',
-
+        'is_flagged',
+        'flag_notes',
         'residency_type',
         'accreditation_category_code',
         'media_house_category_code',
@@ -146,6 +149,7 @@ class Application extends Model
         'registrar_letter_path',
         'receipt_number',
         'paynow_ref_submitted',
+        'batch_id',
     ];
 
     protected $casts = [
@@ -162,7 +166,9 @@ class Application extends Model
         'waiver_offered_date' => 'date',
         'form_data'      => 'array',
         'is_draft'       => 'boolean',
+        'is_flagged'     => 'boolean',
         'locked_at'      => 'datetime',
+        'registrar_reviewed_at' => 'datetime',
     ];
 
     /* =========================
@@ -280,6 +286,16 @@ class Application extends Model
     public function accreditationRecord(): HasOne
     {
         return $this->hasOne(\App\Models\AccreditationRecord::class, 'application_id');
+    }
+    
+    public function registrationRecord(): HasOne
+    {
+        return $this->hasOne(RegistrationRecord::class, 'application_id');
+    }
+
+    public function batch(): BelongsTo
+    {
+        return $this->belongsTo(Batch::class);
     }
 
     public function payments(): HasMany

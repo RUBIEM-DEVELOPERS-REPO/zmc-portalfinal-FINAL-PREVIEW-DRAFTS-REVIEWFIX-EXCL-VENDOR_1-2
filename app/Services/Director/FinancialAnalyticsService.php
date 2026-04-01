@@ -47,8 +47,10 @@ class FinancialAnalyticsService
         $previousYearStart = now()->subMonths($months)->subYear()->startOfMonth();
         $previousYearEnd = now()->subYear()->endOfMonth();
         
+        $monthFormat = DB::getDriverName() === 'pgsql' ? "TO_CHAR(confirmed_at, 'YYYY-MM')" : "strftime('%Y-%m', confirmed_at)";
+
         $previousYearData = Payment::select(
-            DB::raw("TO_CHAR(confirmed_at, 'YYYY-MM') as month"),
+            DB::raw("$monthFormat as month"),
             DB::raw('SUM(amount) as total_revenue')
         )
         ->where('status', 'paid')

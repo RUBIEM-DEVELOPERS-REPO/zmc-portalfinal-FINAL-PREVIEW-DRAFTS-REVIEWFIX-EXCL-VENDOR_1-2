@@ -24,7 +24,7 @@
       <div class="zmc-card h-100">
         <div class="d-flex justify-content-between align-items-center mb-2">
           <h6 class="fw-bold m-0"><i class="ri-megaphone-line me-2" style="color:var(--zmc-accent)"></i>Notices</h6>
-          @hasanyrole('super_admin|it_admin')
+          @hasanyrole('super_admin|it_admin|pr')
             <button class="btn btn-sm btn-dark" data-bs-toggle="modal" data-bs-target="#createNotice"><i class="ri-add-line me-1"></i>New</button>
           @endhasanyrole
         </div>
@@ -45,13 +45,13 @@
                   <span class="badge rounded-pill bg-{{ $n->is_published ? 'success' : 'secondary' }} px-3">{{ $n->is_published ? 'Published' : 'Draft' }}</span>
                 </td>
                 <td class="text-end">
-                  @hasanyrole('super_admin|it_admin')
+                  @hasanyrole('super_admin|it_admin|pr')
                     <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editNotice{{ $n->id }}"><i class="ri-edit-line"></i></button>
-                    <form method="POST" action="{{ route('staff.it.notices.destroy',$n) }}" class="d-inline">@csrf @method('DELETE')
+                    <form method="POST" action="{{ route('admin.content.notices.destroy',$n) }}" class="d-inline">@csrf @method('DELETE')
                       <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this notice?')"><i class="ri-delete-bin-line"></i></button>
                     </form>
                   @else
-                    —
+                    <span class="text-muted small">View Only</span>
                   @endhasanyrole
                 </td>
               </tr>
@@ -68,7 +68,7 @@
       <div class="zmc-card h-100">
         <div class="d-flex justify-content-between align-items-center mb-2">
           <h6 class="fw-bold m-0"><i class="ri-calendar-event-line me-2" style="color:var(--zmc-accent)"></i>Events</h6>
-          @hasanyrole('super_admin|it_admin')
+          @hasanyrole('super_admin|it_admin|pr')
             <button class="btn btn-sm btn-dark" data-bs-toggle="modal" data-bs-target="#createEvent"><i class="ri-add-line me-1"></i>New</button>
           @endhasanyrole
         </div>
@@ -89,13 +89,13 @@
                   <span class="badge rounded-pill bg-{{ $e->is_published ? 'success' : 'secondary' }} px-3">{{ $e->is_published ? 'Published' : 'Draft' }}</span>
                 </td>
                 <td class="text-end">
-                  @hasanyrole('super_admin|it_admin')
+                  @hasanyrole('super_admin|it_admin|pr')
                     <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editEvent{{ $e->id }}"><i class="ri-edit-line"></i></button>
-                    <form method="POST" action="{{ route('staff.it.events.destroy',$e) }}" class="d-inline">@csrf @method('DELETE')
+                    <form method="POST" action="{{ route('admin.content.events.destroy',$e) }}" class="d-inline">@csrf @method('DELETE')
                       <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this event?')"><i class="ri-delete-bin-line"></i></button>
                     </form>
                   @else
-                    —
+                    <span class="text-muted small">View Only</span>
                   @endhasanyrole
                 </td>
               </tr>
@@ -112,7 +112,7 @@
       <div class="zmc-card h-100">
         <div class="d-flex justify-content-between align-items-center mb-2">
           <h6 class="fw-bold m-0"><i class="ri-id-card-line me-2" style="color:var(--zmc-accent)"></i>Vacancies</h6>
-          @hasanyrole('super_admin|it_admin')
+          @hasanyrole('super_admin|it_admin|pr')
             <button class="btn btn-sm btn-dark" data-bs-toggle="modal" data-bs-target="#createVacancy"><i class="ri-add-line me-1"></i>New</button>
           @endhasanyrole
         </div>
@@ -128,13 +128,13 @@
                   <span class="badge rounded-pill bg-{{ $v->is_published ? 'success' : 'secondary' }} px-3">{{ $v->is_published ? 'Published' : 'Draft' }}</span>
                 </td>
                 <td class="text-end">
-                  @hasanyrole('super_admin|it_admin')
+                  @hasanyrole('super_admin|it_admin|pr')
                     <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editVacancy{{ $v->id }}"><i class="ri-edit-line"></i></button>
-                    <form method="POST" action="{{ route('staff.it.vacancies.destroy',$v) }}" class="d-inline">@csrf @method('DELETE')
+                    <form method="POST" action="{{ route('admin.content.vacancies.destroy',$v) }}" class="d-inline">@csrf @method('DELETE')
                       <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this vacancy?')"><i class="ri-delete-bin-line"></i></button>
                     </form>
                   @else
-                    —
+                    <span class="text-muted small">View Only</span>
                   @endhasanyrole
                 </td>
               </tr>
@@ -151,7 +151,7 @@
       <div class="zmc-card h-100">
         <div class="d-flex justify-content-between align-items-center mb-2">
           <h6 class="fw-bold m-0"><i class="ri-briefcase-line me-2" style="color:var(--zmc-accent)"></i>Tenders</h6>
-          @hasanyrole('super_admin|it_admin')
+          @hasanyrole('super_admin|it_admin|pr')
             <button class="btn btn-sm btn-dark" data-bs-toggle="modal" data-bs-target="#createTender"><i class="ri-add-line me-1"></i>New</button>
           @endhasanyrole
         </div>
@@ -167,13 +167,13 @@
                   <span class="badge rounded-pill bg-{{ $t->is_published ? 'success' : 'secondary' }} px-3">{{ $t->is_published ? 'Published' : 'Draft' }}</span>
                 </td>
                 <td class="text-end">
-                  @hasanyrole('super_admin|it_admin')
+                  @hasanyrole('super_admin|it_admin|pr')
                     <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editTender{{ $t->id }}"><i class="ri-edit-line"></i></button>
-                    <form method="POST" action="{{ route('staff.it.tenders.destroy',$t) }}" class="d-inline">@csrf @method('DELETE')
+                    <form method="POST" action="{{ route('admin.content.tenders.destroy',$t) }}" class="d-inline">@csrf @method('DELETE')
                       <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this tender?')"><i class="ri-delete-bin-line"></i></button>
                     </form>
                   @else
-                    —
+                    <span class="text-muted small">View Only</span>
                   @endhasanyrole
                 </td>
               </tr>
@@ -187,7 +187,7 @@
   </div>
 </div>
 
-@hasanyrole('super_admin|it_admin')
+@hasanyrole('super_admin|it_admin|pr')
 {{-- Create Notice --}}
 <div class="modal fade" id="createNotice" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -253,7 +253,7 @@
 @foreach($notices as $n)
 <div class="modal fade" id="editNotice{{ $n->id }}" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
-    <form class="modal-content" method="POST" enctype="multipart/form-data" action="{{ route('staff.it.notices.update',$n) }}">
+    <form class="modal-content" method="POST" enctype="multipart/form-data" action="{{ route('admin.content.notices.update',$n) }}">
       @csrf @method('PUT')
       <div class="modal-header zmc-modal-header"><div class="zmc-modal-title">Edit Notice</div><button class="btn-close" data-bs-dismiss="modal"></button></div>
       <div class="modal-body">
@@ -289,7 +289,7 @@
 @foreach($events as $e)
 <div class="modal fade" id="editEvent{{ $e->id }}" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
-    <form class="modal-content" method="POST" enctype="multipart/form-data" action="{{ route('staff.it.events.update',$e) }}">
+    <form class="modal-content" method="POST" enctype="multipart/form-data" action="{{ route('admin.content.events.update',$e) }}">
       @csrf @method('PUT')
       <div class="modal-header zmc-modal-header"><div class="zmc-modal-title">Edit Event</div><button class="btn-close" data-bs-dismiss="modal"></button></div>
       <div class="modal-body">
@@ -322,7 +322,7 @@
 {{-- Create Vacancy Modal --}}
 <div class="modal fade" id="createVacancy" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
-    <form class="modal-content" method="POST" enctype="multipart/form-data" action="{{ route('staff.it.vacancies.store') }}">
+    <form class="modal-content" method="POST" enctype="multipart/form-data" action="{{ route('admin.content.vacancies.store') }}">
       @csrf
       <div class="modal-header zmc-modal-header"><div class="zmc-modal-title">New Vacancy</div><button class="btn-close" data-bs-dismiss="modal"></button></div>
       <div class="modal-body">
@@ -345,8 +345,8 @@
 @foreach($vacancies as $v)
 <div class="modal fade" id="editVacancy{{ $v->id }}" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
-    <form class="modal-content" method="POST" enctype="multipart/form-data" action="{{ route('staff.it.vacancies.update',$v) }}">
-      @csrf @method('POST') {{-- Using POST with method if needed, controller expects POST for files usually --}}
+    <form class="modal-content" method="POST" enctype="multipart/form-data" action="{{ route('admin.content.vacancies.update',$v) }}">
+      @csrf @method('PUT')
       <div class="modal-header zmc-modal-header"><div class="zmc-modal-title">Edit Vacancy</div><button class="btn-close" data-bs-dismiss="modal"></button></div>
       <div class="modal-body">
         <div class="row g-3">
@@ -369,7 +369,7 @@
 {{-- Create Tender Modal --}}
 <div class="modal fade" id="createTender" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
-    <form class="modal-content" method="POST" enctype="multipart/form-data" action="{{ route('staff.it.tenders.store') }}">
+    <form class="modal-content" method="POST" enctype="multipart/form-data" action="{{ route('admin.content.tenders.store') }}">
       @csrf
       <div class="modal-header zmc-modal-header"><div class="zmc-modal-title">New Tender</div><button class="btn-close" data-bs-dismiss="modal"></button></div>
       <div class="modal-body">
@@ -391,8 +391,8 @@
 @foreach($tenders as $t)
 <div class="modal fade" id="editTender{{ $t->id }}" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
-    <form class="modal-content" method="POST" enctype="multipart/form-data" action="{{ route('staff.it.tenders.update',$t) }}">
-      @csrf @method('POST')
+    <form class="modal-content" method="POST" enctype="multipart/form-data" action="{{ route('admin.content.tenders.update',$t) }}">
+      @csrf @method('PUT')
       <div class="modal-header zmc-modal-header"><div class="zmc-modal-title">Edit Tender</div><button class="btn-close" data-bs-dismiss="modal"></button></div>
       <div class="modal-body">
         <div class="row g-3">

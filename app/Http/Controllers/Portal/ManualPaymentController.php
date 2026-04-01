@@ -20,9 +20,11 @@ class ManualPaymentController extends Controller
         }
 
         $allowedStatuses = [
+            Application::SUBMITTED,
             Application::ACCOUNTS_REVIEW,
             Application::APPROVED_AWAITING_PAYMENT,
             Application::PAYMENT_REJECTED,
+            Application::AWAITING_ACCOUNTS_VERIFICATION,
             Application::REGISTRAR_APPROVED_PENDING_REG_FEE,
         ];
         if (!in_array($application->status ?? '', $allowedStatuses, true)) {

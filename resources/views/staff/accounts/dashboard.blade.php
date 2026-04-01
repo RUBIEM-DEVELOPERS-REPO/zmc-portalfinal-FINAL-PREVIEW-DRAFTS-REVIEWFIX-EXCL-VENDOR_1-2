@@ -39,7 +39,7 @@
     $summaryTotal = method_exists($applications, 'total') ? $applications->total() : $items->count();
 
     $summaryPending = $items->filter(fn($x) => in_array(strtolower((string)($x->status ?? '')), [
-      'accounts_review','paid_confirmed','returned_to_accounts','awaiting_accounts_verification','pending_accounts_from_registrar'
+      'accounts_review','returned_to_accounts','awaiting_accounts_verification','pending_accounts_from_registrar'
     ], true))->count();
 
     $summaryPaid = $items->filter(fn($x) => strtolower((string)($x->status ?? '')) === 'paid_confirmed')->count();
@@ -60,8 +60,16 @@
       <div class="zmc-card h-100">
         <div class="d-flex justify-content-between align-items-start">
           <div>
-            <div class="text-muted small fw-bold">Total queue</div>
-            <div class="h3 fw-black mb-0">{{ $summaryTotal }}</div>
+            <div class="text-muted small fw-bold">Total Applications</div>
+            <div class="h3 fw-black mb-0">{{ $totalApplications }}</div>
+            <div class="mt-2">
+              <a href="#" class="btn btn-sm btn-outline-primary me-1" title="Download Applications">
+                <i class="ri-download-2-line"></i>
+              </a>
+              <a href="#" class="btn btn-sm btn-outline-info" title="View Analytics">
+                <i class="ri-bar-chart-line"></i>
+              </a>
+            </div>
           </div>
           <div class="icon-box text-primary"><i class="ri-folders-line"></i></div>
         </div>
@@ -72,12 +80,18 @@
       <div class="zmc-card h-100">
         <div class="d-flex justify-content-between align-items-start">
           <div>
-            <div class="text-muted small fw-bold">Pending action</div>
-            <div class="h3 fw-black mb-0">{{ $summaryPending }}</div>
+            <div class="text-muted small fw-bold">Paid via Pay Now</div>
+            <div class="h3 fw-black mb-0 text-success">{{ $paidViaPayNow }}</div>
+            <div class="mt-2">
+              <a href="#" class="btn btn-sm btn-outline-primary me-1" title="Download Pay Now Payments">
+                <i class="ri-download-2-line"></i>
+              </a>
+              <a href="#" class="btn btn-sm btn-outline-info" title="View Analytics">
+                <i class="ri-bar-chart-line"></i>
+              </a>
+            </div>
           </div>
-          <div class="icon-box" style="background:transparent;border-left:3px solid var(--zmc-accent);border-radius:0;">
-            <i class="ri-time-line" style="color:var(--zmc-accent)"></i>
-          </div>
+          <div class="icon-box text-success"><i class="ri-bank-card-line"></i></div>
         </div>
       </div>
     </div>
@@ -86,10 +100,18 @@
       <div class="zmc-card h-100">
         <div class="d-flex justify-content-between align-items-start">
           <div>
-            <div class="text-muted small fw-bold">Paid confirmed</div>
-            <div class="h3 fw-black mb-0">{{ $summaryPaid }}</div>
+            <div class="text-muted small fw-bold">Paid via Uploads</div>
+            <div class="h3 fw-black mb-0 text-info">{{ $paidViaUploads }}</div>
+            <div class="mt-2">
+              <a href="#" class="btn btn-sm btn-outline-primary me-1" title="Download Upload Payments">
+                <i class="ri-download-2-line"></i>
+              </a>
+              <a href="#" class="btn btn-sm btn-outline-info" title="View Analytics">
+                <i class="ri-bar-chart-line"></i>
+              </a>
+            </div>
           </div>
-          <div class="icon-box text-success"><i class="ri-check-double-line"></i></div>
+          <div class="icon-box text-info"><i class="ri-upload-2-line"></i></div>
         </div>
       </div>
     </div>
@@ -98,10 +120,18 @@
       <div class="zmc-card h-100">
         <div class="d-flex justify-content-between align-items-start">
           <div>
-            <div class="text-muted small fw-bold">Returned</div>
-            <div class="h3 fw-black mb-0">{{ $summaryReturned }}</div>
+            <div class="text-muted small fw-bold">Pending Action</div>
+            <div class="h3 fw-black mb-0 text-warning">{{ $pendingAction }}</div>
+            <div class="mt-2">
+              <a href="#" class="btn btn-sm btn-outline-primary me-1" title="Download Pending Actions">
+                <i class="ri-download-2-line"></i>
+              </a>
+              <a href="#" class="btn btn-sm btn-outline-info" title="View Analytics">
+                <i class="ri-bar-chart-line"></i>
+              </a>
+            </div>
           </div>
-          <div class="icon-box text-warning"><i class="ri-arrow-go-back-line"></i></div>
+          <div class="icon-box text-warning"><i class="ri-time-line"></i></div>
         </div>
       </div>
     </div>
@@ -112,10 +142,18 @@
       <div class="zmc-card h-100">
         <div class="d-flex justify-content-between align-items-start">
           <div>
-            <div class="text-muted small fw-bold">Awaiting verification</div>
-            <div class="h3 fw-black mb-0">{{ $summaryAwaitingVerification }}</div>
+            <div class="text-muted small fw-bold">Approved (Paid)</div>
+            <div class="h3 fw-black mb-0 text-success">{{ $approvedPaid }}</div>
+            <div class="mt-2">
+              <a href="#" class="btn btn-sm btn-outline-primary me-1" title="Download Approved Applications">
+                <i class="ri-download-2-line"></i>
+              </a>
+              <a href="#" class="btn btn-sm btn-outline-info" title="View Analytics">
+                <i class="ri-bar-chart-line"></i>
+              </a>
+            </div>
           </div>
-          <div class="icon-box text-primary"><i class="ri-shield-check-line"></i></div>
+          <div class="icon-box text-success"><i class="ri-check-double-line"></i></div>
         </div>
       </div>
     </div>
@@ -124,10 +162,10 @@
       <div class="zmc-card h-100">
         <div class="d-flex justify-content-between align-items-start">
           <div>
-            <div class="text-muted small fw-bold">From Registrar (waiver)</div>
-            <div class="h3 fw-black mb-0">{{ $summaryFromRegistrar }}</div>
+            <div class="text-muted small fw-bold">Returned for Correction</div>
+            <div class="h3 fw-black mb-0 text-danger">{{ $items->filter(fn($x) => in_array(strtolower((string)($x->status ?? '')), ['payment_rejected','returned_to_accounts','returned_from_registrar','returned_to_officer','officer_rejected','registrar_rejected'], true))->count() }}</div>
           </div>
-          <div class="icon-box" style="color:#7c3aed;"><i class="ri-file-shield-2-line"></i></div>
+          <div class="icon-box text-danger"><i class="ri-arrow-go-back-line"></i></div>
         </div>
       </div>
     </div>
@@ -137,7 +175,7 @@
         <div class="zmc-card h-100">
           <div class="d-flex justify-content-between align-items-start">
             <div>
-              <div class="text-muted small fw-bold">Record cash payment</div>
+              <div class="text-muted small fw-bold">Record Cash Payment</div>
               <div class="small text-primary mt-1"><i class="ri-add-circle-line me-1"></i>New entry</div>
             </div>
             <div class="icon-box text-dark"><i class="ri-money-dollar-circle-line"></i></div>
@@ -146,6 +184,33 @@
       </a>
     </div>
   </div>
+
+  @include('partials.analytics.financial_summary')
+
+  <div class="row g-3 mb-4">
+    <div class="col-12">
+      <div class="zmc-card shadow-sm border-0">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h6 class="fw-bold m-0"><i class="ri-bar-chart-box-line me-2 text-primary"></i> Monthly Revenue Overview ({{ date('Y') }})</h6>
+          <div class="dropdown">
+            <button class="btn btn-sm btn-light border dropdown-toggle" type="button" data-bs-toggle="dropdown">
+              Export Report
+            </button>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-menu-item p-2 text-decoration-none d-block small" href="{{ route('staff.accounts.reports.export-ledger') }}"><i class="ri-file-excel-line me-2 text-success"></i> Excel Format</a></li>
+              <li><a class="dropdown-menu-item p-2 text-decoration-none d-block small" href="#"><i class="ri-file-pdf-line me-2 text-danger"></i> PDF Format</a></li>
+            </ul>
+          </div>
+        </div>
+        <div style="height: 300px;">
+          <canvas id="revenueChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {{-- Trends Analytics (Redistributed from IT) --}}
+  @include('partials.analytics.trends')
 
   {{-- Table --}}
   <div class="zmc-card p-0 shadow-sm border-0">
@@ -210,7 +275,7 @@
             <td class="small">{{ !empty($app->created_at) ? \Carbon\Carbon::parse($app->created_at)->format('d M Y') : '—' }}</td>
             <td>
               <span class="badge rounded-pill bg-{{ $badge }} px-3">
-                {{ ucwords(str_replace('_',' ', $status ?: '—')) }}
+                {{ str_replace('_',' ', in_array($status, ['payment_rejected','officer_rejected','registrar_rejected'], true) ? 'returned_for_correction' : ($status ?: '—')) }}
               </span>
             </td>
 
@@ -247,7 +312,7 @@
                   data-target="#paidModal{{ $app->id }}"
                   @if(!$canAct) disabled @endif
                   data-bs-toggle="tooltip" data-bs-placement="top"
-                  title="Mark paid"
+                  title="Mark paid & generate receipt"
                 >
                   <i class="fa-solid fa-check"></i>
                 </button>
@@ -264,6 +329,7 @@
                   <i class="fa-solid fa-times"></i>
                 </button>
 
+                
               </div>
             </td>
           </tr>
@@ -311,24 +377,31 @@
                   <div class="modal-header zmc-modal-header">
                     <div>
                       <div class="zmc-modal-title">
-                        <i class="fa-solid fa-check me-2" style="color:var(--zmc-green)"></i>
-                        Confirm payment
+                        <i class="fa-solid fa-file-invoice me-2" style="color:var(--zmc-green)"></i>
+                        Mark Paid & Generate Receipt
                         <span class="ms-2 text-muted" style="font-weight:800;font-size:12px;">{{ $ref }}</span>
                       </div>
-                      <div class="zmc-modal-sub">This will verify payment and send to Production.</div>
+                      <div class="zmc-modal-sub">This will confirm payment, generate receipt, and send to Production.</div>
                     </div>
                     <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
                   </div>
 
                   <div class="modal-body">
+                    <div class="alert alert-info d-flex align-items-center gap-2">
+                      <i class="fa-solid fa-info-circle"></i>
+                      <div>
+                        <strong>Receipt will be automatically generated and downloaded</strong><br>
+                        <small>Payment status will be updated to "paid" and application will move to Production queue.</small>
+                      </div>
+                    </div>
                     <label class="form-label zmc-lbl">Notes (optional)</label>
-                    <textarea name="notes" class="form-control zmc-input" rows="4" placeholder="Add any notes (optional)"></textarea>
+                    <textarea name="decision_notes" class="form-control zmc-input" rows="4" placeholder="Add any notes (optional)"></textarea>
                   </div>
 
                   <div class="modal-footer zmc-modal-footer">
                     <button type="button" class="btn btn-light fw-bold" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-success fw-bold">
-                      <i class="fa-solid fa-check me-1"></i>Mark paid
+                      <i class="fa-solid fa-file-invoice me-1"></i>Mark Paid & Generate Receipt
                     </button>
                   </div>
                 </form>
@@ -499,118 +572,82 @@
 
       let html = '';
 
-      if (formCode === 'AP3') {
-        const body = `
-          <div class="row g-3">
-            ${zmcInput('Title', app.title)}
-            ${zmcInput('First name', app.first_name)}
-            ${zmcInput('Surname', app.surname)}
-            ${zmcInput('Other names', app.other_names)}
-            ${zmcInput('Date of birth', app.dob)}
-            ${zmcInput('Sex', app.sex)}
-            ${zmcInput('Birth place', app.birth_place)}
-            ${zmcInput('Origin', app.origin)}
-            ${zmcInput('Nationality', app.nationality)}
-            ${zmcInput('ID / Passport', app.id_passport_number)}
-            ${zmcInput('Employer', app.employer_name)}
-            ${zmcInput('Medium type', app.medium_type)}
-            ${zmcInput('Designation', app.designation)}
-            ${zmcTextarea('Assignment brief', app.assignment_brief)}
-            ${zmcInput('Arrival date', app.arrival_date)}
-            ${zmcInput('Departure date', app.departure_date)}
-            ${zmcInput('Port of entry', app.port_entry)}
-            ${zmcTextarea('Local address', (app.zim_local_address || app.zim_address))}
-          </div>
-        `;
-        html += zmcBlock(`<i class="fa-regular fa-id-card"></i> Applicant details`, body);
-      }
-
-      if (formCode === 'AP1') {
-        const s = data.ap1 || {};
-
-        html += zmcBlock(
-          `<i class="fa-regular fa-building"></i> Organisation details`,
-          `
-          <div class="row g-3">
-            ${zmcInput('Category', s.category)}
-            ${zmcInput('Service name', s.service_name)}
-            ${zmcInput('Operating model', s.operating_model)}
-            ${zmcInput('Organisation', s.org_name)}
-            ${zmcInput('Reg no', s.reg_no)}
-            ${zmcInput('Website', s.website)}
-            ${zmcTextarea('Head office', s.head_office, 6)}
-            ${zmcTextarea('Postal address', s.postal_address, 6)}
-          </div>
-          `
-        );
-
-        html += zmcBlock(
-          `<i class="fa-regular fa-address-book"></i> Contact`,
-          `
-          <div class="row g-3">
-            ${zmcInput('Contact person', s.contact_person, 4)}
-            ${zmcInput('Contact email', s.contact_email, 4)}
-            ${zmcInput('Contact phone', s.contact_phone, 4)}
-          </div>
-          `
-        );
-
-        const directors = Array.isArray(data.directors) ? data.directors : [];
-        const managers  = Array.isArray(data.managers) ? data.managers : [];
-
-        let dRows = directors.length ? '' : `<tr><td colspan="5" class="text-muted text-center">—</td></tr>`;
-        directors.forEach(d => {
-          dRows += `
-            <tr>
-              <td>${zmcFmt(d.full_name || (d.name ? (d.name + ' ' + (d.surname||'')) : ''))}</td>
-              <td>${zmcFmt(d.id_passport)}</td>
-              <td>${zmcFmt(d.nationality)}</td>
-              <td>${zmcFmt(d.role || d.occupation)}</td>
-              <td>${zmcFmt(d.shareholding)}</td>
-            </tr>
+      // For Accounts Dashboard, show only payment details
+      if (data.payment_details) {
+        const pay = data.payment_details;
+        
+        // Payment proof file display
+        let proofFileDisplay = '';
+        if (pay.payment_proof_path) {
+          const proofUrl = `/storage/${pay.payment_proof_path}`;
+          proofFileDisplay = `
+            <div class="d-flex align-items-center gap-2">
+              <a href="${proofUrl}" target="_blank" class="btn btn-sm btn-outline-primary">
+                <i class="fa-solid fa-file-pdf"></i> View Payment Proof
+              </a>
+              <span class="text-muted small">
+                Uploaded: ${pay.payment_proof_uploaded_at ? new Date(pay.payment_proof_uploaded_at).toLocaleDateString() : '—'}
+              </span>
+            </div>
           `;
-        });
+        } else {
+          proofFileDisplay = '<span class="text-muted">No payment proof uploaded</span>';
+        }
 
-        html += zmcBlock(
-          `<i class="fa-solid fa-people-group"></i> Directors`,
-          `
-          <div class="table-responsive">
-            <table class="table table-sm align-middle zmc-table-lite">
-              <thead>
-                <tr>
-                  <th>Full name</th><th>ID / Passport</th><th>Nationality</th><th>Role</th><th>Shareholding</th>
-                </tr>
-              </thead>
-              <tbody>${dRows}</tbody>
-            </table>
-          </div>
-          `
-        );
-
-        let mRows = managers.length ? '' : `<tr><td colspan="4" class="text-muted text-center">—</td></tr>`;
-        managers.forEach(m => {
-          mRows += `
-            <tr>
-              <td>${zmcFmt(m.full_name)}</td>
-              <td>${zmcFmt(m.position)}</td>
-              <td>${zmcFmt(m.qualification)}</td>
-              <td>${zmcFmt(m.experience)}</td>
-            </tr>
+        // Waiver file display
+        let waiverFileDisplay = '';
+        if (pay.waiver_path) {
+          const waiverUrl = `/storage/${pay.waiver_path}`;
+          waiverFileDisplay = `
+            <div class="d-flex align-items-center gap-2">
+              <a href="${waiverUrl}" target="_blank" class="btn btn-sm btn-outline-info">
+                <i class="fa-solid fa-file-pdf"></i> View Waiver
+              </a>
+              <span class="text-muted small">
+                Status: <span class="badge bg-${pay.waiver_status === 'approved' ? 'success' : (pay.waiver_status === 'rejected' ? 'danger' : 'warning')}">${zmcFmt(pay.waiver_status)}</span>
+              </span>
+            </div>
           `;
-        });
+        }
 
         html += zmcBlock(
-          `<i class="fa-solid fa-user-gear"></i> Managers`,
+          `<i class="fa-solid fa-credit-card"></i> Payment Details`,
           `
-          <div class="table-responsive">
-            <table class="table table-sm align-middle zmc-table-lite">
-              <thead>
-                <tr>
-                  <th>Full name</th><th>Position</th><th>Qualification</th><th>Experience</th>
-                </tr>
-              </thead>
-              <tbody>${mRows}</tbody>
-            </table>
+          <div class="row g-3">
+            <div class="col-md-6">
+              ${zmcInput('Payment Status', pay.payment_status)}
+              ${zmcInput('Proof Status', pay.proof_status)}
+              ${zmcInput('Amount Paid (USD)', pay.proof_amount_paid)}
+              ${zmcInput('Payment Date', pay.proof_payment_date)}
+              ${zmcInput('Bank Used', pay.proof_bank_name)}
+            </div>
+            <div class="col-md-6">
+              ${zmcInput('Payer First Name', pay.proof_payer_first_name)}
+              ${zmcInput('Payer Last Name', pay.proof_payer_last_name)}
+              ${zmcInput('PayNow Reference', pay.paynow_reference)}
+              ${zmcInput('PayNow Confirmed At', pay.paynow_confirmed_at)}
+              ${zmcInput('Waiver Status', pay.waiver_status)}
+            </div>
+            <div class="col-12">
+              <div class="mb-3">
+                <label class="form-label fw-bold">Payment Proof</label>
+                ${proofFileDisplay}
+              </div>
+              ${pay.proof_review_notes ? `
+                <div class="mb-3">
+                  <label class="form-label fw-bold">Review Notes</label>
+                  <div class="alert alert-info small">${zmcFmt(pay.proof_review_notes)}</div>
+                </div>
+              ` : ''}
+            </div>
+            ${waiverFileDisplay ? `
+              <div class="col-12">
+                <div class="mb-3">
+                  <label class="form-label fw-bold">Waiver Document</label>
+                  ${waiverFileDisplay}
+                </div>
+              </div>
+            ` : ''}
           </div>
           `
         );
@@ -683,6 +720,58 @@
       zmcOpenModal('#appDetailsModal');
       loadApplicationDetails(appId);
     });
+
+    // --- Revenue Chart Initialization ---
+    const ctx = document.getElementById('revenueChart');
+    if (ctx) {
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: @json($labels),
+          datasets: [{
+            label: 'Monthly Revenue (USD)',
+            data: @json($chartData),
+            borderColor: '#2563eb',
+            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4,
+            pointRadius: 4,
+            pointBackgroundColor: '#fff',
+            pointBorderColor: '#2563eb',
+            pointBorderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              mode: 'index',
+              intersect: false,
+              callbacks: {
+                label: function(context) {
+                  return 'Revenue: $' + context.parsed.y.toLocaleString();
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: { borderDash: [5, 5] },
+              ticks: {
+                callback: function(value) { return '$' + value.toLocaleString(); }
+              }
+            },
+            x: {
+              grid: { display: false }
+            }
+          }
+        }
+      });
+    }
   });
 </script>
 @endpush

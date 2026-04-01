@@ -190,7 +190,7 @@
                         <span class="badge bg-success">{{ $stats['approved_applications'] }}</span>
                     </div>
                     <div class="d-flex justify-content-between align-items-center">
-                        <span>Rejected</span>
+                        <span>Returned for Correction</span>
                         <span class="badge bg-danger">{{ $stats['rejected_applications'] }}</span>
                     </div>
                 </div>
@@ -409,6 +409,7 @@
                                                 'pending' => 'warning',
                                                 'approved' => 'success',
                                                 'rejected' => 'danger',
+                                                'returned_for_correction' => 'danger',
                                                 'draft' => 'secondary',
                                                 'under_review' => 'info',
                                             ];

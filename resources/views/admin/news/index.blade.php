@@ -9,7 +9,7 @@
         Manage news posts that can be consumed by the website via JSON endpoints.
       </div>
     </div>
-    @hasanyrole('super_admin|it_admin')
+    @hasanyrole('super_admin|it_admin|pr')
       <button class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#createNews"><i class="ri-add-line me-1"></i>New</button>
     @endhasanyrole
   </div>
@@ -49,20 +49,24 @@
                 <a href="{{ asset('storage/'.$n->image_path) }}" target="_blank" class="me-2">Image</a>
               @endif
               @if($n->attachment_path)
-                <a href="{{ asset('storage/'.$n->attachment_path) }}" target="_blank">{{ $n->attachment_original_name ?? 'Attachment' }}</a>
+                @hasanyrole('super_admin|it_admin|pr')
+                  <a href="{{ asset('storage/'.$n->attachment_path) }}" target="_blank">{{ $n->attachment_original_name ?? 'Attachment' }}</a>
+                @else
+                  <span class="text-muted"><i class="ri-lock-line me-1"></i>View Only (Download Restricted)</span>
+                @endhasanyrole
               @endif
               @if(!$n->image_path && !$n->attachment_path)
                 —
               @endif
             </td>
             <td class="text-end">
-              @hasanyrole('super_admin|it_admin')
+              @hasanyrole('super_admin|it_admin|pr')
                 <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editNews{{ $n->id }}"><i class="ri-edit-line"></i></button>
                 <form method="POST" action="{{ route('admin.news.destroy',$n) }}" class="d-inline">@csrf @method('DELETE')
                   <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this news item?')"><i class="ri-delete-bin-line"></i></button>
                 </form>
               @else
-                —
+                <span class="text-muted small">View Only</span>
               @endhasanyrole
             </td>
           </tr>
@@ -75,7 +79,7 @@
 </div>
 
 {{-- Create News --}}
-@hasanyrole('super_admin|it_admin')
+@hasanyrole('super_admin|it_admin|pr')
 <div class="modal fade" id="createNews" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <form class="modal-content" method="POST" enctype="multipart/form-data" action="{{ route('admin.news.store') }}">
@@ -99,7 +103,7 @@
 @endhasanyrole
 
 {{-- Edit News --}}
-@hasanyrole('super_admin|it_admin')
+@hasanyrole('super_admin|it_admin|pr')
 @foreach($items as $n)
 <div class="modal fade" id="editNews{{ $n->id }}" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">

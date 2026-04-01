@@ -143,7 +143,7 @@
 <body>
 <div class="wrap">
   <a href="{{ url('/') }}" class="brand">
-    <img src="{{ asset('zimbabwe_media_commission_transparent_edges.png') }}" alt="ZMC Logo">
+    <img src="{{ asset('zmc_logo_circular.png') }}" alt="ZMC Logo">
     <span>ZMC Portal</span>
   </a>
 

@@ -213,7 +213,7 @@ class AccreditationAnalyticsService
             })->toArray(),
             'submitted' => $trends->pluck('total_submitted')->toArray(),
             'approved' => $trends->pluck('total_approved')->toArray(),
-            'rejected' => $trends->pluck('total_rejected')->toArray(),
+            'returned' => $trends->pluck('total_returned')->toArray(),
         ];
     }
 }

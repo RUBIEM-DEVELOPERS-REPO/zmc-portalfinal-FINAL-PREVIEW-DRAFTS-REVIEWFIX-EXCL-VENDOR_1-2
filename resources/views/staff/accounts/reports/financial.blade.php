@@ -22,9 +22,26 @@
                 <div class="col-md-2">
                     <label class="form-label">Category</label>
                     <select name="applicant_category[]" class="form-select select2" multiple>
-                        <option value="journalist">Media Practitioner</option>
-                        <option value="media_practitioner">Media Practitioner</option>
-                        <option value="media_house">Media House</option>
+                        <optgroup label="Journalist / Practitioner">
+                            <option value="JE">JE — Full-time employed</option>
+                            <option value="JF">JF — Freelance (local)</option>
+                            <option value="JO">JO — Office for foreign media</option>
+                            <option value="JS">JS — Stringing for foreign media</option>
+                            <option value="JM">JM — Local and abroad</option>
+                            <option value="JP">JP — Content / Photo / PR / Digital</option>
+                            <option value="JD">JD — Digital social media</option>
+                            <option value="JT">JT — Foreign journalist (temp permit)</option>
+                        </optgroup>
+                        <optgroup label="Media House">
+                            <option value="MC">MC — Community Media</option>
+                            <option value="MA">MA — Advertising agency</option>
+                            <option value="MF">MF — Local office for foreign media</option>
+                            <option value="MN">MN — National newspaper</option>
+                            <option value="DG">DG — Internet based media</option>
+                            <option value="MP">MP — Production house</option>
+                            <option value="MS">MS — Multiple categories</option>
+                            <option value="MV">MV — Film and video</option>
+                        </optgroup>
                     </select>
                 </div>
                 <div class="col-md-1 d-flex align-items-end">

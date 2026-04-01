@@ -17,6 +17,7 @@ use App\Models\Refund;
 use App\Http\Controllers\Portal\PaynowController;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use ZipArchive;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -28,6 +29,7 @@ class AccountsPaymentsController extends Controller
      */
     public function index(Request $request)
     {
+        abort_unless(auth()->user()?->hasAnyRole(['super_admin','it_admin','accounts','accountant','chief_accountant']), 403);
         $query = Payment::query()->with(['application.applicant', 'payer']);
 
         // Multi-level filters
@@ -98,6 +100,79 @@ class AccountsPaymentsController extends Controller
         return view('staff.accounts.payments.offline_create', compact('applications'));
     }
 
+    /**
+     * List batches pending verification.
+     */
+    public function batchesPending(Request $request)
+    {
+        $batches = \App\Models\Batch::with(['mediaHouse'])
+            ->where('status', 'pending_verification')
+            ->latest()
+            ->paginate(20);
+
+        return view('staff.accounts.payments.batches_pending', compact('batches'));
+    }
+
+    /**
+     * Approve a batch payment.
+     */
+    public function approveBatch(\App\Models\Batch $batch)
+    {
+        DB::transaction(function () use ($batch) {
+            $batch->update([
+                'status' => 'paid',
+            ]);
+
+            // Transition all linked applications
+            foreach ($batch->applications as $application) {
+                $application->update([
+                    'status' => Application::PAID_CONFIRMED,
+                ]);
+
+                // Create individual Payment record for the ledger
+                Payment::create([
+                    'application_id' => $application->id,
+                    'payer_user_id' => $batch->media_house_user_id,
+                    'method' => $batch->payment_method,
+                    'amount' => 20, // Placeholder rate
+                    'currency' => 'USD',
+                    'reference' => $batch->reference,
+                    'status' => 'confirmed',
+                    'confirmed_at' => now(),
+                    'recorded_by' => Auth::id(),
+                ]);
+
+                // Trigger the notification to the journalist
+                try {
+                    if ($application->applicant) {
+                        $application->applicant->notify(new \App\Notifications\PaymentReceiptNotification($application));
+                    }
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Failed to send digital receipt notification for batch payment', [
+                        'application_id' => $application->id,
+                        'batch_id' => $batch->id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+        });
+
+        return back()->with('success', 'Batch payment approved. Journalists have been notified.');
+    }
+
+    /**
+     * Reject a batch payment.
+     */
+    public function rejectBatch(\App\Models\Batch $batch, Request $request)
+    {
+        $batch->update([
+            'status' => 'rejected',
+            'metadata' => array_merge($batch->metadata ?? [], ['rejection_reason' => $request->reason]),
+        ]);
+
+        return back()->with('success', 'Batch payment rejected.');
+    }
+
     public function storeOffline(Request $request)
     {
         $validated = $request->validate([
@@ -140,6 +215,18 @@ class AccountsPaymentsController extends Controller
         // Transition application if Paid
         if ($payment->status === 'paid') {
             ApplicationWorkflow::transition($application, Application::PAID_CONFIRMED, 'Payment Confirmed (Offline)');
+
+            // Send Digital Receipt
+            try {
+                if ($application->applicant) {
+                    $application->applicant->notify(new \App\Notifications\PaymentReceiptNotification($application));
+                }
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to send digital receipt notification for offline payment', [
+                    'application_id' => $application->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
         }
 
         return redirect()->route('staff.accounts.payments.index')->with('success', 'Offline payment recorded.');
@@ -315,28 +402,127 @@ class AccountsPaymentsController extends Controller
     public function dashboard()
     {
         $user = Auth::user();
+
+        // 1. Total Applications (Lifetime)
+        $totalApplications = Application::count();
+
+        // 2. Paid via Pay Now (Automatically processed)
+        $paidViaPayNow = Application::where(function ($w) {
+            $w->where('payment_status', 'paid')
+              ->orWhereNotNull('paynow_confirmed_at')
+              ->orWhere('proof_status', 'approved')
+              ->orWhere('status', Application::PAID_CONFIRMED);
+        })->whereNotNull('paynow_reference')->count();
+
+        // 3. Paid via Uploads (Manual, POP, cash, waivers, exemptions)
+        $paidViaUploads = Application::where(function ($w) {
+            $w->where('payment_status', 'paid')
+              ->orWhere('payment_status', 'waived')
+              ->orWhere('proof_status', 'approved')
+              ->orWhere('status', Application::PAID_CONFIRMED);
+        })->whereNull('paynow_reference')->count();
+
+        // 4. Pending Action (Accounts Queue)
+        $pendingAction = Application::whereIn('status', [
+            Application::ACCOUNTS_REVIEW,
+            Application::RETURNED_TO_ACCOUNTS,
+            Application::AWAITING_ACCOUNTS_VERIFICATION,
+            Application::PENDING_ACCOUNTS_FROM_REGISTRAR,
+        ])->count();
+
+        // 5. Approved (Paid) - All approved applications
+        $approvedPaid = Application::where('status', Application::PAID_CONFIRMED)->count();
+
+        // Analytics: Revenue by month (Current Year)
+        $revenueData = \App\Models\Payment::whereIn('status', ['paid', 'confirmed'])
+            ->whereYear('created_at', date('Y'))
+            ->selectRaw('strftime("%m", created_at) as month, SUM(amount) as total')
+            ->groupBy('month')
+            ->orderBy('month')
+            ->pluck('total', 'month')
+            ->all();
+
+        $labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        $chartData = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $monthKey = str_pad($m, 2, '0', STR_PAD_LEFT);
+            $chartData[] = $revenueData[$monthKey] ?? 0;
+        }
+
+        // Main queue list
         $applications = Application::query()
-            ->with('applicant')
+            ->with(['applicant', 'batch'])
             ->whereIn('status', [
                 Application::ACCOUNTS_REVIEW,
                 Application::RETURNED_TO_ACCOUNTS,
                 Application::AWAITING_ACCOUNTS_VERIFICATION,
                 Application::PENDING_ACCOUNTS_FROM_REGISTRAR,
-                Application::PAID_CONFIRMED,
             ])
-            ->where(function($q) use ($user) {
-                $q->whereNull('assigned_officer_id')
-                  ->orWhere('assigned_officer_id', $user->id);
-            })
-            ->where(function($q) use ($user) {
-                $q->whereNull('locked_at')
-                  ->orWhere('locked_at', '<=', now()->subHours(2))
-                  ->orWhere('locked_by', $user->id);
-            })
             ->latest()
             ->paginate(20);
 
-        return view('staff.accounts.dashboard', compact('applications'));
+        // Trend Analytics
+        $trendRange = request()->get('trend_range', '12_months');
+        $trendCutoff = now()->subMonths(12);
+        $currentRangeLabel = 'Last 12 Months';
+
+        switch ($trendRange) {
+            case '30_days': $trendCutoff = now()->subDays(30); $currentRangeLabel = 'Last 30 Days'; break;
+            case '90_days': $trendCutoff = now()->subDays(90); $currentRangeLabel = 'Last 90 Days'; break;
+            case '6_months': $trendCutoff = now()->subMonths(6); $currentRangeLabel = 'Last 6 Months'; break;
+            case 'this_year': $trendCutoff = now()->startOfYear(); $currentRangeLabel = 'This Year (' . date('Y') . ')'; break;
+            case 'all_time': $trendCutoff = now()->subYears(10); $currentRangeLabel = 'All Time'; break;
+        }
+
+        $accreditationTrends = [];
+        $registrationTrends = [];
+        $trendLabels = [];
+
+        try {
+            $applicationsForTrend = Application::select('application_type', 'created_at')
+                ->where('created_at', '>=', $trendCutoff)
+                ->orderBy('created_at')
+                ->get();
+
+            $groupedTrends = $applicationsForTrend->groupBy(function($app) {
+                return \Carbon\Carbon::parse($app->created_at)->format('M Y');
+            });
+
+            foreach ($groupedTrends as $month => $apps) {
+                $trendLabels[] = $month;
+                $accreditationTrends[] = $apps->where('application_type', 'accreditation')->count();
+                $registrationTrends[]  = $apps->where('application_type', 'registration')->count();
+            }
+        } catch (\Exception $e) {}
+
+        // Financial Summary KPIs for the partial
+        $paymentSummary = [
+            'Paid' => \App\Models\Payment::where('status', 'paid')->sum('amount'),
+            'Failed' => \App\Models\Payment::whereIn('status', ['failed', 'voided', 'declined'])->sum('amount'),
+        ];
+        
+        $paymentReconciliation = [
+            'pending_proofs' => Application::where('proof_status', 'submitted')
+                ->whereIn('status', [Application::ACCOUNTS_REVIEW, Application::RETURNED_TO_ACCOUNTS])
+                ->count(),
+        ];
+        
+        $kpis = [
+            'pending_waivers' => Application::where('waiver_status', 'submitted')->count(),
+        ];
+
+        return view('staff.accounts.dashboard', compact(
+            'applications',
+            'totalApplications',
+            'paidViaPayNow',
+            'paidViaUploads',
+            'pendingAction',
+            'approvedPaid',
+            'labels',
+            'chartData',
+            'trendLabels', 'accreditationTrends', 'registrationTrends', 'currentRangeLabel',
+            'paymentSummary', 'paymentReconciliation', 'kpis'
+        ));
     }
 
     /**
@@ -513,7 +699,19 @@ class AccountsPaymentsController extends Controller
             'notes' => $data['proof_review_notes'] ?? null,
         ]);
 
-        return back()->with('success', 'Payment proof approved and sent to Production.');
+        // Send Digital Receipt
+        try {
+            if ($application->applicant) {
+                $application->applicant->notify(new \App\Notifications\PaymentReceiptNotification($application));
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to send digital receipt notification', [
+                'application_id' => $application->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+
+        return back()->with('success', 'Payment proof approved and digital receipt sent.');
     }
 
     /** Reject a payment proof */
@@ -930,62 +1128,201 @@ class AccountsPaymentsController extends Controller
             return back()->with('error', 'Application is not paid or confirmed.');
         }
 
-        $application->load(['applicant']);
+        $application->load(['applicant', 'batch']);
+
+        // Generate receipt number if not exists
+        if (!$application->receipt_number) {
+            $application->receipt_number = $this->generateReceiptNumber();
+            $application->save();
+        }
+
+        // Create or update payment record
+        $payment = Payment::updateOrCreate([
+            'application_id' => $application->id,
+            'method' => 'proof',
+        ], [
+            'payer_user_id' => $application->applicant_user_id,
+            'source' => 'offline',
+            'amount' => $application->proof_amount_paid ?: $application->fee_amount ?: 0,
+            'currency' => $application->currency ?: 'USD',
+            'reference' => $application->receipt_number,
+            'status' => 'paid',
+            'confirmed_at' => now(),
+            'bank_name' => $application->proof_bank_name,
+            'proof_file_path' => $application->payment_proof_path,
+            'receipt_number' => $application->receipt_number,
+            'payment_date' => $application->proof_payment_date ?: now()->format('Y-m-d'),
+            'recorded_by' => auth()->id(),
+            'reconciled' => true,
+            'reconciled_at' => now(),
+            'reconciled_by' => auth()->id(),
+        ]);
 
         $data = [
             'application' => $application,
+            'payment' => $payment,
             'date' => now()->format('Y-m-d H:i'),
             'company_name' => 'Zimbabwe Media Commission',
             'company_address' => '109 Rotten Row, Harare, Zimbabwe',
             'company_email' => 'info@zmc.co.zw',
-            'company_phone' => '+263 242 703351'
+            'company_phone' => '+263 242 703351',
+            'amount' => $payment->amount,
+            'currency' => $payment->currency,
+            'reference' => $payment->reference,
+            'receipt_number' => $payment->receipt_number,
         ];
 
         $pdf = Pdf::loadView('staff.accounts.receipt_pdf', $data);
         return $pdf->download('Receipt_' . $application->reference . '.pdf');
     }
 
+    private function generateReceiptNumber(): string
+    {
+        $prefix = 'ZMC-REC';
+        $year = date('Y');
+        $sequence = Payment::whereYear('created_at', $year)->max('id') + 1;
+        
+        return sprintf('%s-%s-%06d', $prefix, $year, $sequence);
+    }
+
     /**
      * Confirm paid -> push to production_queue
      */
     public function markPaid(Request $request, Application $application)
-{
-    $data = $request->validate([
-        'paynow_reference' => ['nullable', 'string', 'max:200'],
-        'payment_status'   => ['nullable', 'string', 'max:100'],
-        'decision_notes'   => ['nullable', 'string', 'max:5000'],
-    ]);
+    {
+        $data = $request->validate([
+            'paynow_reference' => ['nullable', 'string', 'max:200'],
+            'payment_status'   => ['nullable', 'string', 'max:100'],
+            'decision_notes'   => ['nullable', 'string', 'max:5000'],
+        ]);
 
-    $from = $application->status;
+        $from = $application->status;
 
-    // Save fields (only if columns exist)
-    foreach (['paynow_reference','payment_status','decision_notes'] as $col) {
-        if (!empty($data[$col]) && Schema::hasColumn('applications', $col)) {
-            $application->{$col} = $data[$col];
+        // Save fields (only if columns exist)
+        foreach (['paynow_reference','payment_status','decision_notes'] as $col) {
+            if (!empty($data[$col]) && Schema::hasColumn('applications', $col)) {
+                $application->{$col} = $data[$col];
+            }
+        }
+        
+        // Store payment time if marked paid
+        if (!empty($data['payment_status']) && strtolower($data['payment_status']) === 'paid' && Schema::hasColumn('applications', 'payment_paid_at')) {
+            $application->payment_paid_at = now();
+        }
+        
+        // Update payment status to paid
+        $application->payment_status = 'paid';
+        $application->save();
+
+        // Mark confirmed
+        ApplicationWorkflow::transition($application, Application::PAID_CONFIRMED, 'accounts_confirm_paid', $data);
+
+        // Generate receipt number if not exists
+        if (!$application->receipt_number) {
+            $application->receipt_number = $this->generateReceiptNumber();
+            $application->save();
+        }
+
+        // Create or update payment record
+        $payment = Payment::updateOrCreate([
+            'application_id' => $application->id,
+            'method' => 'proof',
+        ], [
+            'payer_user_id' => $application->applicant_user_id,
+            'source' => 'offline',
+            'amount' => $application->proof_amount_paid ?: $application->fee_amount ?: 0,
+            'currency' => $application->currency ?: 'USD',
+            'reference' => $application->receipt_number,
+            'status' => 'paid',
+            'confirmed_at' => now(),
+            'bank_name' => $application->proof_bank_name,
+            'proof_file_path' => $application->payment_proof_path,
+            'receipt_number' => $application->receipt_number,
+            'payment_date' => $application->proof_payment_date ?: now()->format('Y-m-d'),
+            'recorded_by' => auth()->id(),
+            'reconciled' => true,
+            'reconciled_at' => now(),
+            'reconciled_by' => auth()->id(),
+        ]);
+
+        // ✅ NEW ORDER: send to production (since Registrar already reviewed it before pushing to Accounts)
+        ApplicationWorkflow::transition($application, Application::PRODUCTION_QUEUE, 'system_send_to_production', [
+            'region' => $application->collection_region ?? null,
+        ]);
+
+        ActivityLogger::log('accounts_confirm_paid', $application, $from, $application->status, [
+            'actor_role' => session('active_staff_role'),
+            'paynow_reference' => $data['paynow_reference'] ?? null,
+            'payment_status' => $data['payment_status'] ?? null,
+            'receipt_number' => $application->receipt_number,
+        ]);
+
+        // Generate receipt data
+        $receiptData = [
+            'application' => $application,
+            'payment' => $payment,
+            'date' => now()->format('Y-m-d H:i'),
+            'company_name' => 'Zimbabwe Media Commission',
+            'company_address' => '109 Rotten Row, Harare, Zimbabwe',
+            'company_email' => 'info@zmc.co.zw',
+            'company_phone' => '+263 242 703351',
+            'amount' => $payment->amount,
+            'currency' => $payment->currency,
+            'reference' => $payment->reference,
+            'receipt_number' => $payment->receipt_number,
+        ];
+
+        // Generate and return receipt PDF
+        $pdf = Pdf::loadView('staff.accounts.receipt_pdf', $receiptData);
+        
+        // Send digital receipt to applicant
+        $this->sendDigitalReceipt($application, $payment, $receiptData);
+        
+        return $pdf->download('Receipt_' . $application->reference . '.pdf');
+    }
+
+    /**
+     * Send digital receipt to applicant
+     */
+    private function sendDigitalReceipt(Application $application, Payment $payment, array $receiptData)
+    {
+        try {
+            // Generate receipt PDF for email attachment
+            $pdf = Pdf::loadView('staff.accounts.receipt_pdf', $receiptData);
+            $pdfContent = $pdf->output();
+            
+            // Send email to applicant
+            $applicant = $application->applicant;
+            if ($applicant && $applicant->email) {
+                Mail::send('emails.receipt_notification', [
+                    'application' => $application,
+                    'payment' => $payment,
+                    'receiptNumber' => $payment->receipt_number,
+                    'amount' => $payment->amount,
+                    'currency' => $payment->currency,
+                ], function($message) use ($applicant, $pdfContent, $application, $payment) {
+                    $message->to($applicant->email)
+                        ->subject('Payment Receipt - ' . $application->reference . ' - ' . $payment->receipt_number)
+                        ->attachData($pdfContent, 'Receipt_' . $application->reference . '.pdf', [
+                            'mime' => 'application/pdf',
+                        ]);
+                });
+                
+                // Log the email sent
+                ActivityLogger::log('receipt_sent', $application, null, null, [
+                    'actor_role' => session('active_staff_role'),
+                    'receipt_number' => $payment->receipt_number,
+                    'applicant_email' => $applicant->email,
+                ]);
+            }
+        } catch (\Exception $e) {
+            // Log error but don't fail the payment process
+            \Log::error('Failed to send digital receipt: ' . $e->getMessage(), [
+                'application_id' => $application->id,
+                'payment_id' => $payment->id,
+            ]);
         }
     }
-    // Store payment time if marked paid
-    if (!empty($data['payment_status']) && strtolower($data['payment_status']) === 'paid' && Schema::hasColumn('applications', 'payment_paid_at')) {
-        $application->payment_paid_at = now();
-    }
-    $application->save();
-
-    // Mark confirmed
-    ApplicationWorkflow::transition($application, Application::PAID_CONFIRMED, 'accounts_confirm_paid', $data);
-
-    // ✅ NEW ORDER: send to production (since Registrar already reviewed it before pushing to Accounts)
-    ApplicationWorkflow::transition($application, Application::PRODUCTION_QUEUE, 'system_send_to_production', [
-        'region' => $application->collection_region ?? null,
-    ]);
-
-    ActivityLogger::log('accounts_confirm_paid', $application, $from, $application->status, [
-        'actor_role' => session('active_staff_role'),
-        'paynow_reference' => $data['paynow_reference'] ?? null,
-        'payment_status' => $data['payment_status'] ?? null,
-    ]);
-
-    return back()->with('success', 'Payment confirmed and sent to Production.');
-}
 
 
     public function returnToOfficer(Request $request, Application $application)
