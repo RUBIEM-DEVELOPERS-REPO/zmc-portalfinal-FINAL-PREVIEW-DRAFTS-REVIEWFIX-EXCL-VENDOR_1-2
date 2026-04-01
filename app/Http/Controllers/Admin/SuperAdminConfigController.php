@@ -7,6 +7,7 @@ use App\Models\Application;
 use App\Models\AuditLog;
 use App\Models\SystemConfig;
 use App\Support\MasterSettings;
+use App\Models\LoginActivity;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -99,31 +100,42 @@ class SuperAdminConfigController extends Controller
     {
         $q = trim((string) $request->get('q'));
 
-        $failedLogins = AuditLog::query()
-            ->where('action', 'login_failed')
-            ->when($q !== '', fn ($query) => $query->where('meta', 'like', "%{$q}%"))
+        $failedLogins = LoginActivity::query()
+            ->where('login_successful', false)
+            ->when($q !== '', function ($query) use ($q) {
+                $query->where(function($sq) use ($q) {
+                    $sq->where('account_name', 'like', "%{$q}%")
+                       ->orWhere('ip_address', 'like', "%{$q}%")
+                       ->orWhere('device_identifier', 'like', "%{$q}%");
+                });
+            })
             ->latest()
             ->paginate(25, ['*'], 'failed');
 
-        $lastLogins = AuditLog::query()
-            ->whereIn('action', ['login_staff', 'login_applicant'])
-            ->when($q !== '', fn ($query) => $query->where('meta', 'like', "%{$q}%"))
+        $lastLogins = LoginActivity::query()
+            ->where('login_successful', true)
+            ->when($q !== '', function ($query) use ($q) {
+                $query->where(function($sq) use ($q) {
+                    $sq->where('account_name', 'like', "%{$q}%")
+                       ->orWhere('ip_address', 'like', "%{$q}%")
+                       ->orWhere('device_identifier', 'like', "%{$q}%");
+                });
+            })
             ->latest()
             ->paginate(25, ['*'], 'logins');
 
-        // Last active session approximation: last audit entry per user in last 30 days.
-        $lastActive = AuditLog::query()
-            ->selectRaw('actor_user_id, MAX(created_at) as last_seen')
-            ->whereNotNull('actor_user_id')
-            ->where('created_at', '>=', now()->subDays(30))
-            ->groupBy('actor_user_id')
+        // Last active session approximation: last successful login entry per user in last 30 days.
+        $lastActive = LoginActivity::query()
+            ->selectRaw('user_id, MAX(login_at) as last_seen')
+            ->where('login_successful', true)
+            ->where('login_at', '>=', now()->subDays(30))
+            ->groupBy('user_id')
             ->orderByDesc('last_seen')
             ->limit(50)
             ->get()
             ->map(function ($row) {
-                $user = User::find($row->actor_user_id);
                 return [
-                    'user' => $user,
+                    'user' => User::find($row->user_id),
                     'last_seen' => $row->last_seen,
                 ];
             });

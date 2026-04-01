@@ -2,272 +2,163 @@
 @section('title', 'Issuance & Print Oversight')
 
 @section('content')
-<div class="zmc-dashboard-wrapper" style="font-family:'Roboto', sans-serif; color:#334155;">
+<div class="zmc-dashboard-wrapper" style="font-family: var(--font-primary); color: var(--zmc-text-dark);">
     <div class="mb-4">
         <a href="{{ route('staff.director.dashboard') }}" class="btn btn-sm btn-link p-0 text-muted mb-2 text-decoration-none">
             <i class="ri-arrow-left-line"></i> Back to Overview
         </a>
-        <h4 class="fw-bold m-0" style="font-size:22px; color:#1e293b;">Issuance & Print Oversight</h4>
+        <h4 class="fw-bold m-0" style="font-size: var(--font-size-2xl); color:#1e293b;">Issuance & Print Oversight</h4>
     </div>
 
-    {{-- KPI Cards --}}
-    <div class="row g-4 mb-4">
-        <div class="col-md-3">
-            <div class="zmc-card border-start border-4 border-success">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="text-muted small fw-bold text-uppercase mb-1">Total Issued</div>
-                        <div class="h2 fw-black mb-0 text-success">
-                            {{ number_format(\App\Models\Application::where('status', 'issued')->count()) }}
-                        </div>
-                    </div>
-                    <i class="ri-checkbox-circle-line fs-1 text-success opacity-25"></i>
+    <div class="row g-4">
+        <!-- Monthly Issuance Counts -->
+        <div class="col-md-12">
+            <div class="zmc-card">
+                <h6 class="fw-bold mb-3">Monthly Issuance Trend (Last 12 Months)</h6>
+                <div style="height: 300px;">
+                    <canvas id="issuanceChart"></canvas>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="zmc-card border-start border-4 border-primary">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="text-muted small fw-bold text-uppercase mb-1">Total Prints</div>
-                        <div class="h2 fw-black mb-0 text-primary">{{ number_format($printStatistics['total_prints']) }}</div>
-                    </div>
-                    <i class="ri-printer-line fs-1 text-primary opacity-25"></i>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="zmc-card border-start border-4 border-warning">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="text-muted small fw-bold text-uppercase mb-1">Reprints</div>
-                        <div class="h2 fw-black mb-0 text-warning">{{ number_format($printStatistics['total_reprints']) }}</div>
-                    </div>
-                    <i class="ri-refresh-line fs-1 text-warning opacity-25"></i>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="zmc-card border-start border-4 border-danger">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="text-muted small fw-bold text-uppercase mb-1">Reprint Rate</div>
-                        <div class="h2 fw-black mb-0 text-danger">
-                            @php
-                                $totalPrints = $printStatistics['total_prints'] + $printStatistics['total_reprints'];
-                                $reprintRate = $totalPrints > 0 ? ($printStatistics['total_reprints'] / $totalPrints) * 100 : 0;
-                            @endphp
-                            {{ number_format($reprintRate, 1) }}%
-                        </div>
-                    </div>
-                    <i class="ri-error-warning-line fs-1 text-danger opacity-25"></i>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    {{-- Charts Row --}}
-    <div class="row g-4 mb-4">
+        <!-- Print vs Reprint Ratio -->
         <div class="col-md-6">
             <div class="zmc-card">
-                <h6 class="fw-bold mb-3">Print vs Reprint Distribution</h6>
-                <div style="height: 300px;">
-                    <canvas id="printDistChart"></canvas>
+                <h6 class="fw-bold mb-3">Print vs Reprint Ratio</h6>
+                <div style="height: 250px;">
+                    <canvas id="printRatioChart"></canvas>
                 </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="zmc-card">
-                <h6 class="fw-bold mb-3">Print Actions by Staff</h6>
-                <div style="height: 300px;">
-                    <canvas id="staffPrintsChart"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Unprinted Approvals Alert --}}
-    @php
-        $unprintedCount = \App\Models\Application::where('status', 'issued')
-            ->where(function($q) {
-                $q->whereNull('print_count')->orWhere('print_count', 0);
-            })
-            ->count();
-    @endphp
-    @if($unprintedCount > 0)
-    <div class="row g-4 mb-4">
-        <div class="col-12">
-            <div class="alert alert-warning border-0 d-flex align-items-center shadow-sm">
-                <i class="ri-alert-line fs-3 me-3"></i>
-                <div>
-                    <div class="fw-bold">Unprinted Approvals Detected</div>
-                    <div class="small">
-                        There are <strong>{{ $unprintedCount }}</strong> approved applications that have not been printed yet.
-                        These should be processed in the production queue.
+                <div class="mt-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Initial Prints</span>
+                        <span class="fw-bold text-success">{{ number_format($printRatio['total_prints']) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Reprints</span>
+                        <span class="fw-bold text-warning">{{ number_format($printRatio['total_reprints']) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Reprint Rate</span>
+                        <span class="fw-bold">
+                            {{ $printRatio['total_prints'] > 0 ? number_format(($printRatio['total_reprints'] / $printRatio['total_prints']) * 100, 1) : 0 }}%
+                        </span>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    @endif
 
-    {{-- Detailed Print Actions Table --}}
-    <div class="row g-4 mb-4">
-        <div class="col-12">
-            <div class="zmc-card p-0">
-                <div class="p-3 border-bottom bg-light d-flex justify-content-between align-items-center">
-                    <h6 class="fw-bold m-0">Detailed Print Actions by Staff Member</h6>
-                    <span class="badge bg-primary">{{ $printsByStaff->count() }} Staff Members</span>
+        <!-- Outstanding Unprinted Approvals -->
+        <div class="col-md-6">
+            <div class="zmc-card">
+                <h6 class="fw-bold mb-3">
+                    <i class="ri-alert-line text-danger me-2"></i>Outstanding Unprinted Approvals
+                </h6>
+                @if($outstandingUnprinted->count() > 0)
+                <div class="alert alert-danger alert-sm mb-3">
+                    <strong>{{ $outstandingUnprinted->count() }}</strong> approved applications awaiting print
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-sm align-middle mb-0">
-                        <thead class="bg-light">
-                            <tr>
-                                <th class="ps-3">Staff Member</th>
-                                <th>Role</th>
-                                <th class="text-center">Total Prints</th>
-                                <th class="text-center">Initial Prints</th>
-                                <th class="text-center">Reprints</th>
-                                <th class="text-center">Reprint Rate</th>
-                                <th class="text-center">Performance</th>
+                    <table class="table table-sm table-hover mb-0">
+                        <thead>
+                            <tr class="smaller text-muted">
+                                <th>Application ID</th>
+                                <th>Applicant</th>
+                                <th class="text-end">Days Pending</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($printsByStaff as $staff)
-                            @php
-                                $staffReprintRate = $staff->total_prints > 0 ? ($staff->reprints / $staff->total_prints) * 100 : 0;
-                            @endphp
+                            @foreach($outstandingUnprinted->take(10) as $app)
                             <tr>
-                                <td class="ps-3 fw-bold">{{ $staff->name }}</td>
-                                <td>
-                                    <span class="badge bg-secondary small">
-                                        {{ strtoupper(str_replace('_', ' ', $staff->role ?? 'N/A')) }}
+                                <td class="fw-bold">{{ $app->application_number }}</td>
+                                <td>{{ $app->applicant_name }}</td>
+                                <td class="text-end">
+                                    <span class="badge bg-{{ $app->days_pending > 7 ? 'danger' : ($app->days_pending > 3 ? 'warning' : 'info') }}">
+                                        {{ $app->days_pending }} days
                                     </span>
                                 </td>
-                                <td class="text-center">
-                                    <span class="badge bg-primary fs-6">{{ number_format($staff->total_prints) }}</span>
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge bg-success">{{ number_format($staff->initial_prints) }}</span>
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge bg-warning text-dark">{{ number_format($staff->reprints) }}</span>
-                                </td>
-                                <td class="text-center">
-                                    <div class="d-flex align-items-center justify-content-center gap-2">
-                                        <div class="progress" style="width: 80px; height: 18px;">
-                                            <div class="progress-bar {{ $staffReprintRate > 20 ? 'bg-danger' : ($staffReprintRate > 10 ? 'bg-warning' : 'bg-success') }}" 
-                                                 style="width: {{ min($staffReprintRate, 100) }}%">
-                                            </div>
-                                        </div>
-                                        <span class="small fw-bold">{{ number_format($staffReprintRate, 1) }}%</span>
-                                    </div>
-                                </td>
-                                <td class="text-center">
-                                    @if($staffReprintRate <= 5)
-                                        <span class="badge bg-success">
-                                            <i class="ri-star-fill"></i> Excellent
-                                        </span>
-                                    @elseif($staffReprintRate <= 15)
-                                        <span class="badge bg-info">
-                                            <i class="ri-checkbox-circle-line"></i> Good
-                                        </span>
-                                    @else
-                                        <span class="badge bg-warning text-dark">
-                                            <i class="ri-alert-line"></i> Needs Review
-                                        </span>
-                                    @endif
-                                </td>
                             </tr>
-                            @empty
-                            <tr>
-                                <td colspan="7" class="text-center text-muted py-4">
-                                    No print actions recorded
-                                </td>
-                            </tr>
-                            @endforelse
+                            @endforeach
                         </tbody>
-                        @if($printsByStaff->isNotEmpty())
-                        <tfoot class="bg-light">
-                            <tr class="fw-bold">
-                                <td class="ps-3" colspan="2">TOTALS</td>
-                                <td class="text-center">{{ number_format($printsByStaff->sum('total_prints')) }}</td>
-                                <td class="text-center">{{ number_format($printsByStaff->sum('initial_prints')) }}</td>
-                                <td class="text-center">{{ number_format($printsByStaff->sum('reprints')) }}</td>
-                                <td class="text-center">
-                                    @php
-                                        $totalPrintsSum = $printsByStaff->sum('total_prints');
-                                        $totalReprintsSum = $printsByStaff->sum('reprints');
-                                        $overallRate = $totalPrintsSum > 0 ? ($totalReprintsSum / $totalPrintsSum) * 100 : 0;
-                                    @endphp
-                                    {{ number_format($overallRate, 1) }}%
-                                </td>
-                                <td></td>
+                    </table>
+                </div>
+                @else
+                <div class="alert alert-success alert-sm">
+                    <i class="ri-checkbox-circle-line me-2"></i>All approved applications have been printed
+                </div>
+                @endif
+            </div>
+        </div>
+
+        <!-- Print Actions by Staff -->
+        <div class="col-md-12">
+            <div class="zmc-card">
+                <h6 class="fw-bold mb-3">Print Actions by Production Staff</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead>
+                            <tr class="smaller text-muted">
+                                <th>Staff Member</th>
+                                <th class="text-end">Initial Prints</th>
+                                <th class="text-end">Reprints</th>
+                                <th class="text-end">Total Actions</th>
+                                <th class="text-end">Reprint Rate</th>
                             </tr>
-                        </tfoot>
-                        @endif
+                        </thead>
+                        <tbody>
+                            @foreach($printsByStaff as $staff)
+                            <tr>
+                                <td class="fw-bold">{{ $staff->name }}</td>
+                                <td class="text-end">{{ number_format($staff->initial_prints) }}</td>
+                                <td class="text-end">{{ number_format($staff->reprints) }}</td>
+                                <td class="text-end fw-bold">{{ number_format($staff->total_prints) }}</td>
+                                <td class="text-end">
+                                    <span class="badge bg-{{ $staff->reprint_rate > 20 ? 'danger' : ($staff->reprint_rate > 10 ? 'warning' : 'success') }}">
+                                        {{ number_format($staff->reprint_rate, 1) }}%
+                                    </span>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
                     </table>
                 </div>
             </div>
         </div>
-    </div>
 
-    {{-- Print Quality Insights --}}
-    <div class="row g-4">
-        <div class="col-12">
-            <div class="zmc-card bg-light border-0">
-                <h6 class="fw-bold mb-3">
-                    <i class="ri-lightbulb-line me-1 text-warning"></i>
-                    Print Quality & Efficiency Insights
-                </h6>
+        <!-- Print Performance Summary -->
+        <div class="col-md-12">
+            <div class="zmc-card">
+                <h6 class="fw-bold mb-3">Print Performance Summary</h6>
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <div class="p-3 bg-white rounded-3 border">
-                            <div class="small text-muted mb-1">Overall Reprint Rate</div>
-                            <div class="h4 fw-bold mb-0 {{ $reprintRate > 15 ? 'text-danger' : ($reprintRate > 10 ? 'text-warning' : 'text-success') }}">
-                                {{ number_format($reprintRate, 1) }}%
+                        <div class="p-3 border rounded-3 text-center bg-light">
+                            <div class="h3 fw-bold mb-1 text-primary">
+                                {{ number_format($printRatio['total_prints'] + $printRatio['total_reprints']) }}
                             </div>
-                            <div class="smaller text-muted">
-                                @if($reprintRate <= 5)
-                                    Excellent quality control
-                                @elseif($reprintRate <= 10)
-                                    Good performance
-                                @elseif($reprintRate <= 15)
-                                    Acceptable range
-                                @else
-                                    Needs improvement
-                                @endif
-                            </div>
+                            <div class="text-muted small">Total Print Actions</div>
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="p-3 bg-white rounded-3 border">
-                            <div class="small text-muted mb-1">Print Efficiency</div>
-                            <div class="h4 fw-bold mb-0 text-primary">
-                                {{ $printStatistics['total_prints'] > 0 ? number_format((1 - $reprintRate/100) * 100, 1) : 0 }}%
+                        <div class="p-3 border rounded-3 text-center bg-success bg-opacity-10 border-success">
+                            <div class="h3 fw-bold mb-1 text-success">
+                                {{ number_format($printRatio['total_prints']) }}
                             </div>
-                            <div class="smaller text-muted">First-time success rate</div>
+                            <div class="text-muted small">Initial Prints</div>
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="p-3 bg-white rounded-3 border">
-                            <div class="small text-muted mb-1">Staff with Low Reprint Rate</div>
-                            <div class="h4 fw-bold mb-0 text-success">
-                                {{ $printsByStaff->filter(function($s) {
-                                    $rate = $s->total_prints > 0 ? ($s->reprints / $s->total_prints) * 100 : 0;
-                                    return $rate <= 10;
-                                })->count() }}
+                        <div class="p-3 border rounded-3 text-center bg-warning bg-opacity-10 border-warning">
+                            <div class="h3 fw-bold mb-1 text-warning">
+                                {{ number_format($printRatio['total_reprints']) }}
                             </div>
-                            <div class="smaller text-muted">Out of {{ $printsByStaff->count() }} staff</div>
+                            <div class="text-muted small">Reprints</div>
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="p-3 bg-white rounded-3 border">
-                            <div class="small text-muted mb-1">Unprinted Approvals</div>
-                            <div class="h4 fw-bold mb-0 {{ $unprintedCount > 0 ? 'text-warning' : 'text-success' }}">
-                                {{ number_format($unprintedCount) }}
+                        <div class="p-3 border rounded-3 text-center bg-danger bg-opacity-10 border-danger">
+                            <div class="h3 fw-bold mb-1 text-danger">
+                                {{ $outstandingUnprinted->count() }}
                             </div>
-                            <div class="smaller text-muted">Pending production</div>
+                            <div class="text-muted small">Pending Prints</div>
                         </div>
                     </div>
                 </div>
@@ -280,22 +171,53 @@
 (function() {
     function initCharts() {
         if (typeof Chart === 'undefined') {
-            console.error('Chart.js not loaded, retrying...');
             setTimeout(initCharts, 100);
             return;
         }
 
-        // Print Distribution Doughnut Chart
-        const distCanvas = document.getElementById('printDistChart');
-        if (distCanvas) {
-            new Chart(distCanvas, {
+        // Monthly Issuance Chart
+        const issuanceCanvas = document.getElementById('issuanceChart');
+        if (issuanceCanvas) {
+            new Chart(issuanceCanvas, {
+                type: 'line',
+                data: {
+                    labels: {!! json_encode($monthlyIssuance->pluck('month')->toArray()) !!},
+                    datasets: [{
+                        label: 'Accreditations Issued',
+                        data: {!! json_encode($monthlyIssuance->pluck('count')->toArray()) !!},
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { precision: 0 }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Print Ratio Chart
+        const printRatioCanvas = document.getElementById('printRatioChart');
+        if (printRatioCanvas) {
+            new Chart(printRatioCanvas, {
                 type: 'doughnut',
                 data: {
                     labels: ['Initial Prints', 'Reprints'],
                     datasets: [{
                         data: [
-                            {{ $printStatistics['total_prints'] }},
-                            {{ $printStatistics['total_reprints'] }}
+                            {{ $printRatio['total_prints'] }},
+                            {{ $printRatio['total_reprints'] }}
                         ],
                         backgroundColor: ['#10b981', '#f59e0b']
                     }]
@@ -304,61 +226,7 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { padding: 20, font: { size: 13 } }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const total = {{ $printStatistics['total_prints'] + $printStatistics['total_reprints'] }};
-                                    const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : 0;
-                                    return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        // Staff Prints Bar Chart
-        const staffCanvas = document.getElementById('staffPrintsChart');
-        if (staffCanvas) {
-            const staffData = {!! json_encode($printsByStaff) !!};
-            new Chart(staffCanvas, {
-                type: 'bar',
-                data: {
-                    labels: staffData.map(s => s.name),
-                    datasets: [
-                        {
-                            label: 'Initial Prints',
-                            data: staffData.map(s => s.initial_prints),
-                            backgroundColor: '#10b981'
-                        },
-                        {
-                            label: 'Reprints',
-                            data: staffData.map(s => s.reprints),
-                            backgroundColor: '#f59e0b'
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { padding: 15, font: { size: 11 } }
-                        }
-                    },
-                    scales: {
-                        x: { stacked: true },
-                        y: { 
-                            stacked: true,
-                            beginAtZero: true,
-                            ticks: { precision: 0 }
-                        }
+                        legend: { position: 'bottom' }
                     }
                 }
             });

@@ -7,9 +7,15 @@
     <i class="ri-arrow-left-line me-1"></i> Back
   </a>
   <div>
-    <h4 class="fw-bold mb-1">{{ $application->reference }}</h4>
-    <div class="text-muted">
-      {{ $application->application_type }} • {{ $application->request_type }} • {{ $application->journalist_scope ?? '—' }}
+    @php
+      $name = ($application->application_type === 'registration') 
+        ? ($application->form_data['org_name'] ?? $application->form_data['organization_name'] ?? $application->applicant?->name)
+        : (($application->form_data['first_name'] ?? '') . ' ' . ($application->form_data['surname'] ?? '') ?: $application->applicant?->name);
+    @endphp
+    <h4 class="fw-bold mb-0">{{ $application->reference }}</h4>
+    <div class="fw-bold text-dark my-1" style="font-size: var(--font-size-lg);"><i class="ri-user-line me-1"></i> {{ $name }}</div>
+    <div class="text-muted small text-uppercase">
+      {{ str_replace('_', ' ', $application->application_type) }} • {{ $application->request_type }} • {{ $application->journalist_scope ?? $application->residency_type ?? 'local' }}
     </div>
   </div>
   <div class="d-flex align-items-center gap-2">
@@ -29,38 +35,103 @@
 
 <div class="row g-3">
   <div class="col-md-7">
-    <div class="card">
-      <div class="card-header fw-bold">Applicant</div>
-      <div class="card-body">
-        <div class="d-flex align-items-center gap-3">
-          @php
-            $passportPhoto = $application->documents->where('doc_type', 'passport_photo')->first();
-          @endphp
-          @if($passportPhoto)
-            <div class="border rounded p-1 bg-light">
-              <img src="{{ $passportPhoto->url }}" alt="Passport Photo" style="width: 100px; height: 120px; object-fit: cover;">
-            </div>
-          @endif
-          <div>
-            <div><b>Name:</b> {{ $application->applicant?->name ?? '—' }}</div>
-            <div><b>Email:</b> {{ $application->applicant?->email ?? '—' }}</div>
-            <div><b>Region for collection:</b> {{ $application->collection_region }}</div>
-            <div class="mt-2">
-              <b>Status:</b> <span class="badge bg-info">{{ str_replace('_',' ', $application->status === 'officer_rejected' ? 'returned_for_correction' : $application->status) }}</span>
-            </div>
+    @include('staff.partials.application_details_card', ['application' => $application])
+
+    <div class="card mt-3">
+      <div class="card-header fw-bold bg-light d-flex justify-content-between align-items-center">
+        <span><i class="ri-history-line me-1"></i> Previous Applications for this Applicant</span>
+        <span class="badge bg-white text-dark border">{{ $previousApplications->count() }} found</span>
+      </div>
+      <div class="card-body p-0">
+        @if($previousApplications->count())
+          <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0 align-middle small">
+              <thead class="bg-light">
+                <tr>
+                  <th class="ps-3">Ref</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                  <th class="text-end pe-3">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                @foreach($previousApplications as $pa)
+                  @php
+                    $paStatus = strtolower((string)$pa->status);
+                    $paBadge = match(true) {
+                      str_contains($paStatus, 'approved') || $paStatus === 'issued' => 'success',
+                      str_contains($paStatus, 'rejected') => 'danger',
+                      default => 'info'
+                    };
+                  @endphp
+                  <tr>
+                    <td class="ps-3 fw-bold">{{ $pa->reference }}</td>
+                    <td class="text-capitalize">{{ $pa->application_type }}</td>
+                    <td><span class="badge bg-{{ $paBadge }}-subtle text-{{ $paBadge }} border border-{{ $paBadge }}">{{ ucwords(str_replace('_',' ', $pa->status)) }}</span></td>
+                    <td>{{ $pa->created_at?->format('d M Y') }}</td>
+                    <td class="text-end pe-3">
+                      <a href="{{ route('staff.officer.applications.show', $pa) }}" class="btn btn-xs btn-outline-primary py-0" title="View this application">
+                        <i class="ri-eye-line"></i>
+                      </a>
+                    </td>
+                  </tr>
+                @endforeach
+              </tbody>
+            </table>
           </div>
-        </div>
-        @if($application->decision_notes)
-          <div class="mt-3">
-            <b>Notes:</b>
-            <div class="border rounded p-2 mt-1">{{ $application->decision_notes }}</div>
-          </div>
+        @else
+          <div class="p-4 text-center text-muted small">No other applications found for this applicant.</div>
         @endif
       </div>
     </div>
 
     <div class="card mt-3">
-      <div class="card mt-3">
+      <div class="card-header fw-bold bg-light d-flex justify-content-between align-items-center">
+        <span><i class="ri-history-line me-1"></i> Payment History for this Applicant</span>
+        <span class="badge bg-white text-dark border">{{ $userPayments->count() }} found</span>
+      </div>
+      <div class="card-body p-0">
+        @if($userPayments->count())
+          <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0 align-middle small">
+              <thead class="bg-light">
+                <tr>
+                  <th class="ps-3">Ref</th>
+                  <th>Amount</th>
+                  <th>Method</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                @foreach($userPayments as $p)
+                  @php
+                    $pStatus = strtolower((string)$p->status);
+                    $pBadge = match(true) {
+                      $pStatus === 'paid' || $pStatus === 'confirmed' => 'success',
+                      $pStatus === 'reversed' || $pStatus === 'failed' => 'danger',
+                      default => 'info'
+                    };
+                  @endphp
+                  <tr>
+                    <td class="ps-3 fw-bold">{{ $p->reference }}</td>
+                    <td>{{ number_format($p->amount, 2) }} {{ $p->currency }}</td>
+                    <td class="text-capitalize">{{ $p->method }}</td>
+                    <td><span class="badge bg-{{ $pBadge }}-subtle text-{{ $pBadge }} border border-{{ $pBadge }} text-capitalize">{{ $p->status }}</span></td>
+                    <td>{{ $p->created_at?->format('d M Y') }}</td>
+                  </tr>
+                @endforeach
+              </tbody>
+            </table>
+          </div>
+        @else
+          <div class="p-4 text-center text-muted small">No previous payments found for this applicant.</div>
+        @endif
+      </div>
+    </div>
+
+    <div class="card mt-3">
       <div class="card-header fw-bold">Documents</div>
       <div class="card-body">
         @if($application->documents && $application->documents->count())
@@ -83,71 +154,18 @@
     </div>
   </div>
 
-  @if($previousApplications->count())
-  <div class="col-12">
-    <div class="card mt-3">
-      <div class="card-header fw-bold d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#prevAppsPanel" role="button" aria-expanded="false">
-        <span><i class="ri-history-line me-1"></i> Previous Applications by This Applicant ({{ $previousApplications->count() }})</span>
-        <i class="ri-arrow-down-s-line"></i>
-      </div>
-      <div class="collapse" id="prevAppsPanel">
-        <div class="card-body p-0">
-          <div class="table-responsive">
-            <table class="table table-sm table-hover align-middle mb-0">
-              <thead class="bg-light">
-                <tr>
-                  <th>Reference</th>
-                  <th>Type</th>
-                  <th>Request</th>
-                  <th>Status</th>
-                  <th>Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                @foreach($previousApplications as $prevApp)
-                  <tr>
-                    <td class="small fw-bold">{{ $prevApp->reference }}</td>
-                    <td class="small text-capitalize">{{ $prevApp->application_type ?? '—' }}</td>
-                    <td>
-                      @php
-                        $pReqType = $prevApp->request_type ?? 'new';
-                        $pReqBadge = match($pReqType) { 'renewal' => 'warning', 'replacement' => 'info', default => 'success' };
-                      @endphp
-                      <span class="badge bg-{{ $pReqBadge }}">{{ ucfirst($pReqType) }}</span>
-                    </td>
-                    <td><span class="badge bg-secondary">{{ ucwords(str_replace('_', ' ', $prevApp->status === 'officer_rejected' ? 'returned_for_correction' : $prevApp->status)) }}</span></td>
-                    <td class="small text-muted">{{ $prevApp->created_at?->format('d M Y') ?? '—' }}</td>
-                  </tr>
-                @endforeach
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  @endif
-
   <div class="col-md-5">
     <div class="card">
       <div class="card-header fw-bold">Actions</div>
       <div class="card-body">
 
-        @php
-          $actionableStatuses = [
-            'submitted', 'submitted_with_app_fee', 'officer_review',
-            'needs_correction', 'returned_from_payments', 'returned_from_registrar',
-            'returned_to_officer', 'registrar_fix_request', 'correction_requested',
-          ];
-        @endphp
-        @if(in_array($application->status, $actionableStatuses))
+        @if(in_array($application->status, ['submitted','needs_correction','returned_from_payments','returned_from_registrar']))
           <form method="POST" action="{{ route('staff.officer.applications.approve', $application) }}" class="mb-3">
             @csrf
             @php
               $isRegistration = ($application->application_type ?? '') === 'registration';
               $cats = $isRegistration ? \App\Models\Application::massMediaCategories() : \App\Models\Application::accreditationCategories();
               $label = $isRegistration ? 'Mass Media Category' : 'Accreditation Category';
-              $approveLabel = $isRegistration ? 'Verify & Send to Registrar' : 'Approve (Prompt Payment)';
             @endphp
 
             <label class="form-label fw-semibold">{{ $label }} (required)</label>
@@ -160,22 +178,20 @@
 
             <label class="form-label fw-semibold">Approve notes (optional)</label>
             <textarea class="form-control mb-2" name="decision_notes" rows="3"></textarea>
-            <button class="btn btn-success w-100">{{ $approveLabel }}</button>
+            <button class="btn btn-success w-100">Approve & Send to Registrar</button>
           </form>
 
           <form method="POST" action="{{ route('staff.officer.applications.requestCorrection', $application) }}" class="mb-3">
             @csrf
-            <label class="form-label fw-semibold">Return to applicant — reason (required)</label>
+            <label class="form-label fw-semibold">Request correction (required)</label>
             <textarea class="form-control mb-2" name="notes" rows="3" required></textarea>
-            <button class="btn btn-warning w-100">Return to Applicant</button>
+            <button class="btn btn-warning w-100">Request Correction</button>
           </form>
 
-          <form method="POST" action="{{ route('staff.officer.applications.forward-to-registrar', $application) }}" class="mb-3" id="forward-to-registrar">
-            @csrf
-            <label class="form-label fw-semibold">Forward to Registrar — reason (required)</label>
-            <textarea class="form-control mb-2" name="forward_reason" rows="3" required placeholder="Waiver, special case, etc."></textarea>
-            <button class="btn btn-outline-primary w-100">Forward to Registrar (No Approval)</button>
-          </form>
+          {{-- Forward Without Approval (for waivers/special cases) --}}
+          <button type="button" class="btn btn-outline-warning w-100 mb-3" data-bs-toggle="modal" data-bs-target="#forwardNoApprovalModal">
+            <i class="ri-arrow-right-line me-1"></i> Forward to Registrar (No Approval)
+          </button>
         @else
           <div class="alert alert-light border">No actions available for this status.</div>
         @endif
@@ -193,4 +209,72 @@
     </div>
   </div>
 </div>
+
+{{-- Forward Without Approval Modal --}}
+<div class="modal fade" id="forwardNoApprovalModal" tabindex="-1" aria-labelledby="forwardNoApprovalModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content" style="background: #000000; color: #facc15; border: 2px solid #facc15;">
+      <div class="modal-header" style="border-bottom: 1px solid #facc15;">
+        <h5 class="modal-title" id="forwardNoApprovalModalLabel">
+          <i class="ri-alert-line me-2"></i>Forward to Registrar Without Approval
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="POST" action="{{ route('staff.officer.applications.forward-no-approval', $application) }}">
+        @csrf
+        <div class="modal-body">
+          <div class="alert" style="background: rgba(250, 204, 21, 0.1); border: 1px solid #facc15; color: #facc15;">
+            <i class="ri-information-line me-2"></i>
+            <strong>Special Case:</strong> This action forwards the application to the Registrar WITHOUT your approval. Use this for waiver submissions or other special circumstances that require Registrar review before payment verification.
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Reason Type <span class="text-danger">*</span></label>
+            <select class="form-select" id="reasonType" style="background: #1a1a1a; color: #facc15; border: 1px solid #facc15;">
+              <option value="">-- Select reason type --</option>
+              <option value="Waiver submitted">Waiver Submitted</option>
+              <option value="Special payment arrangement">Special Payment Arrangement</option>
+              <option value="Requires Registrar review">Requires Registrar Review</option>
+              <option value="Complicated payment method">Complicated Payment Method</option>
+              <option value="Other">Other (specify below)</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Detailed Reason <span class="text-danger">*</span></label>
+            <textarea class="form-control" name="reason" rows="4" required 
+                      style="background: #1a1a1a; color: #facc15; border: 1px solid #facc15;"
+                      placeholder="Provide detailed explanation for forwarding without approval..."></textarea>
+            <small class="form-text" style="color: #facc15; opacity: 0.7;">
+              This reason will be visible to the Registrar and included in the audit trail.
+            </small>
+          </div>
+        </div>
+        <div class="modal-footer" style="border-top: 1px solid #facc15;">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" style="border-color: #facc15; color: #facc15;">
+            Cancel
+          </button>
+          <button type="submit" class="btn" style="background: #facc15; color: #000000; font-weight: 600;">
+            <i class="ri-arrow-right-line me-1"></i> Forward to Registrar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+// Auto-fill reason textarea when reason type is selected
+document.getElementById('reasonType')?.addEventListener('change', function() {
+  const reasonTextarea = document.querySelector('textarea[name="reason"]');
+  if (this.value && this.value !== 'Other' && reasonTextarea) {
+    const currentText = reasonTextarea.value.trim();
+    if (!currentText || currentText === reasonTextarea.placeholder) {
+      reasonTextarea.value = this.value + ': ';
+      reasonTextarea.focus();
+    }
+  }
+});
+</script>
+
 @endsection

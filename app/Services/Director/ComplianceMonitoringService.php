@@ -11,16 +11,35 @@ use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Compliance Monitoring Service
+ * 
+ * Provides audit trail analysis, compliance violation tracking, and suspicious
+ * activity detection. Monitors category reassignments, manual overrides,
+ * certificate edits, and excessive reprints.
+ * 
+ * @package App\Services\Director
+ */
 class ComplianceMonitoringService
 {
+    /**
+     * Create a new ComplianceMonitoringService instance.
+     * 
+     * @param ActivityLogRepository $activityLogRepo Repository for activity log queries
+     */
     public function __construct(
         private ActivityLogRepository $activityLogRepo
     ) {}
 
     /**
-     * Get category reassignment statistics
+     * Get category reassignment statistics.
      * 
-     * @return array ['total' => int, 'by_staff' => Collection]
+     * Returns total count and staff-level breakdown of category reassignments
+     * performed since the start of the current month.
+     * 
+     * @return array Associative array containing:
+     *               - total: Total count of category reassignments
+     *               - by_staff: Collection of reassignments grouped by staff member
      */
     public function getCategoryReassignments(): array
     {
@@ -39,9 +58,14 @@ class ComplianceMonitoringService
     }
 
     /**
-     * Get reopened applications statistics
+     * Get reopened applications statistics.
      * 
-     * @return array ['total' => int, 'by_staff' => Collection]
+     * Returns total count and staff-level breakdown of applications that were
+     * reopened after being closed, since the start of the current month.
+     * 
+     * @return array Associative array containing:
+     *               - total: Total count of reopened applications
+     *               - by_staff: Collection of reopenings grouped by staff member
      */
     public function getReopenedApplications(): array
     {
@@ -60,9 +84,14 @@ class ComplianceMonitoringService
     }
 
     /**
-     * Get manual override statistics
+     * Get manual override statistics.
      * 
-     * @return array ['total' => int, 'by_staff' => Collection]
+     * Returns total count and staff-level breakdown of manual payment overrides
+     * and system overrides performed since the start of the current month.
+     * 
+     * @return array Associative array containing:
+     *               - total: Total count of manual overrides
+     *               - by_staff: Collection of overrides grouped by staff member
      */
     public function getManualOverrides(): array
     {
@@ -87,9 +116,15 @@ class ComplianceMonitoringService
     }
 
     /**
-     * Get certificate edit statistics
+     * Get certificate edit statistics.
      * 
-     * @return array ['total' => int, 'by_staff' => Collection, 'most_edited_fields' => Collection]
+     * Returns total count, staff-level breakdown, and most frequently edited
+     * fields for certificate edits performed after approval.
+     * 
+     * @return array Associative array containing:
+     *               - total: Total count of certificate edits
+     *               - by_staff: Collection of edits grouped by staff member
+     *               - most_edited_fields: Collection of most frequently edited fields
      */
     public function getCertificateEdits(): array
     {
@@ -120,9 +155,14 @@ class ComplianceMonitoringService
     }
 
     /**
-     * Get excessive reprint statistics
+     * Get excessive reprint statistics.
      * 
-     * @return array ['by_applicant' => Collection, 'by_staff' => Collection]
+     * Returns applications and staff members with excessive reprint activity,
+     * based on configured threshold (default: 2 reprints).
+     * 
+     * @return array Associative array containing:
+     *               - by_applicant: Collection of applications exceeding reprint threshold
+     *               - by_staff: Collection of staff members with high reprint counts
      */
     public function getExcessiveReprints(): array
     {
@@ -153,9 +193,14 @@ class ComplianceMonitoringService
     }
 
     /**
-     * Get print vs reprint statistics
+     * Get print vs reprint statistics.
      * 
-     * @return array ['total_prints' => int, 'total_reprints' => int]
+     * Returns counts of initial prints versus reprints for the current month.
+     * Returns zeros if PrintLog model is not available.
+     * 
+     * @return array Associative array containing:
+     *               - total_prints: Count of initial certificate prints
+     *               - total_reprints: Count of certificate reprints
      */
     public function getPrintStatistics(): array
     {
@@ -181,9 +226,16 @@ class ComplianceMonitoringService
     }
 
     /**
-     * Get suspicious activity alerts
+     * Get suspicious activity alerts.
      * 
-     * @return array ['failed_logins' => int, 'repeated_reassignments' => int, 'high_waiver_frequency' => int, 'system_overrides' => int]
+     * Returns counts of various suspicious activity patterns including failed
+     * logins, repeated reassignments, high waiver frequency, and system overrides.
+     * 
+     * @return array Associative array containing:
+     *               - failed_logins: Count of failed login attempts
+     *               - repeated_reassignments: Count of users with >5 reassignments
+     *               - high_waiver_frequency: Count of waivers approved
+     *               - system_overrides: Count of system override actions
      */
     public function getSuspiciousActivityAlerts(): array
     {
@@ -191,11 +243,17 @@ class ComplianceMonitoringService
     }
 
     /**
-     * Get drill-down audit trail
+     * Get drill-down audit trail.
      * 
-     * @param string $eventType
-     * @param array $filters
-     * @return Collection
+     * Retrieves up to 100 activity log entries for a specific event type,
+     * with optional filtering by user and date range.
+     * 
+     * @param string $eventType Activity log action type to filter by
+     * @param array $filters Associative array of filter criteria:
+     *                       - user_id: Filter by specific user
+     *                       - date_from: Start date for created_at filter
+     *                       - date_to: End date for created_at filter
+     * @return Collection Collection of ActivityLog models with user and entity relations
      */
     public function getDrillDownAuditTrail(string $eventType, array $filters): Collection
     {
@@ -217,10 +275,13 @@ class ComplianceMonitoringService
     }
 
     /**
-     * Get high-risk actions for dashboard display
+     * Get high-risk actions for dashboard display.
      * 
-     * @param int $limit
-     * @return Collection
+     * Returns the most recent high-risk actions from the past 7 days,
+     * limited to the specified number of results.
+     * 
+     * @param int $limit Maximum number of results to return (default: 5)
+     * @return Collection Collection of high-risk ActivityLog entries
      */
     public function getHighRiskActions(int $limit = 5): Collection
     {

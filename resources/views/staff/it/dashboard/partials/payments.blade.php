@@ -35,7 +35,7 @@
     </div>
     <div class="col-xl-3">
         <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white border-start border-4 border-warning">
-            <h6 class="fw-bold mb-1 small uppercase text-slate-600">Manual Reconciliation</h6>
+            <h6 class="fw-bold mb-1">Manual Reconciliation</h6>
             <h3 class="fw-bold mb-1 text-slate-900">{{ $reconciliation['pending_proofs'] }}</h3>
             <p class="text-slate-700 small m-0 fw-bold">Bank transfers awaiting IT validation</p>
             <hr>
@@ -45,7 +45,7 @@
             </form>
         </div>
         <div class="card border-0 shadow-sm rounded-4 p-4 bg-slate-900 text-white">
-            <h6 class="fw-bold mb-3 small uppercase text-white-50">Revenue Oversight</h6>
+            <h6 class="fw-bold mb-3">Revenue Oversight</h6>
             <div class="mb-3">
                 <div class="text-white-50 small mb-1">Total Digital Revenue</div>
                 <div class="fs-4 fw-bold text-success">${{ number_format($reconciliation['total_revenue'], 2) }}</div>

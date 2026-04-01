@@ -35,15 +35,15 @@
 
   $second = 'J';
   if (count($words) >= 1) {
-    // If the designation includes JOURNALIST, use next word (PHOTO JOURNALIST => JP etc)
-    $idxPractitioner = array_search('MEDIA PRACTITIONER', $words);
+    // If the designation includes PRACTITIONER, use next word (PHOTO PRACTITIONER => JP etc)
+    $idxPractitioner = array_search('PRACTITIONER', $words);
     if ($idxPractitioner !== false && isset($words[$idxPractitioner + 1])) {
       $second = substr($words[$idxPractitioner + 1], 0, 1);
     } else {
       // Otherwise use first word (VIDEOGRAPHER => V)
       $second = substr($words[0], 0, 1);
-      // if first word is JOURNALIST and no next word, fallback to J
-      if ($second === 'J' && !isset($words[1])) $second = 'J';
+      // if first word is MEDIA and no next word, fallback to J
+      if ($second === 'M' && !isset($words[1])) $second = 'J';
     }
   }
   $typeInitials = 'J' . $second; // e.g. JV
@@ -85,11 +85,11 @@
     : route('public.verify', 'invalid');
 @endphp
 
-<div class="zmc-dashboard-wrapper" style="font-family:'Roboto', sans-serif; color:#334155;">
+<div class="zmc-dashboard-wrapper" style="font-family: var(--font-primary); color: var(--zmc-text-dark);">
   <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
     <div>
-      <h4 class="fw-bold m-0" style="font-size:22px; color:#1e293b;">Card Preview</h4>
-      <div class="text-muted mt-1" style="font-size:13px;">
+      <h4 class="fw-bold m-0" style="font-size: var(--font-size-2xl); color:#1e293b;">Card Preview</h4>
+      <div class="text-muted mt-1" style="font-size: var(--font-size-base);">
         <i class="ri-information-line me-1"></i>
         Preview & edit the accreditation card before printing.
       </div>

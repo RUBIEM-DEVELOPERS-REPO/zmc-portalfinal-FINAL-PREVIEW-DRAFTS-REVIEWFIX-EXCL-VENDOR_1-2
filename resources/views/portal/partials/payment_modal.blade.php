@@ -21,12 +21,6 @@
         <div id="pay_error" class="alert alert-danger d-none"></div>
         <div id="pay_success" class="alert alert-success d-none"></div>
 
-        <div id="pay_rejection_banner" class="alert alert-danger d-none">
-          <div class="fw-bold mb-1"><i class="ri-error-warning-line me-1"></i> Payment Rejected</div>
-          <div id="pay_rejection_reason" class="small"></div>
-          <div class="text-muted small mt-1">Please resubmit your payment using one of the options below.</div>
-        </div>
-
         <div id="pay_options">
           <div class="alert alert-light border mb-3">
             <div class="fw-bold mb-1"><i class="ri-information-line me-1"></i> Payment Information</div>
@@ -54,32 +48,58 @@
           <div class="tab-content" id="payTabContent">
             {{-- PAYNOW --}}
             <div class="tab-pane fade show active" id="pane-paynow" role="tabpanel">
-              <div class="mb-4">
-                <h6 class="fw-bold mb-3"><i class="ri-smartphone-line me-2"></i>Mobile Money (EcoCash / OneMoney)</h6>
-                <div class="row g-2">
-                  <div class="col-12 col-md-7">
-                    <input type="tel" class="form-control zmc-input" id="pay_phone" placeholder="e.g. 0771234567" pattern="0[7][0-9]{8}">
+              <div id="paynow_initial">
+                <div class="mb-4">
+                  <h6 class="fw-bold mb-3"><i class="ri-smartphone-line me-2"></i>Mobile Money (EcoCash / OneMoney)</h6>
+                  <div class="row g-2">
+                    <div class="col-12 col-md-7">
+                      <input type="tel" class="form-control zmc-input" id="pay_phone" placeholder="e.g. 0771234567" pattern="0[7][0-9]{8}">
+                    </div>
+                    <div class="col-12 col-md-5">
+                      <select class="form-select zmc-input" id="pay_method">
+                        <option value="ecocash">EcoCash</option>
+                        <option value="onemoney">OneMoney</option>
+                      </select>
+                    </div>
                   </div>
-                  <div class="col-12 col-md-5">
-                    <select class="form-select zmc-input" id="pay_method">
-                      <option value="ecocash">EcoCash</option>
-                      <option value="onemoney">OneMoney</option>
-                    </select>
-                  </div>
+                  <button type="button" class="btn btn-success w-100 mt-2 fw-bold" id="btnPayMobile">
+                    <i class="ri-smartphone-line me-1"></i> Pay with Mobile Money
+                  </button>
                 </div>
-                <button type="button" class="btn btn-success w-100 mt-2 fw-bold" id="btnPayMobile">
-                  <i class="ri-smartphone-line me-1"></i> Pay with Mobile Money
+
+                <div class="text-center text-muted my-3">— OR —</div>
+
+                <div>
+                  <h6 class="fw-bold mb-3"><i class="ri-bank-card-2-line me-2"></i>Card / Bank Payment</h6>
+                  <button type="button" class="btn btn-dark w-100 fw-bold" id="btnPayCard">
+                    <i class="ri-bank-card-2-line me-1"></i> Pay with Card / Zimswitch
+                  </button>
+                  <div class="text-muted small mt-2 text-center">You will be redirected to Paynow to complete payment.</div>
+                </div>
+              </div>
+
+              {{-- NEW: Reference Submission Step --}}
+              <div id="paynow_reference_step" class="d-none">
+                <div class="alert alert-info border mb-3">
+                  <div class="fw-bold"><i class="ri-check-line me-1"></i> Payment Link Opened</div>
+                  <div class="small">Once you have completed your payment on the PayNow gateway, click the button below to enter your reference number.</div>
+                </div>
+                <button type="button" class="btn btn-primary w-100 fw-bold py-3" id="btnPaymentDone">
+                  <i class="ri-checkbox-circle-line me-2"></i> I Have Paid - Click to Enter Reference
                 </button>
               </div>
 
-              <div class="text-center text-muted my-3">— OR —</div>
-
-              <div>
-                <h6 class="fw-bold mb-3"><i class="ri-bank-card-2-line me-2"></i>Card / Bank Payment</h6>
-                <button type="button" class="btn btn-dark w-100 fw-bold" id="btnPayCard">
-                  <i class="ri-bank-card-2-line me-1"></i> Pay with Card / Zimswitch
+              {{-- NEW: Reference Input Modal/Form --}}
+              <div id="paynow_input_step" class="d-none">
+                <div class="mb-3">
+                  <label class="form-label fw-bold">Enter PayNow Reference Number</label>
+                  <input type="text" class="form-control zmc-input form-control-lg" id="paynow_reference" placeholder="e.g. PN-123456789">
+                  <div class="text-muted small mt-1">Enter the reference number you received after successful payment.</div>
+                </div>
+                <button type="button" class="btn btn-success w-100 fw-bold" id="btnSubmitRef">
+                  <i class="ri-send-plane-line me-1"></i> Submit to Accounts
                 </button>
-                <div class="text-muted small mt-2 text-center">You will be redirected to Paynow to complete payment.</div>
+                <button type="button" class="btn btn-link w-100 mt-2 text-muted small" id="btnBackToPaynow">Back to payment options</button>
               </div>
             </div>
 
@@ -167,27 +187,8 @@
           <div class="spinner-border text-success" role="status"></div>
           <div class="mt-3 fw-bold">Waiting for payment confirmation...</div>
           <div class="text-muted small">Please approve the payment on your phone.</div>
-          <div class="d-flex justify-content-center gap-2 mt-3">
-            <button type="button" class="btn btn-outline-secondary btn-sm" id="btnCheckStatus">
-              <i class="ri-refresh-line me-1"></i> Check Status
-            </button>
-            <button type="button" class="btn btn-success btn-sm fw-bold" id="btnPaynowDone">
-              <i class="ri-check-line me-1"></i> Done - Enter Reference
-            </button>
-          </div>
-        </div>
-
-        <div id="pay_reference_form" class="d-none">
-          <div class="alert alert-light border mb-3">
-            <div class="fw-bold mb-1"><i class="ri-information-line me-1"></i> Submit PayNow Reference</div>
-            <div class="text-muted small">Please enter the PayNow transaction reference number from your payment confirmation.</div>
-          </div>
-          <div class="mb-3">
-            <label class="form-label small fw-bold">PayNow Reference Number</label>
-            <input type="text" class="form-control zmc-input" id="paynow_ref_input" placeholder="e.g. PN1234567890" required>
-          </div>
-          <button type="button" class="btn btn-success w-100 fw-bold" id="btnSubmitPaynowRef">
-            <i class="ri-check-double-line me-1"></i> Submit Reference
+          <button type="button" class="btn btn-outline-secondary btn-sm mt-3" id="btnCheckStatus">
+            <i class="ri-refresh-line me-1"></i> Check Status
           </button>
         </div>
       </div>
@@ -232,15 +233,18 @@
     document.getElementById('pay_loading').classList.add('d-none');
     document.getElementById('pay_options').classList.remove('d-none');
     document.getElementById('pay_polling').classList.add('d-none');
-    document.getElementById('pay_reference_form').classList.add('d-none');
-    document.getElementById('pay_rejection_banner').classList.add('d-none');
-    document.getElementById('pay_phone').value = '';
-    document.getElementById('paynow_ref_input').value = '';
+    document.getElementById('paynow_initial')?.classList.remove('d-none');
+    document.getElementById('paynow_reference_step')?.classList.add('d-none');
+    document.getElementById('paynow_input_step')?.classList.add('d-none');
+    document.getElementById('paynow_reference').value = '';
+
     if (pollingInterval) clearInterval(pollingInterval);
 
+    // reset forms
     document.getElementById('proofForm')?.reset();
     document.getElementById('waiverForm')?.reset();
 
+    // ensure PayNow tab active
     const tab = document.getElementById('tab-paynow');
     if (tab && window.bootstrap?.Tab) {
       bootstrap.Tab.getOrCreateInstance(tab).show();
@@ -329,24 +333,9 @@
 
     currentAppId = btn.getAttribute('data-app-id');
     const appRef = btn.getAttribute('data-app-ref');
-    const rejectionReason = btn.getAttribute('data-rejection-reason');
-    const paymentStage = btn.getAttribute('data-payment-stage');
 
     resetPayModal();
-
-    let metaText = 'Application: ' + appRef;
-    if (paymentStage === 'registration_fee') {
-      metaText += ' — Registration Fee';
-    } else if (paymentStage === 'application_fee') {
-      metaText += ' — Application Fee';
-    }
-    document.getElementById('pay_meta').textContent = metaText;
-
-    if (rejectionReason) {
-      const banner = document.getElementById('pay_rejection_banner');
-      document.getElementById('pay_rejection_reason').textContent = rejectionReason;
-      banner.classList.remove('d-none');
-    }
+    document.getElementById('pay_meta').textContent = 'Application: ' + appRef;
 
     const modal = document.getElementById('paymentModal');
     if (window.bootstrap && typeof bootstrap.Modal === 'function') {
@@ -412,12 +401,60 @@
       const data = await res.json();
 
       if (data.success && data.redirect_url) {
-        window.location.href = data.redirect_url;
+        // Show the "Done" step and hide initial options
+        document.getElementById('paynow_initial').classList.add('d-none');
+        document.getElementById('paynow_reference_step').classList.remove('d-none');
+        document.getElementById('pay_loading').classList.add('d-none');
+        
+        window.open(data.redirect_url, '_blank');
       } else {
         showPayError(data.message || 'Payment failed. Please try again.');
       }
     } catch (e) {
       showPayError('Network error. Please try again.');
+    }
+  });
+
+  document.getElementById('btnPaymentDone')?.addEventListener('click', function() {
+    document.getElementById('paynow_reference_step').classList.add('d-none');
+    document.getElementById('paynow_input_step').classList.remove('d-none');
+  });
+
+  document.getElementById('btnBackToPaynow')?.addEventListener('click', function() {
+    document.getElementById('paynow_input_step').classList.add('d-none');
+    document.getElementById('paynow_initial').classList.remove('d-none');
+  });
+
+  document.getElementById('btnSubmitRef')?.addEventListener('click', async function() {
+    const ref = document.getElementById('paynow_reference').value.trim();
+    if (!ref) {
+      alert('Please enter your PayNow reference number.');
+      return;
+    }
+
+    setBusy(this, true, 'Submitting...');
+    try {
+      const res = await fetch(`/payments/${currentAppId}/submit-reference`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': csrf(),
+        },
+        body: JSON.stringify({ reference: ref })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        showPaySuccess(data.message || 'Reference submitted! Awaiting accounts verification.');
+        setTimeout(() => window.location.reload(), 1500);
+      } else {
+        alert(data.message || 'Failed to submit reference.');
+      }
+    } catch (e) {
+      alert('Network error.');
+    } finally {
+      setBusy(this, false);
     }
   });
 
@@ -450,71 +487,6 @@
     ev.preventDefault();
     if (!currentAppId) return;
     postForm(`/payments/${currentAppId}/upload-waiver`, this, document.getElementById('btnSubmitWaiver'));
-  });
-
-  document.getElementById('btnPaynowDone')?.addEventListener('click', function() {
-    if (pollingInterval) clearInterval(pollingInterval);
-    document.getElementById('pay_polling').classList.add('d-none');
-    document.getElementById('pay_reference_form').classList.remove('d-none');
-  });
-
-  document.getElementById('btnSubmitPaynowRef')?.addEventListener('click', async function() {
-    const refInput = document.getElementById('paynow_ref_input');
-    const ref = refInput.value.trim();
-
-    if (!ref) {
-      showPayError('Please enter a valid PayNow reference number.');
-      return;
-    }
-
-    if (!currentAppId) return;
-
-    const btn = this;
-    try {
-      document.getElementById('pay_error').classList.add('d-none');
-      setBusy(btn, true, 'Submitting...');
-
-      const res = await fetch(`/payments/${currentAppId}/submit-reference`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'X-CSRF-TOKEN': csrf(),
-        },
-        body: JSON.stringify({ paynow_reference: ref })
-      });
-
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || data.ok === false) {
-        if (data.errors) {
-          const first = Object.values(data.errors)[0];
-          throw new Error(Array.isArray(first) ? first[0] : String(first));
-        }
-        throw new Error(data.message || 'Submission failed');
-      }
-
-      document.getElementById('pay_reference_form').classList.add('d-none');
-      showPaySuccess(data.message || 'PayNow reference submitted successfully.');
-
-      const rowBtn = document.querySelector(`.js-pay-now[data-app-id="${currentAppId}"]`);
-      if (rowBtn) {
-        rowBtn.classList.remove('btn-success', 'btn-danger');
-        rowBtn.classList.add('btn-outline-secondary');
-        rowBtn.innerHTML = `<i class="ri-time-line me-1"></i> Submitted`;
-        rowBtn.disabled = true;
-      }
-
-      setTimeout(() => {
-        const modalEl = document.getElementById('paymentModal');
-        const inst = window.bootstrap?.Modal?.getInstance(modalEl) || window.bootstrap?.Modal?.getOrCreateInstance(modalEl);
-        inst?.hide();
-      }, 1500);
-
-    } catch (e) {
-      showPayError(e.message || 'Network error. Please try again.');
-    } finally {
-      setBusy(btn, false);
-    }
   });
 
 })();

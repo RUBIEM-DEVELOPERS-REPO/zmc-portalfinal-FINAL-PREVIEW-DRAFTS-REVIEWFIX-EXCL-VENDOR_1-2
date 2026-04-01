@@ -92,12 +92,20 @@
                         <input name="email" type="email" class="form-control" value="{{ old('email', $user->email) }}" required>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-bold">Phone Number</label>
+                        <label class="form-label fw-bold">Primary Phone Number</label>
                         <input name="phone_number" class="form-control" value="{{ old('phone_number', $user->phone_number) }}" placeholder="+263...">
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-bold">National ID / Passport Number</label>
-                        <input name="profile[national_id]" class="form-control" value="{{ old('profile.national_id', $user->profile_data['national_id'] ?? '') }}">
+                        <label class="form-label fw-bold">Secondary Phone Number</label>
+                        <input name="profile[secondary_phone]" class="form-control" value="{{ old('profile.secondary_phone', $user->profile_data['secondary_phone'] ?? '') }}" placeholder="+263...">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">National ID Number</label>
+                        <input name="profile[national_id]" class="form-control" value="{{ old('profile.national_id', $user->profile_data['national_id'] ?? '') }}" placeholder="XX-XXXXXX-X-XX">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Passport Number (Foreigners)</label>
+                        <input name="profile[passport_number]" class="form-control" value="{{ old('profile.passport_number', $user->profile_data['passport_number'] ?? '') }}" placeholder="Travel Doc No.">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label fw-bold d-block">Date of Birth</label>
@@ -144,6 +152,33 @@
                         <label class="form-label fw-bold">Postal Address</label>
                         <textarea name="profile[postal_address]" class="form-control" rows="2">{{ old('profile.postal_address', $user->profile_data['postal_address'] ?? '') }}</textarea>
                     </div>
+
+                    @if(($user->account_type ?? '') === 'mediahouse')
+                    <div class="col-12">
+                        <hr>
+                        <div class="fw-bold mb-2">Social Media & Online Presence (Media House)</div>
+                        <div class="row g-2">
+                            <div class="col-md-4">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text"><i class="ri-twitter-x-line"></i></span>
+                                    <input name="profile[social][twitter]" class="form-control" value="{{ $user->profile_data['social']['twitter'] ?? '' }}" placeholder="Handle">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text"><i class="ri-facebook-box-line"></i></span>
+                                    <input name="profile[social][facebook]" class="form-control" value="{{ $user->profile_data['social']['facebook'] ?? '' }}" placeholder="URL">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text"><i class="ri-linkedin-box-line"></i></span>
+                                    <input name="profile[social][linkedin]" class="form-control" value="{{ $user->profile_data['social']['linkedin'] ?? '' }}" placeholder="URL">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
                 </div>
                 <hr>
                 <button class="btn btn-primary mt-2"><i class="ri-save-3-line me-1"></i> Save Changes</button>

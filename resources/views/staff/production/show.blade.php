@@ -28,14 +28,7 @@
     <div class="card">
       <div class="card-header fw-bold">Applicant & Application</div>
       <div class="card-body">
-        <div><b>Name:</b> {{ $application->applicant?->name ?? '—' }}</div>
-        <div><b>Collection region:</b> {{ $application->collection_region ?? '—' }}</div>
-        <div class="mt-2"><b>Registrar approved at:</b> {{ $application->registrar_approved_at?->format('Y-m-d H:i') ?? '—' }}</div>
-        @if($application->form_data)
-          <hr>
-          <div class="fw-bold mb-2">Form data (summary)</div>
-          <pre class="mb-0 small bg-light p-2 rounded">{{ json_encode($application->form_data, JSON_PRETTY_PRINT) }}</pre>
-        @endif
+        @include('staff.partials.application_details_card', ['application' => $application])
       </div>
     </div>
 
@@ -67,7 +60,7 @@
       <div class="card-header fw-bold">Production Actions</div>
       <div class="card-body">
         <div class="text-muted small mb-3">
-          Generate the accreditation card (journalists) or certificate (mass media). QR codes are added for verification.
+          Generate the accreditation card (media practitioners) or certificate (mass media). QR codes are added for verification.
         </div>
 
         @if($application->application_type === 'accreditation')

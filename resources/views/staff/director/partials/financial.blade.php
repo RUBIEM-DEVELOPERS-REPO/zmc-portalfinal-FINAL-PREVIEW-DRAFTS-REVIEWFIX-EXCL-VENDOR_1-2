@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     },
                     stroke: { width: 4, curve: 'smooth' },
-                    colors: ['#10b981'],
+                    colors: ['#facc15'],
                     xaxis: { 
                         categories: chartLabels,
                         labels: {
@@ -190,7 +190,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     },
                     labels: chartLabels,
-                    colors: ['#3b82f6', '#10b981', '#f59e0b', '#6366f1', '#ec4899', '#8b5cf6'],
+                    colors: ['#000000', '#facc15', '#eab308', '#6366f1', '#ec4899', '#8b5cf6'],
                     legend: { 
                         position: 'bottom',
                         fontSize: '12px'

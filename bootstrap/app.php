@@ -15,7 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: '*');
         
         $middleware->redirectGuestsTo(function ($request) {
-            if ($request->is('staff/*') || $request->is('staff') || $request->is('admin/*') || $request->is('admin')) {
+            if ($request->is('staff/*') || $request->is('admin/*')) {
                 return route('staff.login');
             }
             return route('login');
@@ -38,35 +38,17 @@ return Application::configure(basePath: dirname(__DIR__))
 
             // Director has oversight rights, but must not run operational workflows
             'block.director.operational' => \App\Http\Middleware\BlockDirectorOperationalRoles::class,
+            'director.view_only' => \App\Http\Middleware\DirectorViewOnly::class,
 
-            // Token-based auth for iframe cookie bypass
-            'token.auth' => \App\Http\Middleware\TokenAuth::class,
-            
-            // Session timeout management
-            'session.timeout' => \App\Http\Middleware\SessionTimeoutMiddleware::class,
+            // Workflow enforcement (ZMC v2)
+            'workflow.enforce' => \App\Http\Middleware\EnforceWorkflowTransitions::class,
+            'role.access' => \App\Http\Middleware\EnforceRoleBasedAccess::class,
         ]);
 
+        // Global portal guard (maintenance + availability toggles)
         $middleware->appendToGroup('web', [
             \App\Http\Middleware\AddRequestId::class,
-            \App\Http\Middleware\TokenAuth::class,
             \App\Http\Middleware\ZmcGatekeeper::class,
-            \App\Http\Middleware\SetLocale::class,
-            \App\Http\Middleware\SessionTimeoutMiddleware::class,
-        ]);
-
-        $middleware->web(replace: [
-            \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class => \App\Http\Middleware\VerifyCsrfWithTokenBypass::class,
-        ]);
-
-        $middleware->priority([
-            \Illuminate\Cookie\Middleware\EncryptCookies::class,
-            \Illuminate\Session\Middleware\StartSession::class,
-            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
-            \App\Http\Middleware\TokenAuth::class,
-            \App\Http\Middleware\VerifyCsrfWithTokenBypass::class,
-            \Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests::class,
-            \Illuminate\Routing\Middleware\SubstituteBindings::class,
-            \Illuminate\Auth\Middleware\Authorize::class,
         ]);
 
     })
@@ -89,8 +71,5 @@ return Application::configure(basePath: dirname(__DIR__))
                 // Never block exception reporting
             }
         });
-    })
-    ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule) {
-        $schedule->command('app:delete-old-drafts')->daily();
     })
     ->create();

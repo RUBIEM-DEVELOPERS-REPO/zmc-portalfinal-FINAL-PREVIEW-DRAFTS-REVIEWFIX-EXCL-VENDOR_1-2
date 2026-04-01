@@ -100,7 +100,7 @@
 <div class="row g-4 mt-2">
     <div class="col-md-6">
         <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
-            <h6 class="fw-bold mb-3 small uppercase text-slate-600">Disk Distribution</h6>
+            <h6 class="fw-bold mb-3">Disk Distribution</h6>
             <pre class="bg-dark text-success p-3 rounded-4 small mb-0"><code>{{ $storageStats['public'] }} public/
 {{ $storageStats['uploads'] }} uploads/</code></pre>
         </div>

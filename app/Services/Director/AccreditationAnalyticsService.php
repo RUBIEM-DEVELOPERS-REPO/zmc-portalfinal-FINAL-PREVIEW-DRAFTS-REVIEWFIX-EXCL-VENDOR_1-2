@@ -9,29 +9,52 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Accreditation Analytics Service
+ * 
+ * Provides trend analysis, processing time calculations, and approval ratio
+ * statistics for accreditation applications. Supports drill-down functionality
+ * and Chart.js data formatting.
+ * 
+ * @package App\Services\Director
+ */
 class AccreditationAnalyticsService
 {
+    /**
+     * Create a new AccreditationAnalyticsService instance.
+     * 
+     * @param ApplicationRepository $applicationRepo Repository for application data queries
+     */
     public function __construct(
         private ApplicationRepository $applicationRepo
     ) {}
 
     /**
-     * Get monthly trends for submitted, approved, rejected applications
+     * Get monthly trends for submitted, approved, rejected applications.
      * 
-     * @param int $months Number of months to retrieve
-     * @return Collection
+     * Returns monthly aggregated counts for the specified number of months.
+     * Results are cached for 2 hours to optimize performance.
+     * 
+     * @param int $months Number of months to retrieve (default: 12)
+     * @return Collection Collection of monthly trend data with month, total_submitted,
+     *                    total_approved, and total_rejected counts
      */
-    public function getMonthlyTrends(int $months = 12): Collection
+    public function getMonthlyTrends(int $months = 12, ?int $year = null): Collection
     {
-        return Cache::remember("director.charts.monthly_trends_{$months}", 7200, function() use ($months) {
-            return $this->applicationRepo->getMonthlyApplicationCounts($months);
+        $cacheKey = "director.charts.monthly_trends_{$months}" . ($year ? "_{$year}" : "");
+        return Cache::remember($cacheKey, 7200, function() use ($months, $year) {
+            return $this->applicationRepo->getMonthlyApplicationCounts($months, $year);
         });
     }
 
     /**
-     * Get average processing time by stage
+     * Get average processing time by stage.
      * 
-     * @return array ['officer' => float, 'registrar' => float, 'accounts' => float]
+     * Calculates average hours spent in each processing stage (officer review,
+     * registrar review, accounts verification) for applications from the last 3 months.
+     * 
+     * @return array Associative array with keys 'officer', 'registrar', 'accounts',
+     *               each containing average hours as float (rounded to 1 decimal)
      */
     public function getProcessingTimeByStage(): array
     {
@@ -62,7 +85,14 @@ class AccreditationAnalyticsService
     }
 
     /**
-     * Calculate average hours between two timestamps
+     * Calculate average hours between two timestamps.
+     * 
+     * Helper method to compute average time difference across a collection of items.
+     * 
+     * @param Collection $items Collection of objects with timestamp fields
+     * @param string $startField Name of the start timestamp field
+     * @param string $endField Name of the end timestamp field
+     * @return float Average hours between timestamps (rounded to 1 decimal, 0.0 if empty)
      */
     private function calculateAverageHours(Collection $items, string $startField, string $endField): float
     {
@@ -80,9 +110,13 @@ class AccreditationAnalyticsService
     }
 
     /**
-     * Get approval-to-rejection ratio by category
+     * Get approval-to-rejection ratio by category.
      * 
-     * @return Collection
+     * Calculates approval rates for each accreditation category, including
+     * total applications, approved count, rejected count, and approval percentage.
+     * 
+     * @return Collection Collection of category statistics with accreditation_category_code,
+     *                    total, approved, rejected, and approval_rate fields
      */
     public function getApprovalRatioByCategory(): Collection
     {
@@ -105,9 +139,12 @@ class AccreditationAnalyticsService
     }
 
     /**
-     * Get approval-to-rejection ratio by application type
+     * Get approval-to-rejection ratio by application type.
      * 
-     * @return Collection
+     * Calculates approval rates for each application type (registration, accreditation, etc.),
+     * returning a key-value map of application type to approval percentage.
+     * 
+     * @return Collection Collection keyed by application_type with approval rate percentages
      */
     public function getApprovalRatioByApplicationType(): Collection
     {
@@ -133,9 +170,13 @@ class AccreditationAnalyticsService
      */
 
     /**
-     * Get category distribution with trends
+     * Get category distribution with trends.
      * 
-     * @return Collection
+     * Returns the distribution of applications across accreditation categories,
+     * including counts, percentages, and category names.
+     * 
+     * @return Collection Collection of category distribution data with accreditation_category_code,
+     *                    count, percentage, and category_name fields
      */
     public function getCategoryDistribution(): Collection
     {
@@ -158,7 +199,12 @@ class AccreditationAnalyticsService
     }
 
     /**
-     * Get category name from code
+     * Get category name from code.
+     * 
+     * Translates accreditation category codes to human-readable names.
+     * 
+     * @param string $code Accreditation category code
+     * @return string Human-readable category name (returns code if not found)
      */
     private function getCategoryName(string $code): string
     {
@@ -167,10 +213,18 @@ class AccreditationAnalyticsService
     }
 
     /**
-     * Get detailed applications for drill-down
+     * Get detailed applications for drill-down.
      * 
-     * @param array $filters
-     * @return Collection
+     * Retrieves up to 100 applications matching the specified filters,
+     * with related applicant and officer data for detailed analysis.
+     * 
+     * @param array $filters Associative array of filter criteria:
+     *                       - status: Filter by application status
+     *                       - category: Filter by accreditation category code
+     *                       - residency: Filter by residency type
+     *                       - date_from: Start date for created_at filter
+     *                       - date_to: End date for created_at filter
+     * @return Collection Collection of Application models with applicant and assignedOfficer relations
      */
     public function getDrillDownApplications(array $filters): Collection
     {
@@ -199,9 +253,13 @@ class AccreditationAnalyticsService
     }
 
     /**
-     * Get chart data for monthly trends
+     * Get chart data for monthly trends.
      * 
-     * @return array Chart.js compatible format
+     * Formats monthly trend data for Chart.js line chart rendering,
+     * with separate datasets for submitted, approved, and rejected applications.
+     * 
+     * @return array Chart.js compatible format with 'months', 'submitted', 'approved',
+     *               and 'rejected' arrays
      */
     public function getMonthlyTrendsChartData(): array
     {

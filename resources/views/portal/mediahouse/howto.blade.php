@@ -1,243 +1,245 @@
 @extends('layouts.portal')
-
-@section('title', 'How to Get Registered')
-@section('page_title', 'HOW TO GET REGISTERED')
-
-@section('content')
-<div class="zmc-dashboard-wrapper" style="font-family:'Roboto', sans-serif; color:#334155;">
-
-  <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4">
-    <div>
-      <h4 class="fw-bold m-0" style="font-size:22px; color:#1e293b;">How to Get Registered</h4>
-      <div class="text-muted mt-1" style="font-size:13px;">
-        <i class="ri-guide-line me-1"></i>
-        Step-by-step guide to the ZMC media house registration process.
-      </div>
-    </div>
-    <div class="d-flex gap-2">
-      <a href="{{ route('mediahouse.requirements') }}" class="btn btn-outline-dark btn-sm px-3">
-        <i class="ri-list-check-2 me-1"></i> View Requirements
-      </a>
-      <a href="{{ route('mediahouse.new') }}" class="btn btn-dark btn-sm px-3">
-        <i class="ri-file-add-line me-1"></i> Start Registration
-      </a>
-    </div>
-  </div>
-
-  <div class="row g-3 mb-4">
-    <div class="col-12 col-md-6 col-lg-3">
-      <div class="zmc-card h-100 text-center" style="border-top: 3px solid #2e7d32;">
-        <div class="d-flex align-items-center justify-content-center mx-auto mb-3" style="width:50px;height:50px;border-radius:50%;background:rgba(46, 125, 50,0.1);color:#2e7d32;font-size:22px;font-weight:900;">1</div>
-        <h6 class="fw-bold" style="color:#2e7d32;">Choose Category</h6>
-        <p class="text-muted small mb-0">Select your media service category: <strong>Newspaper</strong>, <strong>Broadcasting</strong>, <strong>Online</strong>, or <strong>News Agency</strong>.</p>
-      </div>
-    </div>
-    <div class="col-12 col-md-6 col-lg-3">
-      <div class="zmc-card h-100 text-center" style="border-top: 3px solid #2e7d32;">
-        <div class="d-flex align-items-center justify-content-center mx-auto mb-3" style="width:50px;height:50px;border-radius:50%;background:rgba(46, 125, 50,0.1);color:#2e7d32;font-size:22px;font-weight:900;">2</div>
-        <h6 class="fw-bold" style="color:#2e7d32;">Prepare Documents</h6>
-        <p class="text-muted small mb-0">Gather all 12 required documents including financial projections, editorial charter, and incorporation certificates.</p>
-      </div>
-    </div>
-    <div class="col-12 col-md-6 col-lg-3">
-      <div class="zmc-card h-100 text-center" style="border-top: 3px solid #2e7d32;">
-        <div class="d-flex align-items-center justify-content-center mx-auto mb-3" style="width:50px;height:50px;border-radius:50%;background:rgba(46, 125, 50,0.1);color:#2e7d32;font-size:22px;font-weight:900;">3</div>
-        <h6 class="fw-bold" style="color:#2e7d32;">Submit AP1</h6>
-        <p class="text-muted small mb-0">Complete the AP1 form with organisation details, directors, managers, and upload all required documents.</p>
-      </div>
-    </div>
-    <div class="col-12 col-md-6 col-lg-3">
-      <div class="zmc-card h-100 text-center" style="border-top: 3px solid #2e7d32;">
-        <div class="d-flex align-items-center justify-content-center mx-auto mb-3" style="width:50px;height:50px;border-radius:50%;background:rgba(46, 125, 50,0.1);color:#2e7d32;font-size:22px;font-weight:900;">4</div>
-        <h6 class="fw-bold" style="color:#2e7d32;">Pay & Receive</h6>
-        <p class="text-muted small mb-0">Pay the two-stage fees (application + registration) and receive your registration certificate.</p>
-      </div>
-    </div>
-  </div>
-
-  <div class="row g-3 mb-4">
-    <div class="col-12 col-lg-6">
-      <div class="zmc-card h-100">
-        <h6 class="fw-bold mb-3" style="color:#2e7d32;">
-          <i class="ri-file-list-3-line me-2" style="color:var(--zmc-accent)"></i>Required Documents (12 Items)
-        </h6>
-        <div class="row g-2">
-          <div class="col-12 col-md-6">
-            <div class="d-flex align-items-center gap-2 p-2 border rounded mb-1" style="border-radius:8px !important;">
-              <i class="ri-money-dollar-circle-line" style="color:#2e7d32;"></i>
-              <span class="small fw-bold">Cash Flow (3 years)</span>
-            </div>
-          </div>
-          <div class="col-12 col-md-6">
-            <div class="d-flex align-items-center gap-2 p-2 border rounded mb-1" style="border-radius:8px !important;">
-              <i class="ri-bar-chart-line" style="color:#2e7d32;"></i>
-              <span class="small fw-bold">Balance Sheet (3 years)</span>
-            </div>
-          </div>
-          <div class="col-12 col-md-6">
-            <div class="d-flex align-items-center gap-2 p-2 border rounded mb-1" style="border-radius:8px !important;">
-              <i class="ri-newspaper-line" style="color:#2e7d32;"></i>
-              <span class="small fw-bold">Editorial Charter</span>
-            </div>
-          </div>
-          <div class="col-12 col-md-6">
-            <div class="d-flex align-items-center gap-2 p-2 border rounded mb-1" style="border-radius:8px !important;">
-              <i class="ri-shield-check-line" style="color:#2e7d32;"></i>
-              <span class="small fw-bold">Code of Ethics</span>
-            </div>
-          </div>
-          <div class="col-12 col-md-6">
-            <div class="d-flex align-items-center gap-2 p-2 border rounded mb-1" style="border-radius:8px !important;">
-              <i class="ri-team-line" style="color:#2e7d32;"></i>
-              <span class="small fw-bold">Employee Code of Conduct</span>
-            </div>
-          </div>
-          <div class="col-12 col-md-6">
-            <div class="d-flex align-items-center gap-2 p-2 border rounded mb-1" style="border-radius:8px !important;">
-              <i class="ri-line-chart-line" style="color:#2e7d32;"></i>
-              <span class="small fw-bold">Market Analysis</span>
-            </div>
-          </div>
-          <div class="col-12 col-md-6">
-            <div class="d-flex align-items-center gap-2 p-2 border rounded mb-1" style="border-radius:8px !important;">
-              <i class="ri-id-card-line" style="color:#2e7d32;"></i>
-              <span class="small fw-bold">Directors' Certified IDs</span>
-            </div>
-          </div>
-          <div class="col-12 col-md-6">
-            <div class="d-flex align-items-center gap-2 p-2 border rounded mb-1" style="border-radius:8px !important;">
-              <i class="ri-book-open-line" style="color:#2e7d32;"></i>
-              <span class="small fw-bold">In-house Style Book</span>
-            </div>
-          </div>
-          <div class="col-12 col-md-6">
-            <div class="d-flex align-items-center gap-2 p-2 border rounded mb-1" style="border-radius:8px !important;">
-              <i class="ri-file-copy-line" style="color:#2e7d32;"></i>
-              <span class="small fw-bold">Sample Publication</span>
-            </div>
-          </div>
-          <div class="col-12 col-md-6">
-            <div class="d-flex align-items-center gap-2 p-2 border rounded mb-1" style="border-radius:8px !important;">
-              <i class="ri-flag-line" style="color:#2e7d32;"></i>
-              <span class="small fw-bold">Mission Statement</span>
-            </div>
-          </div>
-          <div class="col-12 col-md-6">
-            <div class="d-flex align-items-center gap-2 p-2 border rounded mb-1" style="border-radius:8px !important;">
-              <i class="ri-government-line" style="color:#2e7d32;"></i>
-              <span class="small fw-bold">Certificate of Incorporation</span>
-            </div>
-          </div>
-          <div class="col-12 col-md-6">
-            <div class="d-flex align-items-center gap-2 p-2 border rounded mb-1" style="border-radius:8px !important;">
-              <i class="ri-file-text-line" style="color:#2e7d32;"></i>
-              <span class="small fw-bold">Memorandum of Association</span>
-            </div>
-          </div>
-        </div>
-        <div class="mt-3">
-          <a href="{{ route('mediahouse.requirements') }}" class="btn btn-sm btn-outline-dark">
-            <i class="ri-arrow-right-line me-1"></i> Full Requirements List
-          </a>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-12 col-lg-6">
-      <div class="zmc-card h-100">
-        <h6 class="fw-bold mb-3" style="color:#2e7d32;">
-          <i class="ri-bank-card-line me-2" style="color:var(--zmc-accent)"></i>Two-Stage Payment Process
-        </h6>
-        <div class="mb-3 p-3 border rounded" style="border-radius:10px !important; border-left: 3px solid #2e7d32 !important;">
-          <div class="fw-bold small mb-1" style="color:#2e7d32;">Stage 1: Application Fee</div>
-          <div class="text-muted small">Paid when submitting your AP1 application. This is a non-refundable processing fee.</div>
-        </div>
-        <div class="mb-3 p-3 border rounded" style="border-radius:10px !important; border-left: 3px solid var(--zmc-accent) !important;">
-          <div class="fw-bold small mb-1" style="color:#2e7d32;">Stage 2: Registration Fee</div>
-          <div class="text-muted small">Paid after your application is approved by the Registrar. Your certificate is issued after this payment is confirmed.</div>
-        </div>
-
-        <h6 class="fw-bold mb-2 mt-4" style="color:#2e7d32; font-size:13px;">Payment Methods</h6>
-        <div class="d-flex align-items-start gap-2 mb-3">
-          <div class="d-flex align-items-center justify-content-center flex-shrink-0" style="width:36px;height:36px;border-radius:8px;background:rgba(37,99,235,0.1);">
-            <i class="ri-smartphone-line" style="color:#2563eb;"></i>
-          </div>
-          <div>
-            <div class="fw-bold small">PayNow (Online)</div>
-            <div class="text-muted small">EcoCash, OneMoney, or bank card via PayNow gateway.</div>
-          </div>
-        </div>
-        <div class="d-flex align-items-start gap-2 mb-3">
-          <div class="d-flex align-items-center justify-content-center flex-shrink-0" style="width:36px;height:36px;border-radius:8px;background:rgba(16,185,129,0.1);">
-            <i class="ri-bank-line" style="color:#10b981;"></i>
-          </div>
-          <div>
-            <div class="fw-bold small">Bank Transfer</div>
-            <div class="text-muted small">Transfer to ZMC bank account and upload proof of payment.</div>
-          </div>
-        </div>
-        <div class="d-flex align-items-start gap-2">
-          <div class="d-flex align-items-center justify-content-center flex-shrink-0" style="width:36px;height:36px;border-radius:8px;background:rgba(245,158,11,0.1);">
-            <i class="ri-money-dollar-circle-line" style="color:#f59e0b;"></i>
-          </div>
-          <div>
-            <div class="fw-bold small">Cash Payment</div>
-            <div class="text-muted small">Pay in person at any ZMC regional office.</div>
-          </div>
-        </div>
-
-        <div class="mt-3 p-3 border rounded small" style="border-radius:8px !important; background:rgba(245,158,11,0.05);">
-          <i class="ri-error-warning-line me-1 text-warning"></i>
-          Fees per <strong>SI 65 of 2022</strong>. Local currency accepted at the prevailing official bank rate.
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="row g-3 mb-4">
-    <div class="col-12">
-      <div class="zmc-card">
-        <h6 class="fw-bold mb-3" style="color:#2e7d32;">
-          <i class="ri-customer-service-2-line me-2" style="color:var(--zmc-accent)"></i>Need Help?
-        </h6>
-        <div class="row g-4">
-          <div class="col-12 col-md-4">
-            <div class="d-flex align-items-start gap-3">
-              <i class="ri-whatsapp-line text-success" style="font-size:20px;margin-top:2px;"></i>
-              <div>
-                <div class="fw-bold small">WhatsApp Hotline</div>
-                <div class="text-muted small">+263 719 299 150</div>
-              </div>
-            </div>
-          </div>
-          <div class="col-12 col-md-4">
-            <div class="d-flex align-items-start gap-3">
-              <i class="ri-mail-line" style="font-size:20px;margin-top:2px;color:#2e7d32;"></i>
-              <div>
-                <div class="fw-bold small">Email Support</div>
-                <div class="text-muted small">info@zmc.org.zw / zmcaccreditation@gmail.com</div>
-              </div>
-            </div>
-          </div>
-          <div class="col-12 col-md-4">
-            <div class="d-flex align-items-start gap-3">
-              <i class="ri-phone-line" style="font-size:20px;margin-top:2px;color:#2e7d32;"></i>
-              <div>
-                <div class="fw-bold small">Telephone</div>
-                <div class="text-muted small">+263 242 253509/10 | +263 242 253572/75/76</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="text-center">
-    <a href="{{ route('mediahouse.new') }}" class="btn btn-lg px-5 py-3" style="background:#2e7d32;color:#fff;border-radius:12px;font-weight:900;">
-      <i class="ri-file-add-line me-2"></i> Start Your Registration Now
-    </a>
-    <div class="text-muted small mt-2">You can save your progress as a draft and return later.</div>
-  </div>
-</div>
-@endsection
+ 
+ @section('title', 'Media House Registration Guide')
+ 
+ @section('content')
+ <style>
+   :root {
+     --glass-bg: rgba(255, 255, 255, 0.7);
+     --glass-border: rgba(255, 255, 255, 0.4);
+     --brand-primary: #1e3a8a; /* Blue for Media House */
+     --brand-accent: #fbbf24; /* Amber */
+     --text-main: #0f172a;
+     --text-muted: #475569;
+   }
+ 
+   .glass-card {
+     background: var(--glass-bg);
+     backdrop-filter: blur(12px);
+     -webkit-backdrop-filter: blur(12px);
+     border: 1px solid var(--glass-border);
+     border-radius: 24px;
+     box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+   }
+ 
+   .howto-hero {
+     background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+     border-radius: 30px;
+     padding: 60px 40px;
+     margin-bottom: 40px;
+     color: #fff;
+     position: relative;
+     overflow: hidden;
+   }
+ 
+   .howto-hero::after {
+     content: '';
+     position: absolute;
+     bottom: -20%;
+     right: -10%;
+     width: 400px;
+     height: 400px;
+     background: radial-gradient(circle, rgba(251, 191, 36, 0.1) 0%, transparent 70%);
+     border-radius: 50%;
+   }
+ 
+   .hero-badge {
+     background: rgba(255, 255, 255, 0.15);
+     padding: 6px 16px;
+     border-radius: 100px;
+     font-size: 12px;
+     font-weight: 700;
+     text-transform: uppercase;
+     letter-spacing: 2px;
+     display: inline-block;
+     margin-bottom: 20px;
+     border: 1px solid rgba(255, 255, 255, 0.2);
+   }
+ 
+   .req-grid {
+     display: grid;
+     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+     gap: 24px;
+     margin-bottom: 40px;
+   }
+ 
+   .req-list {
+     list-style: none;
+     padding: 0;
+     margin: 0;
+   }
+ 
+   .req-item {
+     display: flex;
+     align-items: flex-start;
+     gap: 12px;
+     padding: 12px;
+     background: rgba(255,255,255,0.5);
+     margin-bottom: 10px;
+     border-radius: 12px;
+     border: 1px solid #f1f5f9;
+     transition: all 0.3s ease;
+     font-size: 14px;
+   }
+ 
+   .req-item:hover {
+     background: #fff;
+     transform: translateX(5px);
+     border-color: var(--brand-primary);
+   }
+ 
+   .req-item i {
+     color: #10b981;
+     margin-top: 3px;
+   }
+ 
+   .fee-alert {
+     background: rgba(251, 191, 36, 0.1);
+     border: 1px solid rgba(251, 191, 36, 0.3);
+     padding: 24px;
+     border-radius: 18px;
+     margin-bottom: 40px;
+   }
+ 
+   .contact-box {
+     padding: 30px;
+     text-align: center;
+   }
+ 
+   .contact-grid {
+     display: grid;
+     grid-template-columns: repeat(3, 1fr);
+     gap: 20px;
+     margin-top: 20px;
+   }
+ 
+   .contact-item {
+     padding: 15px;
+     background: #f8fafc;
+     border-radius: 12px;
+     font-size: 13px;
+   }
+ 
+   .cta-btn {
+     background: #fff;
+     color: var(--brand-primary) !important;
+     padding: 14px 30px;
+     border-radius: 14px;
+     font-weight: 800;
+     text-decoration: none;
+     display: inline-flex;
+     align-items: center;
+     gap: 10px;
+     transition: all 0.3s ease;
+   }
+ 
+   .cta-btn:hover {
+     background: var(--brand-accent);
+     transform: translateY(-3px);
+   }
+ 
+   @media (max-width: 768px) {
+     .contact-grid { grid-template-columns: 1fr; }
+   }
+ </style>
+ 
+ <div class="howto-hero">
+   <div class="d-flex justify-content-between align-items-center flex-wrap gap-4">
+     <div>
+       <div class="hero-badge">Entity Registration</div>
+       <h1 class="fw-black mb-2">Media House (AP1) Guide</h1>
+       <p class="opacity-90 max-w-lg">Establishing your media entity requires comprehensive documentation. Follow this guide to ensure a smooth application.</p>
+     </div>
+     <a href="{{ route('mediahouse.new') }}" class="cta-btn">
+       <i class="ri-file-add-line"></i> Start AP1 Form
+     </a>
+   </div>
+ </div>
+ 
+ <div class="glass-card mb-4" style="padding:40px;">
+   <h4 class="fw-bold mb-4 d-flex align-items-center gap-3">
+     <i class="ri-list-check-2 ri-lg text-primary"></i>
+     Core Requirements Checklist
+   </h4>
+   
+   <div class="req-grid">
+     <div class="req-list">
+       <div class="req-item">
+         <i class="ri-checkbox-circle-fill"></i>
+         Three-year projected cash flow statement
+       </div>
+       <div class="req-item">
+         <i class="ri-checkbox-circle-fill"></i>
+         Three-year projected balance sheet
+       </div>
+       <div class="req-item">
+         <i class="ri-checkbox-circle-fill"></i>
+         Editorial Charter & Code of Ethics
+       </div>
+       <div class="req-item">
+         <i class="ri-checkbox-circle-fill"></i>
+         Employee Code of Conduct
+       </div>
+       <div class="req-item">
+         <i class="ri-checkbox-circle-fill"></i>
+         Detailed Market Analysis
+       </div>
+     </div>
+     <div class="req-list">
+       <div class="req-item">
+         <i class="ri-checkbox-circle-fill"></i>
+         Certified IDs for all Directors
+       </div>
+       <div class="req-item">
+         <i class="ri-checkbox-circle-fill"></i>
+         In-house style book & Mission Statement
+       </div>
+       <div class="req-item">
+         <i class="ri-checkbox-circle-fill"></i>
+         Dummy copies / Publications
+       </div>
+       <div class="req-item">
+         <i class="ri-checkbox-circle-fill"></i>
+         Certificate of Incorporation
+       </div>
+       <div class="req-item">
+         <i class="ri-checkbox-circle-fill"></i>
+         Memorandum of Association
+       </div>
+     </div>
+   </div>
+ </div>
+ 
+ <div class="fee-alert shadow-sm">
+   <div class="d-flex gap-3">
+     <i class="ri-information-fill ri-2x text-warning"></i>
+     <div>
+       <h6 class="fw-bold text-dark">Fees & Statutory Compliance</h6>
+       <p class="mb-0 small text-muted">Fees are governed by <strong>Statutory Instrument 65 of 2022</strong>. Payments are accepted in local currency at the prevailing official bank rate on the day of transaction.</p>
+     </div>
+   </div>
+ </div>
+ 
+ <div class="glass-card contact-box">
+   <h5 class="fw-bold mb-1">Need Assistance?</h5>
+   <p class="text-muted small">Our support teams are available to guide you through the registration process.</p>
+   
+   <div class="contact-grid">
+     <div class="contact-item">
+       <i class="ri-whatsapp-fill text-success ri-xl d-block mb-2"></i>
+       <strong>WhatsApp Hotline</strong>
+       <div class="mt-1">+263 719 299 150</div>
+     </div>
+     <div class="contact-item">
+       <i class="ri-mail-send-fill text-primary ri-xl d-block mb-2"></i>
+       <strong>Email Support</strong>
+       <div class="mt-1">info@zmc.org.zw</div>
+     </div>
+     <div class="contact-item">
+       <i class="ri-phone-fill text-secondary ri-xl d-block mb-2"></i>
+       <strong>Telephone</strong>
+       <div class="mt-1">+263 242 253 509</div>
+     </div>
+   </div>
+ </div>
+ @endsection

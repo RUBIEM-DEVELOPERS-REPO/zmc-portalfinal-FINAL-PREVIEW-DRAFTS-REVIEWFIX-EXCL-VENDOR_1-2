@@ -17,9 +17,7 @@ return new class extends Migration
             $table->index('application_type', 'idx_applications_type');
             $table->index('accreditation_category_code', 'idx_applications_category');
             $table->index('residency_type', 'idx_applications_residency');
-            if (Schema::hasColumn('applications', 'media_house_id')) {
-                $table->index('media_house_id', 'idx_applications_media_house');
-            }
+            // Removed: media_house_id index (column doesn't exist)
             $table->index(['status', 'issued_at'], 'idx_applications_status_issued');
             $table->index(['status', 'submitted_at'], 'idx_applications_status_submitted');
         });
@@ -29,7 +27,7 @@ return new class extends Migration
             $table->index('status', 'idx_payments_status');
             $table->index('service_type', 'idx_payments_service_type');
             $table->index('applicant_category', 'idx_payments_applicant_category');
-            $table->index('method', 'idx_payments_method');
+            $table->index('payment_method', 'idx_payments_method');
             $table->index(['status', 'confirmed_at'], 'idx_payments_status_confirmed');
         });
 
@@ -44,7 +42,7 @@ return new class extends Migration
         // Add indexes on print_logs table for issuance oversight
         Schema::table('print_logs', function (Blueprint $table) {
             $table->index('application_id', 'idx_print_logs_application');
-            $table->index('document_type', 'idx_print_logs_type');
+            $table->index('print_type', 'idx_print_logs_type');
             $table->index('printed_at', 'idx_print_logs_printed');
         });
     }
@@ -59,9 +57,7 @@ return new class extends Migration
             $table->dropIndex('idx_applications_type');
             $table->dropIndex('idx_applications_category');
             $table->dropIndex('idx_applications_residency');
-            if (Schema::hasColumn('applications', 'media_house_id')) {
-                $table->dropIndex('idx_applications_media_house');
-            }
+            // Removed: media_house_id index (column doesn't exist)
             $table->dropIndex('idx_applications_status_issued');
             $table->dropIndex('idx_applications_status_submitted');
         });
@@ -83,7 +79,7 @@ return new class extends Migration
 
         Schema::table('print_logs', function (Blueprint $table) {
             $table->dropIndex('idx_print_logs_application');
-            $table->dropIndex('idx_print_logs_type');  
+            $table->dropIndex('idx_print_logs_type');
             $table->dropIndex('idx_print_logs_printed');
         });
     }

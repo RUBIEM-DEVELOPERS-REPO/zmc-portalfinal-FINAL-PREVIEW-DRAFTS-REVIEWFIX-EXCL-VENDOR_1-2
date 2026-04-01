@@ -2,12 +2,12 @@
 @section('title', 'Audit Logs')
 
 @section('content')
-<div class="zmc-dashboard-wrapper" style="font-family:'Roboto', sans-serif; color:#334155;">
+<div class="zmc-dashboard-wrapper" style="font-family: var(--font-primary); color: var(--zmc-text-dark);">
 
   <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4">
     <div>
-      <h4 class="fw-bold m-0" style="font-size:22px; color:#1e293b;">Audit Logs (Immutable)</h4>
-      <div class="text-muted mt-1" style="font-size:13px;">
+      <h4 class="fw-bold m-0" style="font-size: var(--font-size-2xl); color:#1e293b;">Audit Logs (Immutable)</h4>
+      <div class="text-muted mt-1" style="font-size: var(--font-size-base);">
         <i class="ri-information-line me-1"></i>
         Full read-only trail of user/system actions. These logs cannot be edited or deleted.
       </div>
@@ -77,7 +77,7 @@
               <td class="small">
                 @if($actor)
                   <div class="fw-bold">{{ $actor->name }}</div>
-                  <div class="text-muted" style="font-size:12px;">{{ $actor->email }}</div>
+                  <div class="text-muted" style="font-size: var(--font-size-sm);">{{ $actor->email }}</div>
                 @else
                   {{ $l->actor_user_id ?? '—' }}
                 @endif

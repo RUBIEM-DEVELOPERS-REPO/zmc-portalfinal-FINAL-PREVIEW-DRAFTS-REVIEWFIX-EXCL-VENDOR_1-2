@@ -10,8 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@700;800;900&display=swap" rel="stylesheet">
 
-    {{-- Remix Icons --}}
-    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" rel="stylesheet">
+    <link href="{{ asset('css/green-theme.css') }}" rel="stylesheet">
 
     @php
         $isStaffLogin = session()->has('staff_selected_role');
@@ -27,22 +26,29 @@
 
     <style>
         :root{
-            --bg: #f0f7f0;
+            --bg: #fafafa;
             --card: #ffffff;
             --border: #e2e8f0;
             --muted: #64748b;
             --text: #0f172a;
-            --green: #2e7d32;
-            --green-hover: #1b5e20;
+            --primary: #2d5016;
+            --primary-hover: #1f3a0f;
+            --accent: #facc15;
+            --accent-dark: #eab308;
             --shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
             --radius: 16px;
         }
 
+
         *{box-sizing:border-box}
         body{
             margin:0;
-            font-family: Roboto, Inter, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
-            background: url('{{ asset("zmc_building.png") }}') no-repeat center center fixed;
+            font-family: var(--font-primary);
+            font-size: var(--font-size-base);
+            line-height: var(--line-height-normal);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background: #000 url('{{ asset("zmc_building.png") }}') no-repeat center center fixed;
             background-size: cover;
             color: var(--text);
             display: flex;
@@ -56,11 +62,11 @@
             content: "";
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, rgba(240, 247, 240, 0.92) 0%, rgba(220, 237, 220, 0.95) 100%);
-            z-index: -1;
+            background: rgba(45, 80, 22, 0.45);
+            pointer-events: none;
         }
 
-        .wrap{ width: 100%; max-width: 480px; }
+        .wrap{ width: 100%; max-width: 480px; position: relative; z-index: 1; }
 
         .brand{
             display: flex;
@@ -70,24 +76,11 @@
             margin-bottom: 25px;
             text-decoration: none;
         }
-        .brand img { width: 100%; height: 100%; object-fit: contain; display: block; margin: 0; mix-blend-mode: multiply; }
-        .logo-circle {
-            width: 110px;
-            height: 110px;
-            flex-shrink: 0;
-            background: #fff;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            overflow: hidden;
-        }
+        .brand img { height: 45px; width: auto; }
         .brand span{
-            font-family: Roboto, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
-            font-weight: 900;
-            font-size: 28px;
+            font-family: var(--font-primary);
+            font-weight: var(--font-weight-black);
+            font-size: var(--font-size-xl);
             color: var(--text);
             letter-spacing: -0.5px;
             text-transform: uppercase;
@@ -107,25 +100,25 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            background: rgba(46, 125, 50, 0.1);
-            color: var(--green);
+            background: rgba(45, 80, 22, 0.08);
+            color: var(--primary);
             padding: 6px 14px;
             border-radius: 99px;
-            font-size: 11px;
-            font-weight: 900;
+            font-size: var(--font-size-xs);
+            font-weight: var(--font-weight-black);
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-bottom: 15px;
         }
 
-        .title{ margin: 0 0 8px; font-size: 26px; font-weight: 900; color: #111827; }
-        .subtitle{ margin: 0; font-size: 14px; color: var(--muted); }
+        .title{ margin: 0 0 8px; font-size: var(--font-size-2xl); font-weight: var(--font-weight-black); color: #111827; }
+        .subtitle{ margin: 0; font-size: var(--font-size-base); color: var(--muted); }
 
         .field{ margin-bottom: 20px; }
         label{
             display: block;
-            font-size: 13px;
-            font-weight: 900;
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-black);
             margin-bottom: 8px;
             color: #111827;
         }
@@ -137,14 +130,15 @@
             padding: 0 14px;
             border-radius: 10px;
             border: 1px solid var(--border);
-            font-size: 14px;
+            font-size: var(--font-size-base);
             outline: none;
             transition: all 0.2s ease;
             background:#fff;
         }
+
         .input:focus{
-            border-color: var(--green);
-            box-shadow: 0 0 0 4px rgba(46, 125, 50, 0.1);
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(250, 204, 21, 0.15);
         }
 
         .pwd-row{
@@ -155,13 +149,16 @@
             gap:10px;
         }
         .forgot{
-            font-size: 12px;
-            font-weight: 900;
-            color: var(--green);
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-black);
+            color: var(--primary);
             text-decoration: none;
             white-space:nowrap;
         }
-        .forgot:hover{ text-decoration: underline; }
+        .forgot:hover{ 
+            color: var(--accent-dark);
+            text-decoration: underline; 
+        }
 
         .toggle{
             position: absolute;
@@ -184,42 +181,50 @@
         .btn{
             width: 100%;
             height: 52px;
-            background-color: var(--green);
-            color: white;
-            border: none;
+            background-color: var(--primary);
+            color: var(--accent);
+            border: 2px solid var(--accent);
             border-radius: 12px;
-            font-size: 15px;
-            font-weight: 900;
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-black);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
             margin-top: 10px;
-            transition: background 0.2s, transform .08s ease;
+            transition: all 0.2s ease;
         }
-        .btn:hover { background-color: var(--green-hover); }
+        .btn:hover { 
+            background-color: var(--accent);
+            color: var(--primary);
+            border-color: var(--primary);
+        }
         .btn:active{ transform: translateY(1px); }
 
         .footer-text{
             text-align: center;
-            font-size: 14px;
+            font-size: var(--font-size-base);
             color: var(--muted);
             margin-top: 20px;
         }
         .footer-text a{
-            color: var(--green);
+            color: var(--primary);
             font-weight: 900;
             text-decoration: none;
         }
-        .footer-text a:hover{ text-decoration: underline; }
+        .footer-text a:hover{ 
+            color: var(--accent-dark);
+            text-decoration: underline; 
+        }
 
         .staff-note{
             text-align:center;
-            font-size: 13px;
+            font-size: var(--font-size-sm);
             color: var(--muted);
             margin-top: 10px;
         }
+
         .staff-note strong{ color: #111827; }
 
         @media (max-width: 480px){
@@ -233,9 +238,7 @@
 <div class="wrap">
     {{-- Brand with Logo --}}
     <a href="{{ url('/') }}" class="brand">
-        <div class="logo-circle">
-            <img src="{{ asset('zmc_logo_circular.png') }}" alt="ZMC Logo">
-        </div>
+        <img src="{{ asset('zimbabwe_media_commission_transparent_edges.png') }}" alt="ZMC Logo">
         <span>ZMC Portal</span>
     </a>
 
@@ -308,7 +311,7 @@
 
             <div class="field" style="margin-bottom: 10px;">
                 <label style="display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--muted);font-weight:700;">
-                    <input type="checkbox" name="remember" style="width:16px;height:16px;accent-color:var(--green);">
+                    <input type="checkbox" name="remember" style="width:16px;height:16px;accent-color:var(--primary);">
                     Remember me for 30 days
                 </label>
             </div>
@@ -328,6 +331,7 @@
                     Staff accounts are created by the administrator.
                 </div>
             @endif
+
 
         </form>
     </div>

@@ -6,8 +6,27 @@ use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 
+/**
+ * Report Generation Service
+ * 
+ * Provides PDF and Excel report generation for all dashboard sections.
+ * Supports 5 report types: monthly accreditation, revenue/financial,
+ * compliance/audit, media house status, and operational performance.
+ * 
+ * @package App\Services\Director
+ */
 class ReportGenerationService
 {
+    /**
+     * Create a new ReportGenerationService instance.
+     * 
+     * @param DashboardMetricsService $metricsService Service for executive KPIs
+     * @param AccreditationAnalyticsService $accreditationService Service for accreditation analytics
+     * @param FinancialAnalyticsService $financialService Service for financial analytics
+     * @param ComplianceMonitoringService $complianceService Service for compliance monitoring
+     * @param MediaHouseOversightService $mediaHouseService Service for media house oversight
+     * @param StaffPerformanceService $staffService Service for staff performance metrics
+     */
     public function __construct(
         private DashboardMetricsService $metricsService,
         private AccreditationAnalyticsService $accreditationService,
@@ -18,11 +37,15 @@ class ReportGenerationService
     ) {}
 
     /**
-     * Generate monthly accreditation report
+     * Generate monthly accreditation report.
      * 
-     * @param string $format 'pdf' or 'excel'
-     * @param array $params
-     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     * Creates a comprehensive report of accreditation metrics including monthly trends,
+     * processing times, approval ratios, and category distribution.
+     * 
+     * @param string $format Report format: 'pdf' or 'excel'
+     * @param array $params Report parameters:
+     *                      - month: Month in Y-m format (default: current month)
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse File download response
      */
     public function generateMonthlyAccreditationReport(string $format, array $params)
     {
@@ -53,11 +76,16 @@ class ReportGenerationService
     }
 
     /**
-     * Generate revenue and financial report
+     * Generate revenue and financial report.
      * 
-     * @param string $format
-     * @param array $params
-     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     * Creates a comprehensive financial report including revenue trends, payment
+     * breakdowns, waiver statistics, and outstanding payment aging.
+     * 
+     * @param string $format Report format: 'pdf' or 'excel'
+     * @param array $params Report parameters:
+     *                      - start_date: Start date for report period (default: start of month)
+     *                      - end_date: End date for report period (default: end of month)
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse File download response
      */
     public function generateRevenueFinancialReport(string $format, array $params)
     {
@@ -91,11 +119,16 @@ class ReportGenerationService
     }
 
     /**
-     * Generate compliance and audit report
+     * Generate compliance and audit report.
      * 
-     * @param string $format
-     * @param array $params
-     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     * Creates a comprehensive compliance report including category reassignments,
+     * reopened applications, manual overrides, certificate edits, excessive reprints,
+     * and suspicious activity alerts.
+     * 
+     * @param string $format Report format: 'pdf' or 'excel'
+     * @param array $params Report parameters:
+     *                      - month: Month in Y-m format (default: current month)
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse File download response
      */
     public function generateComplianceAuditReport(string $format, array $params)
     {
@@ -128,11 +161,15 @@ class ReportGenerationService
     }
 
     /**
-     * Generate media house status report
+     * Generate media house status report.
      * 
-     * @param string $format
-     * @param array $params
-     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     * Creates a comprehensive media house report including status counts, average
+     * staff per house, houses exceeding thresholds, accreditations nearing expiry,
+     * and high-risk non-renewals.
+     * 
+     * @param string $format Report format: 'pdf' or 'excel'
+     * @param array $params Report parameters (currently unused, reserved for future filtering)
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse File download response
      */
     public function generateMediaHouseStatusReport(string $format, array $params)
     {
@@ -160,11 +197,16 @@ class ReportGenerationService
     }
 
     /**
-     * Generate operational performance report
+     * Generate operational performance report.
      * 
-     * @param string $format
-     * @param array $params
-     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     * Creates a comprehensive staff performance report including applications processed,
+     * review times, payment turnaround, approval distribution, reassignment frequency,
+     * and processing time by stage.
+     * 
+     * @param string $format Report format: 'pdf' or 'excel'
+     * @param array $params Report parameters:
+     *                      - month: Month in Y-m format (default: current month)
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse File download response
      */
     public function generateOperationalPerformanceReport(string $format, array $params)
     {

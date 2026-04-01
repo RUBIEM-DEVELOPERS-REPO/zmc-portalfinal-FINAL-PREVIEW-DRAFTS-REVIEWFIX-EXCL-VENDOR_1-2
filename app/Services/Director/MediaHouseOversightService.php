@@ -7,12 +7,28 @@ use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Media House Oversight Service
+ * 
+ * Provides monitoring and analysis of media house registrations, staff
+ * accreditation counts, expiry tracking, and renewal risk identification.
+ * 
+ * @package App\Services\Director
+ */
 class MediaHouseOversightService
 {
     /**
-     * Get media house status counts
+     * Get media house status counts.
      * 
-     * @return array ['active' => int, 'suspended' => int, 'new_this_year' => int]
+     * Returns comprehensive statistics about media house registrations including
+     * active, in-progress, suspended, new this year, and total counts.
+     * 
+     * @return array Associative array containing:
+     *               - active: Count of issued registrations
+     *               - in_progress: Count of registrations in review
+     *               - suspended: Count of suspended registrations
+     *               - new_this_year: Count of registrations created this year
+     *               - total: Total count of all registrations
      */
     public function getMediaHouseStatusCounts(): array
     {
@@ -45,9 +61,12 @@ class MediaHouseOversightService
     }
 
     /**
-     * Get average staff accreditations per media house
+     * Get average staff accreditations per media house.
      * 
-     * @return float
+     * Calculates the average number of staff accreditations per registered
+     * media house, providing insight into organizational size.
+     * 
+     * @return float Average staff count per media house (rounded to 1 decimal, 0.0 if no houses)
      */
     public function getAverageStaffPerHouse(): float
     {
@@ -68,9 +87,12 @@ class MediaHouseOversightService
     }
 
     /**
-     * Get media houses exceeding staff thresholds
+     * Get media houses exceeding staff thresholds.
      * 
-     * @return Collection
+     * Returns media houses with staff accreditation counts exceeding the
+     * configured threshold (default: 50), sorted by staff count descending.
+     * 
+     * @return Collection Collection of media house applications with staff_accreditations_count field
      */
     public function getHousesExceedingThresholds(): Collection
     {
@@ -100,10 +122,13 @@ class MediaHouseOversightService
     }
 
     /**
-     * Get accreditations nearing expiry
+     * Get accreditations nearing expiry.
      * 
-     * @param int $days Days until expiry
-     * @return Collection
+     * Returns issued accreditations that will expire within the specified
+     * number of days, sorted by expiry date ascending.
+     * 
+     * @param int $days Number of days until expiry to include (default: 30)
+     * @return Collection Collection of Application models with applicant relation (limited to 50)
      */
     public function getAccreditationsNearingExpiry(int $days = 30): Collection
     {
@@ -120,9 +145,12 @@ class MediaHouseOversightService
     }
 
     /**
-     * Get high-risk non-renewal cases
+     * Get high-risk non-renewal cases.
      * 
-     * @return Collection
+     * Returns accreditations that expired in the last 30 days without renewal,
+     * indicating potential compliance or operational issues.
+     * 
+     * @return Collection Collection of expired Application models with applicant relation (limited to 50)
      */
     public function getHighRiskNonRenewals(): Collection
     {
@@ -139,10 +167,18 @@ class MediaHouseOversightService
     }
 
     /**
-     * Get drill-down media house details
+     * Get drill-down media house details.
+     * 
+     * Returns comprehensive details for a specific media house including
+     * registration info, staff count, staff accreditations, and expiring accreditations.
      * 
      * @param int $mediaHouseId Application ID of the media house registration
-     * @return array
+     * @return array Associative array containing:
+     *               - media_house: Media house registration application
+     *               - staff_count: Total count of staff accreditations
+     *               - staff_accreditations: Collection of staff applications
+     *               - expiring_soon: Collection of accreditations expiring within 30 days
+     *               Returns empty array if media house not found
      */
     public function getDrillDownMediaHouseDetails(int $mediaHouseId): array
     {

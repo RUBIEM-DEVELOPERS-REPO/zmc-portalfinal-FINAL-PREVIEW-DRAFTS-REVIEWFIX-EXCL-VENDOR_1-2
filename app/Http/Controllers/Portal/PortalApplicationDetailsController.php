@@ -39,40 +39,61 @@ class PortalApplicationDetailsController extends Controller
             default         => strtoupper((string)$application->application_type),
         };
 
-        foreach ([
-            'title','first_name','surname','other_names','dob','sex','birth_place','origin','nationality',
-            'id_passport_number','employer_name','medium_type','designation','assignment_brief','arrival_date',
-            'departure_date','port_entry','zim_local_address','zim_address'
-        ] as $k) {
+        // Standardized labels for the frontend
+        $labels = [
+            'title' => 'Title',
+            'surname' => 'Surname',
+            'first_name' => 'First Name',
+            'other_names' => 'Other Names',
+            'dob' => 'Date of Birth',
+            'gender' => 'Sex',
+            'sex' => 'Sex',
+            'birth_place' => 'Place & Country of Birth',
+            'origin' => 'Country of Origin',
+            'nationality' => 'Nationality',
+            'id_passport_number' => 'ID/Passport Number',
+            'passport_no' => 'Passport Number',
+            'employer_name' => 'Employer/Media House',
+            'medium_type' => 'Medium Type',
+            'designation' => 'Designation',
+            'assignment_brief' => 'Assignment Brief',
+            'arrival_date' => 'Arrival Date',
+            'departure_date' => 'Departure Date',
+            'port_entry' => 'Port of Entry',
+            'zim_local_address' => 'Local Address',
+            'zim_address' => 'Zimbabwe Address',
+            'phone' => 'Phone',
+            'email' => 'Email',
+            'org_name' => 'Organization Name',
+            'reg_no' => 'Registration Number',
+            'website' => 'Website',
+            'head_office' => 'Head Office Address',
+            'postal_address' => 'Postal Address',
+            'contact_person' => 'Contact Person',
+            'contact_email' => 'Contact Email',
+            'contact_phone' => 'Contact Phone',
+            'category' => 'Category',
+            'operating_model' => 'Operating Model',
+            'arrived_on' => 'Arrived On',
+            'arrival_mode' => 'Arrival Mode',
+            'departing_on' => 'Departing On',
+            'special_assignment' => 'Special Assignment',
+            'national_reg_no' => 'National ID',
+            'marital_status' => 'Marital Status',
+            'address' => 'Residential Address',
+            'employment_type' => 'Employment Type',
+            'media_org' => 'Media Organization',
+        ];
+
+        // Ensure common fields are at top level for legacy JS if needed, but we'll use fd mostly
+        foreach ($labels as $k => $v) {
             if (array_key_exists($k, $fd) && !array_key_exists($k, $app)) {
                 $app[$k] = $fd[$k];
             }
         }
 
-        $ap1 = [];
-        if (isset($fd['ap1']) && is_array($fd['ap1'])) {
-            $ap1 = $fd['ap1'];
-        } else {
-            $possible = ['category','service_name','operating_model','org_name','reg_no','website','head_office','postal_address',
-                'contact_person','contact_email','contact_phone'];
-            $hasAny = false;
-            foreach ($possible as $p) {
-                if (array_key_exists($p, $fd)) { $hasAny = true; break; }
-            }
-            if ($hasAny) {
-                foreach ($possible as $p) {
-                    if (array_key_exists($p, $fd)) $ap1[$p] = $fd[$p];
-                }
-            }
-        }
-
-        $directors = [];
-        if (isset($fd['directors']) && is_array($fd['directors'])) $directors = $fd['directors'];
-        if (isset($fd['directors_rows']) && is_array($fd['directors_rows'])) $directors = $fd['directors_rows'];
-
-        $managers = [];
-        if (isset($fd['managers']) && is_array($fd['managers'])) $managers = $fd['managers'];
-        if (isset($fd['managers_rows']) && is_array($fd['managers_rows'])) $managers = $fd['managers_rows'];
+        $directors = $fd['directors'] ?? $fd['directors_rows'] ?? [];
+        $managers = $fd['managers'] ?? $fd['managers_rows'] ?? [];
 
         $documents = $application->documents->map(function ($d) {
             return [
@@ -87,7 +108,8 @@ class PortalApplicationDetailsController extends Controller
         return response()->json([
             'ok' => true,
             'application' => $app,
-            'ap1' => $ap1,
+            'form_data' => $fd,
+            'labels' => $labels,
             'directors' => $directors,
             'managers' => $managers,
             'documents' => $documents,

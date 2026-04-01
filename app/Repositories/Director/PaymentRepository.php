@@ -7,15 +7,26 @@ use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Payment Repository
+ * 
+ * Provides data access methods for payment and revenue queries with SQLite-compatible
+ * implementations. Uses strftime() for date operations and standard aggregations.
+ * 
+ * @package App\Repositories\Director
+ */
 class PaymentRepository
 {
     /**
-     * Get payments in date range
+     * Get payments in date range.
      * 
-     * @param Carbon $startDate
-     * @param Carbon $endDate
-     * @param string|null $status
-     * @return Collection
+     * Retrieves payments where confirmed_at falls within the specified
+     * date range, with optional status filtering.
+     * 
+     * @param Carbon $startDate Start of date range
+     * @param Carbon $endDate End of date range
+     * @param string|null $status Optional status filter (e.g., 'paid', 'pending')
+     * @return Collection Collection of Payment models
      */
     public function getInRange(Carbon $startDate, Carbon $endDate, ?string $status = null): Collection
     {
@@ -30,11 +41,18 @@ class PaymentRepository
     }
 
     /**
-     * Get revenue by service type
+     * Get revenue by service type.
      * 
-     * @param Carbon|null $startDate
-     * @param Carbon|null $endDate
-     * @return Collection
+     * Aggregates total revenue and transaction counts grouped by service type
+     * (registration, accreditation, renewal, etc.) for paid payments.
+     * 
+     * SQLite Note: Uses standard SUM() and COUNT() aggregations which are
+     * fully compatible with SQLite.
+     * 
+     * @param Carbon|null $startDate Optional start date for filtering
+     * @param Carbon|null $endDate Optional end date for filtering
+     * @return Collection Collection with service_type, total_revenue, and
+     *                    transaction_count fields, ordered by revenue descending
      */
     public function getRevenueByServiceType(?Carbon $startDate = null, ?Carbon $endDate = null): Collection
     {
@@ -56,9 +74,13 @@ class PaymentRepository
     }
 
     /**
-     * Get revenue by applicant category
+     * Get revenue by applicant category.
      * 
-     * @return Collection
+     * Aggregates total revenue and transaction counts grouped by applicant
+     * category (individual, organization, media house, etc.) for paid payments.
+     * 
+     * @return Collection Collection with applicant_category, total_revenue, and
+     *                    transaction_count fields, ordered by revenue descending
      */
     public function getRevenueByApplicantCategory(): Collection
     {
@@ -76,9 +98,13 @@ class PaymentRepository
     }
 
     /**
-     * Get revenue by payment method
+     * Get revenue by payment method.
      * 
-     * @return Collection
+     * Aggregates total revenue and transaction counts grouped by payment method
+     * (bank_transfer, mobile_money, waiver, etc.) for paid payments.
+     * 
+     * @return Collection Collection with method, total_revenue, and transaction_count
+     *                    fields, ordered by revenue descending
      */
     public function getRevenueByPaymentMethod(): Collection
     {
@@ -96,34 +122,53 @@ class PaymentRepository
     }
 
     /**
-     * Get monthly revenue trend
+     * Get monthly revenue trend (SQLite compatible using strftime).
      * 
-     * @param int $months
-     * @return Collection
+     * Aggregates revenue totals and transaction counts by month for the
+     * specified number of months.
+     * 
+     * SQLite Note: Uses strftime('%Y-%m', confirmed_at) for month extraction.
+     * This is SQLite-specific; MySQL would use DATE_FORMAT(confirmed_at, '%Y-%m').
+     * 
+     * @param int $months Number of months to retrieve (default: 12)
+     * @return Collection Collection with month, total_revenue, and transaction_count
+     *                    fields, ordered by month descending
      */
-    public function getMonthlyRevenueTrend(int $months = 12): Collection
+    public function getMonthlyRevenueTrend(int $months = 12, ?int $year = null): Collection
     {
-        $startDate = now()->subMonths($months)->startOfMonth();
-        
-        $monthFormat = DB::getDriverName() === 'pgsql' ? "TO_CHAR(confirmed_at, 'YYYY-MM')" : "strftime('%Y-%m', confirmed_at)";
-
-        return Payment::select(
-            DB::raw("$monthFormat as month"),
+        $query = Payment::select(
+            DB::raw("strftime('%Y-%m', confirmed_at) as month"),
             DB::raw('SUM(amount) as total_revenue'),
             DB::raw('COUNT(*) as transaction_count')
         )
-        ->where('status', 'paid')
-        ->where('confirmed_at', '>=', $startDate)
-        ->whereNotNull('confirmed_at')
-        ->groupBy('month')
-        ->orderBy('month', 'desc')
-        ->get();
+        ->where('status', 'paid');
+
+        if ($year) {
+            $query->whereYear('confirmed_at', $year);
+        } else {
+            $startDate = now()->subMonths($months)->startOfMonth();
+            $query->where('confirmed_at', '>=', $startDate);
+        }
+
+        return $query->whereNotNull('confirmed_at')
+            ->groupBy('month')
+            ->orderBy('month', 'desc')
+            ->get();
     }
 
     /**
-     * Get outstanding payments with aging
+     * Get outstanding payments with aging (SQLite compatible).
      * 
-     * @return array
+     * Categorizes pending payments into aging buckets based on how long
+     * they have been outstanding: 0-30 days, 30-60 days, and 60+ days.
+     * 
+     * SQLite Note: Uses standard date comparison operators which work
+     * consistently across SQLite and MySQL. Carbon handles date arithmetic.
+     * 
+     * @return array Associative array with keys:
+     *               - '0_30': Count of payments pending 0-30 days
+     *               - '30_60': Count of payments pending 30-60 days
+     *               - '60_plus': Count of payments pending 60+ days
      */
     public function getOutstandingPaymentsAging(): array
     {
@@ -144,9 +189,13 @@ class PaymentRepository
     }
 
     /**
-     * Get revenue by residency type
+     * Get revenue by residency type.
      * 
-     * @return Collection
+     * Aggregates total revenue and transaction counts grouped by residency
+     * type (resident, non-resident, etc.) for paid payments.
+     * 
+     * @return Collection Collection with residency, total_revenue, and
+     *                    transaction_count fields, ordered by revenue descending
      */
     public function getRevenueByResidency(): Collection
     {

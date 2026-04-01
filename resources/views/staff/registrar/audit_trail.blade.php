@@ -2,7 +2,7 @@
 @section('title', 'System Audit Trail')
 
 @section('content')
-<div class="zmc-dashboard-wrapper" style="font-family:'Roboto', sans-serif; color:#334155;">
+<div class="zmc-dashboard-wrapper" style="font-family: var(--font-primary); color: var(--zmc-text-dark);">
     <div class="mb-4">
         <h4 class="fw-bold m-0">System Audit Trail</h4>
         <div class="text-muted small">Chronological chain of custody and action logs.</div>

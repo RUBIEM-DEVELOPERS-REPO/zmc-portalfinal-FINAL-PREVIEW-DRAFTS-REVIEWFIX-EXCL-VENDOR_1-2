@@ -55,6 +55,8 @@ class LoginController extends Controller
             'email' => (string)($request->input('email') ?? ''),
         ]);
 
+        \App\Support\LoginHistory::record(null, $request, false, 'Invalid credentials');
+
         throw ValidationException::withMessages([
             $this->username() => [trans('auth.failed')],
         ]);
@@ -97,6 +99,8 @@ class LoginController extends Controller
         }
 
         \App\Support\AuditTrail::log('login_applicant', $user);
+        \App\Support\LoginHistory::record($user, $request, true);
+
         return redirect()->route('home');
     }
 

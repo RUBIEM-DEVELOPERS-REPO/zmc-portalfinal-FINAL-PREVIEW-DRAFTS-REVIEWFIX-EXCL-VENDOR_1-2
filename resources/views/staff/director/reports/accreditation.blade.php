@@ -2,12 +2,12 @@
 @section('title', 'Accreditation Performance')
 
 @section('content')
-<div class="zmc-dashboard-wrapper" style="font-family:'Roboto', sans-serif; color:#334155;">
+<div class="zmc-dashboard-wrapper" style="font-family: var(--font-primary); color: var(--zmc-text-dark);">
     <div class="mb-4">
         <a href="{{ auth()->user()->hasRole('director') ? route('staff.director.dashboard') : (auth()->user()->hasRole('registrar') ? route('staff.registrar.dashboard') : url()->previous()) }}" class="btn btn-sm btn-link p-0 text-muted mb-2 text-decoration-none">
             <i class="ri-arrow-left-line"></i> Back to Overview
         </a>
-        <h4 class="fw-bold m-0" style="font-size:22px; color:#1e293b;">Accreditation & Operational Performance</h4>
+        <h4 class="fw-bold m-0" style="font-size: var(--font-size-2xl); color:#1e293b;">Accreditation & Operational Performance</h4>
     </div>
 
     <div class="row g-4">
@@ -159,8 +159,8 @@
                             {
                                 label: 'Accreditations (Issued/Reviewed)',
                                 data: accreditationApproved,
-                                borderColor: '#10b981',
-                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                borderColor: '#facc15',
+                                backgroundColor: 'rgba(250, 204, 21, 0.1)',
                                 tension: 0.3,
                                 fill: true
                             },
@@ -237,7 +237,7 @@
                         labels: categoryLabels,
                         datasets: [{
                             data: categoryCounts,
-                            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899']
+                            backgroundColor: ['#000000', '#facc15', '#eab308', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899']
                         }]
                     },
                     options: {

@@ -47,13 +47,19 @@ class ItDashboardController extends Controller
         // Approval / rejection metrics
         $hasDecisionStatus = Schema::hasColumn('applications', 'decision_status');
         if ($hasDecisionStatus) {
-            $approvedCount = Application::where('decision_status', 'Approved')->count();
-            $rejectedCount = Application::where('decision_status', 'Rejected')->count();
-            $pendingCount  = Application::where('decision_status', 'Pending')->count();
+            $approvedCount = Application::where('decision_status', 'Approved')
+                ->count();
+            $rejectedCount = Application::where('decision_status', 'Rejected')
+                ->count();
+            $pendingCount  = Application::where('decision_status', 'Pending')
+                ->count();
         } else {
-            $approvedCount = Application::whereNotNull('approved_at')->count();
-            $rejectedCount = Application::whereNotNull('rejected_at')->count();
-            $pendingCount  = Application::whereNull('approved_at')->whereNull('rejected_at')->count();
+            $approvedCount = Application::whereNotNull('approved_at')
+                ->count();
+            $rejectedCount = Application::whereNotNull('rejected_at')
+                ->count();
+            $pendingCount  = Application::whereNull('approved_at')->whereNull('rejected_at')
+                ->count();
         }
         $totalDecisions = max(1, $approvedCount + $rejectedCount);
         $approvalRatio  = round(($approvedCount / $totalDecisions) * 100, 1);
@@ -75,27 +81,50 @@ class ItDashboardController extends Controller
 
         // Payment summary
         $paymentSummary = ['Paid' => 0, 'Pending' => 0, 'Failed' => 0, 'Refunded' => 0, 'Revenue' => 0];
-        if (auth()->user()->hasRole('super_admin')) {
-            if (Schema::hasTable('payments')) {
-                $statusCounts = DB::table('payments')->select('status', DB::raw('COUNT(*) as total'))->groupBy('status')->pluck('total', 'status')->toArray();
-                $paymentSummary['Paid']     = (int)($statusCounts['success'] ?? $statusCounts['paid'] ?? 0);
-                $paymentSummary['Pending']  = (int)($statusCounts['pending'] ?? 0);
-                $paymentSummary['Failed']   = (int)($statusCounts['failed'] ?? 0);
-                $paymentSummary['Refunded'] = (int)($statusCounts['refunded'] ?? 0);
-                $paymentSummary['Revenue']  = (float) DB::table('payments')->whereIn('status', ['success','paid'])->sum('amount');
-            } else {
-                $appPay = Application::select('payment_status', DB::raw('COUNT(*) as total'))->groupBy('payment_status')->pluck('total', 'payment_status')->toArray();
-                $paymentSummary['Paid']    = (int)($appPay['paid'] ?? 0);
-                $paymentSummary['Pending'] = (int)($appPay['requested'] ?? 0);
-                $paymentSummary['Failed']  = (int)($appPay['rejected'] ?? 0);
+        if (Schema::hasTable('payments')) {
+            $statusCounts = DB::table('payments')->select('status', DB::raw('COUNT(*) as total'))->groupBy('status')->pluck('total', 'status')->toArray();
+            $paymentSummary['Paid']     = (int)($statusCounts['success'] ?? $statusCounts['paid'] ?? 0);
+            $paymentSummary['Pending']  = (int)($statusCounts['pending'] ?? 0);
+            $paymentSummary['Failed']   = (int)($statusCounts['failed'] ?? 0);
+            $paymentSummary['Refunded'] = (int)($statusCounts['refunded'] ?? 0);
+            $paymentSummary['Revenue']  = (float) DB::table('payments')->whereIn('status', ['success','paid'])->sum('amount');
+        } else {
+            $appPay = Application::select('payment_status', DB::raw('COUNT(*) as total'))->groupBy('payment_status')->pluck('total', 'payment_status')->toArray();
+            $paymentSummary['Paid']    = (int)($appPay['paid'] ?? 0);
+            $paymentSummary['Pending'] = (int)($appPay['requested'] ?? 0);
+            $paymentSummary['Failed']  = (int)($appPay['rejected'] ?? 0);
+        }
+
+        // Accreditation trends (monthly last 12 months)
+        $accreditationTrend = [];
+        if (Schema::hasColumn('applications', 'issued_at')) {
+            $isSqlite   = DB::getDriverName() === 'sqlite';
+            $dateFormat = $isSqlite ? "strftime('%Y-%m', issued_at)" : "DATE_FORMAT(issued_at, '%Y-%m')";
+            $rows = Application::selectRaw("$dateFormat as ym, COUNT(*) as c")
+                ->whereNotNull('issued_at')
+                ->where('issued_at', '>=', now()->subMonths(11)->startOfMonth())
+                ->groupBy('ym')->orderBy('ym')->get();
+            $map = $rows->pluck('c', 'ym')->toArray();
+            for ($i = 11; $i >= 0; $i--) {
+                $ym = now()->subMonths($i)->format('Y-m');
+                $accreditationTrend[] = ['month' => $ym, 'count' => (int)($map[$ym] ?? 0)];
             }
         }
 
-        // Accreditation trends - RESTRICTED FOR IT
-        $accreditationTrend = [];
-
-        // Avg processing time - RESTRICTED FOR IT
+        // Avg processing time
         $avgProcessingHours = 0;
+        if (Schema::hasColumn('applications', 'submitted_at')) {
+            try {
+                $isSqlite       = DB::getDriverName() === 'sqlite';
+                $diffExpression = $isSqlite
+                    ? "(strftime('%s', COALESCE(decided_at, approved_at, rejected_at)) - strftime('%s', submitted_at)) / 3600"
+                    : "TIMESTAMPDIFF(HOUR, submitted_at, COALESCE(decided_at, approved_at, rejected_at))";
+                $avgProcessingHours = (float) Application::whereNotNull('submitted_at')
+                    ->where(function ($q) { $q->whereNotNull('decided_at')->orWhereNotNull('approved_at')->orWhereNotNull('rejected_at'); })
+                    ->selectRaw("AVG($diffExpression) as avg_h")
+                    ->value('avg_h') ?: 0;
+            } catch (\Throwable $e) { $avgProcessingHours = 0; }
+        }
 
         // System health checks
         $health = ['database' => false, 'storage' => false, 'queue' => false, 'payment_callback' => false];
@@ -131,24 +160,110 @@ class ItDashboardController extends Controller
         // ── Dashboard Overview Stats ───────────────────────────────────
         $stats = [
             'total_users'      => $totalUsers,
-            'draft_count'      => Application::where('status', Application::DRAFT)->count(),
+            'app_stats'        => [
+                'new'         => Application::where('request_type', 'new')->count(),
+                'renewal'     => Application::where('request_type', 'renewal')->count(),
+                'media_house' => Application::where('application_type', 'registration')->count(),
+                'journalist'  => Application::where('application_type', 'accreditation')->count(),
+            ],
+            'approval_metrics' => [
+                'approved' => Application::whereIn('status', [Application::ISSUED, Application::PRINTED, Application::CERT_GENERATED])
+                    ->when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))->count(),
+                'rejected' => Application::where('status', Application::OFFICER_REJECTED)->orWhere('status', Application::REGISTRAR_REJECTED)
+                    ->when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))->count(),
+            ],
+            'draft_count'      => Application::where('status', Application::DRAFT)
+                ->when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))->count(),
+            'payment_summary'  => Application::select('payment_status', DB::raw('count(*) as total'))
+                ->when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))
+                ->groupBy('payment_status')->pluck('total', 'payment_status')->toArray(),
         ];
 
-        // RESTRICTED: Operational trends & financial data
-        $accreditationTrend = [];
+        // Trends for ApexCharts with dynamic range
+        $isSqlite = DB::getDriverName() === 'sqlite';
+        $range = $request->input('trend_range', '12_months');
+        $startDate = now()->subMonths(11)->startOfMonth();
+        $groupFormat = $isSqlite ? "strftime('%Y-%m', created_at)" : "DATE_FORMAT(created_at, '%Y-%m')";
+        $labelFormat = 'M Y';
+        $period = 'months';
+        $count = 12;
+
+        switch ($range) {
+            case '30_days':
+                $startDate = now()->subDays(29)->startOfDay();
+                $groupFormat = $isSqlite ? "strftime('%Y-%m-%d', created_at)" : "DATE_FORMAT(created_at, '%Y-%m-%d')";
+                $labelFormat = 'd M';
+                $period = 'days';
+                $count = 30;
+                break;
+            case '90_days':
+                $startDate = now()->subDays(89)->startOfDay();
+                $groupFormat = $isSqlite ? "strftime('%Y-%m-%d', created_at)" : "DATE_FORMAT(created_at, '%Y-%m-%d')";
+                $labelFormat = 'd M';
+                $period = 'days';
+                $count = 90;
+                break;
+            case '6_months':
+                $startDate = now()->subMonths(5)->startOfMonth();
+                $count = 6;
+                break;
+            case 'this_year':
+                $startDate = now()->startOfYear();
+                $count = now()->month;
+                break;
+            case 'all_time':
+                $firstApp = Application::orderBy('created_at')->first();
+                $startDate = $firstApp ? $firstApp->created_at->startOfMonth() : now()->startOfMonth();
+                $count = now()->diffInMonths($startDate) + 1;
+                break;
+        }
+
+        $accData = Application::where('application_type', 'accreditation')
+            ->where('created_at', '>=', $startDate)
+            ->selectRaw("$groupFormat as grp, count(*) as c")
+            ->groupBy('grp')
+            ->pluck('c', 'grp')
+            ->toArray();
+
+        $regData = Application::where('application_type', 'registration')
+            ->where('created_at', '>=', $startDate)
+            ->selectRaw("$groupFormat as grp, count(*) as c")
+            ->groupBy('grp')
+            ->pluck('c', 'grp')
+            ->toArray();
+
+        $accreditationTrends = [];
         $registrationTrends = [];
         $trendLabels = [];
-        $approvalTrend = [];
-        $paymentSummary = null;
 
-        if (auth()->user()->hasRole('super_admin')) {
-             // Operational trends moved to Stakeholder dashboards (Registrar, Director)
-             // Only providing minimal stats for Super Admin if needed
-             $paymentSummary = Application::select('payment_status', DB::raw('count(*) as total'))->groupBy('payment_status')->pluck('total', 'payment_status')->toArray();
+        for ($i = 0; $i < $count; $i++) {
+            $date = (clone $startDate)->add($i, $period);
+            $key = $period === 'days' ? $date->format('Y-m-d') : $date->format('Y-m');
+            $trendLabels[] = $date->format($labelFormat);
+            $accreditationTrends[] = (int)($accData[$key] ?? 0);
+            $registrationTrends[] = (int)($regData[$key] ?? 0);
         }
-        $currentRangeLabel = 'RESTRICTED';
 
-        $avgProcessingTime = 0;
+        $rangeLabels = [
+            '30_days' => 'Last 30 Days',
+            '90_days' => 'Last 90 Days',
+            '6_months' => 'Last 6 Months',
+            '12_months' => 'Last 12 Months',
+            'this_year' => 'This Year',
+            'all_time' => 'All Time',
+        ];
+        $currentRangeLabel = $rangeLabels[$range] ?? 'Last 12 Months';
+
+        // Avg processing time for dashboard
+        $isSqlite = DB::getDriverName() === 'sqlite';
+        $diffExpression = $isSqlite
+            ? "(julianday(updated_at) - julianday(submitted_at)) * 24"
+            : "TIMESTAMPDIFF(HOUR, submitted_at, updated_at)";
+
+        $avgProcessingTime = Application::where('status', Application::ISSUED)
+            ->whereNotNull('submitted_at')
+            ->selectRaw("AVG($diffExpression) as avg_hours")
+            ->value('avg_hours') ?: 0;
 
         $storageUsage = [
             'total' => disk_total_space('/'),
@@ -177,15 +292,9 @@ class ItDashboardController extends Controller
 
         $recentTransactions  = Schema::hasTable('payments') ? DB::table('payments')->latest()->paginate(10, ['*'], 'payments_page') : collect();
         $paymentReconciliation = [
-            'total_revenue'  => 0,
-            'pending_proofs' => 0,
+            'total_revenue'  => Schema::hasTable('payments') ? DB::table('payments')->where('status', 'success')->sum('amount') : 0,
+            'pending_proofs' => Application::where('payment_status', 'pending_proof')->count(),
         ];
-        if (auth()->user()->hasRole('super_admin')) {
-             $paymentReconciliation = [
-                'total_revenue'  => Schema::hasTable('payments') ? DB::table('payments')->where('status', 'success')->sum('amount') : 0,
-                'pending_proofs' => Application::where('payment_status', 'pending_proof')->count(),
-            ];
-        }
 
         $activeSessions = [];
         if (config('session.driver') === 'database') {
@@ -207,10 +316,9 @@ class ItDashboardController extends Controller
         ];
 
         return view('staff.it.dashboard.index', compact(
-            // Dashboard data
-            'totalUsers', 'usersByRole', 'appStats',
-            'approvedCount', 'rejectedCount', 'pendingCount', 'approvalRatio',
-            'approvalTrend', 'paymentSummary', 'accreditationTrend', 'avgProcessingHours',
+            'totalUsers', 'usersByRole', 'appStats', 'approvedCount', 'rejectedCount', 
+            'pendingCount', 'approvalRatio', 'approvalTrend', 'paymentSummary', 'isDbUp', 'maintenanceMode',
+            'driveSpace', 'lastBackup', 'envData', 'activeTab',
             'health', 'storageUsageBytes', 'storageByModule',
             'regions', 'pending',
             // Dashboard detailed data
@@ -529,10 +637,6 @@ class ItDashboardController extends Controller
 
     public function downloadBatch(Application $application)
     {
-        if (auth()->user()->hasRole('it_admin')) {
-            return back()->with('error', 'IT Admin is not authorized to download application files. Access restricted.');
-        }
-
         $documents = $application->documents;
         if ($documents->isEmpty()) {
             return back()->with('error', 'No documents found for this application.');

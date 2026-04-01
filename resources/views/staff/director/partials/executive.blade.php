@@ -4,7 +4,7 @@
         <div class="zmc-card h-100 bg-white shadow-sm border-0 rounded-4 p-4">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="text-muted small fw-bold text-uppercase tracking-wider" style="font-size:10px;">Issued (MTD / YTD)</div>
+                    <div class="text-muted small fw-bold text-uppercase tracking-wider" style="font-size: var(--font-size-sm);">Issued (MTD / YTD)</div>
                     <div class="h2 fw-black mb-0 mt-1 text-dark">
                         {{ number_format($kpis['issued_this_month']) }} <span class="text-muted h4 fw-medium">/ {{ number_format($kpis['issued_this_year']) }}</span>
                     </div>
@@ -22,7 +22,7 @@
         <div class="zmc-card h-100 bg-white shadow-sm border-0 rounded-4 p-4">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="text-muted small fw-bold text-uppercase tracking-wider" style="font-size:10px;">Revenue (MTD / YTD)</div>
+                    <div class="text-muted small fw-bold text-uppercase tracking-wider" style="font-size: var(--font-size-sm);">Revenue (MTD / YTD)</div>
                     <div class="h3 fw-black mb-0 mt-1 text-dark">
                         ${{ number_format($kpis['revenue_mtd']) }} <span class="text-muted h5 fw-medium">/ ${{ number_format($kpis['revenue_ytd']) }}</span>
                     </div>
@@ -40,7 +40,7 @@
         <div class="zmc-card h-100 bg-white shadow-sm border-0 rounded-4 p-4 border-start border-4 border-warning">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="text-muted small fw-bold text-uppercase tracking-wider" style="font-size:10px;">Outstanding Revenue</div>
+                    <div class="text-muted small fw-bold text-uppercase tracking-wider" style="font-size: var(--font-size-sm);">Outstanding Revenue</div>
                     <div class="h2 fw-black mb-0 mt-1 text-dark">{{ number_format($kpis['outstanding_revenue']) }}</div>
                 </div>
                 <div class="icon-box bg-warning-subtle text-warning rounded-circle p-2" style="width:40px; height:40px; display:flex; align-items:center; justify-content:center;">
@@ -56,7 +56,7 @@
     {{-- Pipeline Volume --}}
     <div class="col-12 col-md-3">
         <div class="zmc-card h-100 bg-white shadow-sm border-0 rounded-4 p-4">
-            <div class="text-muted small fw-bold text-uppercase tracking-wider" style="font-size:10px;">Applications in Pipeline</div>
+            <div class="text-muted small fw-bold text-uppercase tracking-wider" style="font-size: var(--font-size-sm);">Applications in Pipeline</div>
             <div class="h2 fw-black mb-0 mt-1 text-dark">{{ number_format($kpis['applications_in_pipeline']) }}</div>
             <div class="mt-3 smaller text-muted">Awaiting final decision</div>
         </div>
@@ -65,7 +65,7 @@
     {{-- Avg Processing Time --}}
     <div class="col-12 col-md-3">
         <div class="zmc-card h-100 bg-white shadow-sm border-0 rounded-4 p-4">
-            <div class="text-muted small fw-bold text-uppercase tracking-wider" style="font-size:10px;">Avg. Processing Time</div>
+            <div class="text-muted small fw-bold text-uppercase tracking-wider" style="font-size: var(--font-size-sm);">Avg. Processing Time</div>
             <div class="h2 fw-black mb-0 mt-1 text-dark">{{ $kpis['avg_processing_time'] }} <span class="h4 text-muted">days</span></div>
             <div class="mt-3 smaller text-muted">Submission to issuance</div>
         </div>
@@ -74,7 +74,7 @@
     {{-- Approval Rate --}}
     <div class="col-12 col-md-3">
         <div class="zmc-card h-100 bg-white shadow-sm border-0 rounded-4 p-4">
-                <div class="text-muted small fw-bold text-uppercase tracking-wider" style="font-size:10px;">Approval Rate</div>
+                <div class="text-muted small fw-bold text-uppercase tracking-wider" style="font-size: var(--font-size-sm);">Approval Rate</div>
                 <div class="h2 fw-black mb-0 mt-1 text-dark">{{ $kpis['approval_rate'] }}%</div>
                 <div class="progress mt-3" style="height: 6px; background-color: #f1f5f9;">
                     <div class="progress-bar bg-success" style="width: {{ $kpis['approval_rate'] }}%"></div>
@@ -85,7 +85,7 @@
     {{-- Media Houses --}}
     <div class="col-12 col-md-3">
         <div class="zmc-card h-100 bg-white shadow-sm border-0 rounded-4 p-4">
-            <div class="text-muted small fw-bold text-uppercase tracking-wider" style="font-size:10px;">Media Houses Registered</div>
+            <div class="text-muted small fw-bold text-uppercase tracking-wider" style="font-size: var(--font-size-sm);">Media Houses Registered</div>
             <div class="h2 fw-black mb-0 mt-1 text-dark">{{ number_format($kpis['total_media_houses']) }}</div>
             <div class="mt-3 smaller text-muted">Active entities</div>
         </div>

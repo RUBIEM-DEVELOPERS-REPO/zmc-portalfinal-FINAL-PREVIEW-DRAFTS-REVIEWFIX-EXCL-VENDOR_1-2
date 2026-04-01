@@ -170,20 +170,54 @@
 
   <style>
     :root{
-      --zmc-green:#0f9d58;
-      --zmc-green-dark:#0b7a44;
+      --zmc-primary:#000000;
+      --zmc-primary-dark:#1a1a1a;
+      --zmc-accent:#facc15;
+      --zmc-accent-dark:#eab308;
+      
+      /* Typography System */
+      --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-size-xs: 11px;
+      --font-size-sm: 12px;
+      --font-size-base: 14px;
+      --font-size-lg: 16px;
+      --font-size-xl: 18px;
+      --font-size-2xl: 22px;
+      --font-weight-normal: 400;
+      --font-weight-medium: 500;
+      --font-weight-semibold: 600;
+      --font-weight-bold: 700;
+      --font-weight-black: 900;
+      --line-height-tight: 1.2;
+      --line-height-normal: 1.5;
     }
+    body {
+      font-family: var(--font-primary) !important;
+      font-size: var(--font-size-base);
+      line-height: var(--line-height-normal);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    h1, h2, h3, h4, h5, h6 { font-family: var(--font-primary); line-height: var(--line-height-tight); }
+    .fw-black { font-weight: var(--font-weight-black) !important; }
+    .fw-bold { font-weight: var(--font-weight-bold) !important; }
     .btn-primary, .btn-success{
-      background: var(--zmc-green) !important;
-      border-color: var(--zmc-green) !important;
+      background: var(--zmc-primary) !important;
+      border-color: var(--zmc-accent) !important;
+      color: var(--zmc-accent) !important;
     }
     .btn-primary:hover, .btn-success:hover{
-      background: var(--zmc-green-dark) !important;
-      border-color: var(--zmc-green-dark) !important;
+      background: var(--zmc-accent) !important;
+      border-color: var(--zmc-primary) !important;
+      color: var(--zmc-primary) !important;
     }
-    .badge.bg-success-subtle{ background: rgba(15,157,88,.10) !important; }
-    .text-success{ color: var(--zmc-green) !important; }
-    body{ background:#f6fff9 !important; }
+    .badge.bg-success-subtle{ background: rgba(250,204,21,.15) !important; color: #78350f !important; }
+    .text-success{ color: var(--zmc-accent-dark) !important; }
+    .bg-success{ background-color: var(--zmc-accent) !important; }
+    .border-success{ border-color: var(--zmc-accent) !important; }
+    .bg-success-subtle{ background-color: rgba(250,204,21,.15) !important; }
+    .border-success-subtle{ border-color: rgba(250,204,21,.3) !important; }
+    body{ background:#fafafa !important; }
   </style>
 
 </head>
@@ -209,13 +243,8 @@
         </a>
       </li>
       <li>
-        <a class="{{ request()->routeIs('accreditation.renewals') ? 'active' : '' }}" href="{{ route('accreditation.renewals') }}">
-          <i class="ri-refresh-line"></i> Renewal (AP5)
-        </a>
-      </li>
-      <li>
-        <a class="{{ request()->routeIs('accreditation.replacement') ? 'active' : '' }}" href="{{ route('accreditation.replacement') }}">
-          <i class="ri-file-copy-line"></i> Replacement (AP5)
+        <a class="{{ request()->routeIs('accreditation.renewals*') ? 'active' : '' }}" href="{{ route('accreditation.renewals.index') }}">
+          <i class="ri-refresh-line"></i> Renewals (AP5)
         </a>
       </li>
       <li>

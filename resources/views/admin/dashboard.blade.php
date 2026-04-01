@@ -11,7 +11,16 @@
                     <h4 class="fw-bold m-0" style="font-size:22px; color:#1e293b;">Super Admin Dashboard</h4>
                     <div class="text-muted mt-1" style="font-size:13px;">Complete system overview and management</div>
                 </div>
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-2 align-items-center">
+                    <form action="{{ route('admin.dashboard') }}" method="GET" id="yearFilterForm" class="me-2">
+                        <select name="year" class="form-select border shadow-sm fw-bold bg-white btn-sm" style="height: 31px;" onchange="document.getElementById('yearFilterForm').submit()">
+                            @foreach($availableYears ?? [] as $y)
+                                <option value="{{ $y }}" {{ (isset($year) && $year == $y) ? 'selected' : '' }}>
+                                    Year: {{ $y }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </form>
                     <span class="zmc-pill zmc-pill-dark">
                         <i class="ri-shield-star-line me-1"></i> Super Admin
                     </span>
@@ -496,7 +505,9 @@
   (function () {
     async function refreshAdminStats() {
       try {
-        const res = await fetch("{{ route('admin.dashboard.stats') }}", {
+        const url = new URL("{{ route('admin.dashboard.stats') }}", window.location.origin);
+        url.searchParams.append('year', "{{ $year }}");
+        const res = await fetch(url, {
           headers: { 'X-Requested-With': 'XMLHttpRequest' }
         });
         if (!res.ok) return;

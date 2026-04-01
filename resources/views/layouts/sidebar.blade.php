@@ -10,12 +10,11 @@
 
 <div class="vertical-menu">
   <div class="navbar-brand-box">
-    <div class="navbar-brand-circle">
-      <img src="{{ asset('zmc_logo_circular.png') }}" alt="ZMC Logo">
-    </div>
-    <div>
-      <span class="logo-text"><span class="zimbabwe">ZIMBABWE</span> <span class="media">MEDIA</span> <span class="commission">COMMISSION</span></span>
-      <span class="logo-sub">{{ $subTitle }}</span>
+    <a href="{{ route('home') }}">
+      <img src="{{ asset('zmc_logo.png') }}" alt="ZMC Logo">
+    </a>
+    <div class="logo-portal-name">
+      {{ $isAccred ? 'Media Practitioner Accreditation Portal' : 'Mass Media Service Registration Portal' }}
     </div>
   </div>
 
@@ -34,25 +33,14 @@
         </a>
       </li>
 
-      <li class="{{ request()->routeIs('accreditation.renewals') ? 'active' : '' }}">
-        <a href="{{ route('accreditation.renewals') }}">
-          <i class="ri-refresh-line"></i><span>Renewal (AP5)</span>
-        </a>
-      </li>
-      <li class="{{ request()->routeIs('accreditation.replacement') ? 'active' : '' }}">
-        <a href="{{ route('accreditation.replacement') }}">
-          <i class="ri-file-copy-line"></i><span>Replacement (AP5)</span>
+      <li class="{{ request()->routeIs('accreditation.renewals*') ? 'active' : '' }}">
+        <a href="{{ route('accreditation.renewals.index') }}">
+          <i class="ri-refresh-line"></i><span>Renewal / Replacement (AP5)</span>
         </a>
       </li>
 
-      <li class="{{ request()->routeIs('accreditation.drafts') ? 'active' : '' }}">
-        <a href="{{ route('accreditation.home') }}#drafts-tab" onclick="event.preventDefault(); window.location.href='{{ route('accreditation.home') }}'; setTimeout(() => { document.getElementById('drafts-tab')?.click(); }, 100);">
-          <i class="ri-draft-line"></i><span>Drafts</span>
-        </a>
-      </li>
-
-      <li class="{{ request()->routeIs('portal.payments.history') ? 'active' : '' }}">
-        <a href="{{ route('portal.payments.history') }}">
+      <li class="{{ request()->routeIs('accreditation.payments') ? 'active' : '' }}">
+        <a href="{{ route('accreditation.payments') }}">
           <i class="ri-bank-card-line"></i><span>Payment History</span>
         </a>
       </li>
@@ -69,12 +57,6 @@
         </a>
       </li>
 
-      <li class="{{ request()->routeIs('accreditation.requirements') ? 'active' : '' }}">
-        <a href="{{ route('accreditation.requirements') }}">
-          <i class="ri-list-check-2"></i><span>Requirements</span>
-        </a>
-      </li>
-
       <li class="{{ request()->routeIs('accreditation.howto') ? 'active' : '' }}">
         <a href="{{ route('accreditation.howto') }}">
           <i class="ri-information-line"></i><span>How it Works</span>
@@ -82,8 +64,8 @@
       </li>
 
       <li>
-        <a href="#" target="_blank">
-          <i class="ri-global-line"></i><span>Media Hub</span>
+        <a href="https://mediahub.zmc.co.zw" target="_blank">
+          <i class="ri-links-line"></i><span>Media Hub</span>
         </a>
       </li>
 
@@ -113,25 +95,14 @@
         </a>
       </li>
 
-      <li class="{{ request()->routeIs('mediahouse.renewals') ? 'active' : '' }}">
-        <a href="{{ route('mediahouse.renewals') }}">
-          <i class="ri-refresh-line"></i><span>Renewal (AP5)</span>
-        </a>
-      </li>
-      <li class="{{ request()->routeIs('mediahouse.replacement') ? 'active' : '' }}">
-        <a href="{{ route('mediahouse.replacement') }}">
-          <i class="ri-file-copy-line"></i><span>Replacement (AP5)</span>
+      <li class="{{ request()->routeIs('mediahouse.renewals*') ? 'active' : '' }}">
+        <a href="{{ route('mediahouse.renewals.index') }}">
+          <i class="ri-refresh-line"></i><span>Renewal / Replacement (AP5)</span>
         </a>
       </li>
 
-      <li class="{{ request()->routeIs('mediahouse.drafts') ? 'active' : '' }}">
-        <a href="{{ route('mediahouse.portal') }}#drafts-tab" onclick="event.preventDefault(); window.location.href='{{ route('mediahouse.portal') }}'; setTimeout(() => { document.getElementById('drafts-tab')?.click(); }, 100);">
-          <i class="ri-draft-line"></i><span>Drafts</span>
-        </a>
-      </li>
-
-      <li class="{{ request()->routeIs('portal.payments.history') ? 'active' : '' }}">
-        <a href="{{ route('portal.payments.history') }}">
+      <li class="{{ request()->routeIs('mediahouse.payments') ? 'active' : '' }}">
+        <a href="{{ route('mediahouse.payments') }}">
           <i class="ri-bank-card-line"></i><span>Payment History</span>
         </a>
       </li>
@@ -148,12 +119,6 @@
         </a>
       </li>
 
-      <li class="{{ request()->routeIs('mediahouse.requirements') ? 'active' : '' }}">
-        <a href="{{ route('mediahouse.requirements') }}">
-          <i class="ri-list-check-2"></i><span>Requirements</span>
-        </a>
-      </li>
-
       <li class="{{ request()->routeIs('mediahouse.howto') ? 'active' : '' }}">
         <a href="{{ route('mediahouse.howto') }}">
           <i class="ri-information-line"></i><span>How it Works</span>
@@ -161,8 +126,8 @@
       </li>
 
       <li>
-        <a href="#" target="_blank">
-          <i class="ri-global-line"></i><span>Media Hub</span>
+        <a href="https://mediahub.zmc.co.zw" target="_blank">
+          <i class="ri-links-line"></i><span>Media Hub</span>
         </a>
       </li>
 
@@ -185,10 +150,10 @@
   <div class="sidebar-user">
     <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name ?? 'User') }}&background=facc15&color=000" alt="user">
     <div style="line-height:1.1;">
-      <div style="font-weight:700;font-size:13px;color:#fff;">
+      <div style="font-weight:700;font-size:11px;color:#fff;">
         {{ Auth::user()->name ?? 'User' }}
       </div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.7);">Applicant</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.7);">Applicant Portal</div>
     </div>
   </div>
 </div>

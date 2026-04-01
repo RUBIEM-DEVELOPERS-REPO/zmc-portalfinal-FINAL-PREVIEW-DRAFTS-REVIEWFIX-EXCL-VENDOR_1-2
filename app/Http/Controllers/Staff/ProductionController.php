@@ -12,10 +12,6 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use App\Models\AccreditationRecord;
 use App\Models\RegistrationRecord;
-use App\Models\CardTemplate;
-use App\Models\PrintLog;
-use Illuminate\Support\Facades\Storage;
-use App\Support\AuditTrail as AuditTrailSupport;
 
 class ProductionController extends Controller
 {
@@ -53,182 +49,54 @@ class ProductionController extends Controller
             });
         }
 
-        // Filter logic identical to Officer dashboard
-        $request = request();
-        if ($rt = $request->query('request_type')) {
-            if (in_array($rt, ['new','renewal','replacement'], true)) $q->where('request_type', $rt);
-        }
-        if ($sc = $request->query('scope')) {
-            if (in_array($sc, ['local','foreign'], true)) {
-                if ($sc === 'local') {
-                    $q->where(function ($w) {
-                        $w->where('journalist_scope', 'local')->orWhereNull('journalist_scope');
-                    });
-                } else {
-                    $q->where('journalist_scope', 'foreign');
-                }
-            }
-        }
-        if ($from = $request->query('date_from')) {
-            $q->whereDate('created_at', '>=', $from);
-        }
-        if ($to = $request->query('date_to')) {
-            $q->whereDate('created_at', '<=', $to);
-        }
-        if ($m = $request->query('month')) {
-            $q->whereMonth('created_at', $m);
-        }
-        if ($y = $request->query('year')) {
-            $q->whereYear('created_at', $y);
-        }
-        if ($search = trim((string)$request->query('q'))) {
-            $q->where(function ($qq) use ($search) {
-                $qq->where('reference', 'like', "%{$search}%")
-                   ->orWhereHas('applicant', function ($u) use ($search) {
-                       $u->where('name','like', "%{$search}%")
-                         ->orWhere('email','like', "%{$search}%");
-                   });
-            });
-        }
-
         return $q;
     }
 
-    public function dashboard()
+    public function dashboard(Request $request)
     {
-        $user = Auth::user();
-
-        // Production queue statistics
-        $kpiQueue = (clone $this->baseQuery([
-            Application::PAID_CONFIRMED,
-            Application::PRODUCTION_QUEUE,
-        ]))->count();
-
-        $kpiToPrint = (clone $this->baseQuery([
-            Application::CARD_GENERATED,
-            Application::CERT_GENERATED,
-        ]))->count();
-
-        $kpiPrinted = (clone $this->baseQuery([Application::PRINTED]))->count();
-        $kpiIssued  = (clone $this->baseQuery([Application::ISSUED]))->count();
-
-        $kpiGeneratedToday = (clone $this->baseQuery([Application::CARD_GENERATED, Application::CERT_GENERATED]))
-            ->whereDate('updated_at', today())
-            ->count();
-
-        $kpiIssuedToday = (clone $this->baseQuery([Application::ISSUED]))
-            ->whereDate('updated_at', today())
-            ->count();
-
-        // Main table: show items currently in flux (not yet issued)
         $applications = $this->baseQuery([
-            Application::PAID_CONFIRMED,
             Application::PRODUCTION_QUEUE,
             Application::CARD_GENERATED,
             Application::CERT_GENERATED,
             Application::PRINTED,
-        ])->paginate(20);
+            Application::ISSUED,
+        ])->paginate(20)->withQueryString();
+
+        // KPI counters (region scoped)
+        $kpiQueue       = (clone $this->baseQuery([Application::PRODUCTION_QUEUE]))->count();
+        $kpiToPrint     = (clone $this->baseQuery([Application::CARD_GENERATED, Application::CERT_GENERATED]))->count();
+        $kpiPrinted     = (clone $this->baseQuery([Application::PRINTED]))->count();
+        $kpiIssued      = (clone $this->baseQuery([Application::ISSUED]))->count();
+
+        // "Today" counts (created_at as proxy for production events)
+        $today = now()->startOfDay();
+        $kpiGeneratedToday = (clone $this->baseQuery([Application::CARD_GENERATED, Application::CERT_GENERATED]))
+            ->where('updated_at', '>=', $today)->count();
+        $kpiIssuedToday = (clone $this->baseQuery([Application::ISSUED]))
+            ->where('updated_at', '>=', $today)->count();
 
         return view('staff.production.dashboard', compact(
+            'applications',
             'kpiQueue',
             'kpiToPrint',
             'kpiPrinted',
             'kpiIssued',
             'kpiGeneratedToday',
-            'kpiIssuedToday',
-            'applications'
+            'kpiIssuedToday'
         ));
     }
 
     /**
-     * Production Queue - Applications ready for card/certificate generation
+     * Production Queue (Registrar approved → Production).
      */
     public function queue()
     {
-        $query = Application::query()
-            ->with(['applicant', 'documents'])
-            ->whereIn('status', [
-                Application::PAID_CONFIRMED,
-                Application::PRODUCTION_QUEUE,
-            ])
-            ->latest();
-
-        // Apply comprehensive filters (same as accreditation officer)
-        $this->applyFilters($query, request());
-
-        $applications = $query->paginate(20)->withQueryString();
-
+        $applications = $this->baseQuery([Application::PRODUCTION_QUEUE])->paginate(20);
         return view('staff.production.list', [
             'pageTitle' => 'Production Queue',
-            'pageNote'  => 'All approved applications awaiting production work.',
+            'pageNote'  => 'Items approved by the Registrar and awaiting production actions.',
             'applications' => $applications,
-            'mode' => 'queue'
-        ]);
-    }
-
-    /**
-     * Apply common filters to production queries
-     */
-    private function applyFilters($query, Request $request)
-    {
-        if ($request->filled('name')) {
-            $search = $request->input('name');
-            $query->whereHas('applicant', function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%");
-            });
-        }
-
-        if ($request->filled('application_type')) {
-            $query->where('application_type', $request->input('application_type'));
-        }
-
-        if ($request->filled('request_type')) {
-            $query->where('request_type', $request->input('request_type'));
-        }
-
-        if ($request->filled('reference')) {
-            $query->where('reference', 'like', '%' . $request->input('reference') . '%');
-        }
-
-        if ($request->filled('date')) {
-            $query->whereDate('created_at', $request->input('date'));
-        }
-
-        if ($request->filled('month')) {
-            $query->whereMonth('created_at', $request->input('month'));
-        }
-
-        if ($request->filled('year')) {
-            $query->whereYear('created_at', $request->input('year'));
-        }
-
-        return $query;
-    }
-
-    /**
-     * Card Generation - Generate cards/certificates for applications
-     */
-    public function cardGeneration(Request $request)
-    {
-        $query = Application::query()
-            ->with(['applicant', 'documents'])
-            ->whereIn('status', [
-                Application::PRODUCTION_QUEUE,
-                Application::CARD_GENERATED,
-                Application::CERT_GENERATED,
-            ])
-            ->latest();
-
-        // Apply filters
-        $this->applyFilters($query, $request);
-
-        $applications = $query->paginate(20)->withQueryString();
-
-        return view('staff.production.list', [
-            'pageTitle' => 'Card & Certificate Generation',
-            'pageNote'  => 'Bulk generate / preview documents for approved applications.',
-            'applications' => $applications,
-            'mode' => 'generation'
+            'mode' => 'queue',
         ]);
     }
 
@@ -618,20 +486,7 @@ class ProductionController extends Controller
         $application->refresh();
         $this->audit('production_print_single', $application, $from, $application->status);
 
-        if ($from !== Application::PRINTED) {
-            try {
-                if ($application->applicant) {
-                    $application->applicant->notify(new \App\Notifications\ReadyForCollectionNotification($application));
-                }
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('Failed to send ReadyForCollection notification', [
-                    'application_id' => $application->id,
-                    'error' => $e->getMessage()
-                ]);
-            }
-        }
-
-        return back()->with('success', 'Marked as printed. Applicant notified.');
+        return back()->with('success', 'Marked as printed.');
     }
 
     public function printBatch(Request $request)
@@ -665,24 +520,11 @@ class ProductionController extends Controller
                     'batch_size' => count($apps),
                 ]);
 
-                if ($from !== Application::PRINTED) {
-                    try {
-                        if ($app->applicant) {
-                            $app->applicant->notify(new \App\Notifications\ReadyForCollectionNotification($app));
-                        }
-                    } catch (\Exception $e) {
-                        \Illuminate\Support\Facades\Log::error('Failed to send ReadyForCollection notification in batch', [
-                            'application_id' => $app->id,
-                            'error' => $e->getMessage()
-                        ]);
-                    }
-                }
-
                 $processed++;
             }
         }
 
-        return back()->with('success', "Batch print processed. Printed: {$processed} item(s). Applicants notified.");
+        return back()->with('success', "Batch print processed. Printed: {$processed} item(s).");
     }
 
     public function markIssued(Request $request, Application $application)
@@ -700,100 +542,6 @@ class ProductionController extends Controller
         return back()->with('success', 'Marked as issued.');
     }
 
-    public function designer(Request $request)
-    {
-        $template = null;
-        if ($request->has('template')) {
-            $template = CardTemplate::findOrFail($request->template);
-        }
-        return view('staff.production.designer', compact('template'));
-    }
-
-    public function templates()
-    {
-        $templates = CardTemplate::with('creator')->orderByDesc('created_at')->get();
-        return view('staff.production.templates', compact('templates'));
-    }
-
-    public function storeTemplate(Request $request)
-    {
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'type' => ['required', 'in:card,certificate'],
-            'year' => ['required', 'string', 'max:4'],
-            'background' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:5120'],
-            'layout_config' => ['nullable', 'string'],
-        ]);
-
-        $bgPath = null;
-        if ($request->hasFile('background')) {
-            $bgPath = $request->file('background')->store('card_templates', 'public');
-        }
-
-        $layoutConfig = [];
-        if (!empty($data['layout_config'])) {
-            $layoutConfig = json_decode($data['layout_config'], true) ?: [];
-        }
-
-        CardTemplate::create([
-            'name' => $data['name'],
-            'type' => $data['type'],
-            'year' => $data['year'],
-            'background_path' => $bgPath,
-            'layout_config' => $layoutConfig,
-            'is_active' => false,
-            'created_by' => Auth::id(),
-        ]);
-
-        return redirect()->route('staff.production.templates')->with('success', 'Template created successfully.');
-    }
-
-    public function updateTemplate(Request $request, CardTemplate $template)
-    {
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'type' => ['required', 'in:card,certificate'],
-            'year' => ['required', 'string', 'max:4'],
-            'background' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:5120'],
-            'layout_config' => ['nullable', 'string'],
-        ]);
-
-        if ($request->hasFile('background')) {
-            if ($template->background_path) {
-                Storage::disk('public')->delete($template->background_path);
-            }
-            $data['background_path'] = $request->file('background')->store('card_templates', 'public');
-        }
-
-        $layoutConfig = [];
-        if (!empty($data['layout_config'])) {
-            $layoutConfig = json_decode($data['layout_config'], true) ?: [];
-        }
-
-        $template->update([
-            'name' => $data['name'],
-            'type' => $data['type'],
-            'year' => $data['year'],
-            'background_path' => $data['background_path'] ?? $template->background_path,
-            'layout_config' => $layoutConfig,
-        ]);
-
-        return redirect()->route('staff.production.templates')->with('success', 'Template updated successfully.');
-    }
-
-    public function activateTemplate(CardTemplate $template)
-    {
-        if ($template->is_active) {
-            $template->update(['is_active' => false]);
-            return back()->with('success', "Template \"{$template->name}\" deactivated.");
-        }
-
-        CardTemplate::where('type', $template->type)->where('is_active', true)->update(['is_active' => false]);
-        $template->update(['is_active' => true]);
-
-        return back()->with('success', "Template \"{$template->name}\" is now active for {$template->type} production.");
-    }
-
     /* helpers */
     private function audit(string $action, Application $application, ?string $from, ?string $to, array $meta = []): void
     {
@@ -805,7 +553,7 @@ class ProductionController extends Controller
         ], $meta);
 
         ActivityLogger::log($action, $application, $from, $to, $payload);
-        AuditTrailSupport::log($action, $application, $payload);
+        \App\Support\AuditTrail::log($action, $application, $payload);
     }
 
     /**

@@ -2,7 +2,7 @@
 @section('title', 'Notices & Events')
 
 @section('content')
-<div class="zmc-dashboard-wrapper" style="font-family:'Roboto', sans-serif; color:#334155;">
+<div class="zmc-dashboard-wrapper" style="font-family: var(--font-primary); color: var(--zmc-text-dark);">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h4 class="fw-bold m-0">Notices & Events</h4>
@@ -62,7 +62,7 @@
             <div class="zmc-card p-0 shadow-sm border-0">
                 <div class="p-3 border-bottom">
                     <h6 class="fw-bold m-0">
-                        <i class="ri-calendar-event-line me-2" style="color:#10b981"></i> Events
+                        <i class="ri-calendar-event-line me-2" style="color:#ffffff"></i> Events
                     </h6>
                 </div>
 

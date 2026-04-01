@@ -2,11 +2,11 @@
 @section('title', 'Pending Payments')
 
 @section('content')
-<div class="zmc-dashboard-wrapper" style="font-family:'Roboto', sans-serif; color:#334155;">
+<div class="zmc-dashboard-wrapper" style="font-family: var(--font-primary); color: var(--zmc-text-dark);">
   <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4">
     <div>
-      <h4 class="fw-bold m-0" style="font-size:22px; color:#1e293b;">Pending Payments</h4>
-      <div class="text-muted mt-1" style="font-size:13px;">Applications awaiting payment verification. Use PayNow Transactions / Payment Proofs / Waivers to clear items.</div>
+      <h4 class="fw-bold m-0" style="font-size: var(--font-size-2xl); color:#1e293b;">Pending Payments</h4>
+      <div class="text-muted mt-1" style="font-size: var(--font-size-base);">Applications awaiting payment verification. Use PayNow Transactions / Payment Proofs / Waivers to clear items.</div>
     </div>
     <a href="{{ url()->current() }}" class="btn btn-white border shadow-sm btn-sm px-3"><i class="ri-refresh-line me-1"></i> Refresh</a>
   </div>

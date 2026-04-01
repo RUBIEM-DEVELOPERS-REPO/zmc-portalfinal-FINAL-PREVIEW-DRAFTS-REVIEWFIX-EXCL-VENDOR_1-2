@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             }
                         },
                         labels: ['Standard Issue', 'Reprints/Errors'],
-                        colors: ['#10b981', '#ef4444'],
+                        colors: ['#facc15', '#ef4444'],
                         legend: { 
                             position: 'bottom',
                             fontSize: '12px'

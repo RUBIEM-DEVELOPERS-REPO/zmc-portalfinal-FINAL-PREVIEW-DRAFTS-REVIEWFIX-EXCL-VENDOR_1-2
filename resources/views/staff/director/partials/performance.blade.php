@@ -58,19 +58,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 name: 'Submitted',
                 data: {!! json_encode($monthlyTrends->pluck('submitted')->toArray()) !!}
             }, {
-                name: 'Issued/Reviewed',
+                name: 'Approved',
                 data: {!! json_encode($monthlyTrends->pluck('approved')->toArray()) !!}
             }, {
-                name: 'Returned for Correction',
-                data: {!! json_encode($monthlyTrends->pluck('returned')->toArray()) !!}
+                name: 'Rejected',
+                data: {!! json_encode($monthlyTrends->pluck('rejected')->toArray()) !!}
             }],
             chart: {
                 height: 350,
                 type: 'area',
                 toolbar: { show: false },
-                fontFamily: 'Roboto, sans-serif'
+                fontFamily: 'Inter, sans-serif'
             },
-            colors: ['#3b82f6', '#10b981', '#f59e0b'],
+            colors: ['#000000', '#facc15', '#ef4444'],
             dataLabels: { enabled: false },
             stroke: { curve: 'smooth', width: 2 },
             fill: {

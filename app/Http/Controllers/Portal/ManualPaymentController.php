@@ -19,15 +19,12 @@ class ManualPaymentController extends Controller
             return response()->json(['ok' => false, 'message' => 'Unauthorized'], 403);
         }
 
-        $allowedStatuses = [
-            Application::SUBMITTED,
-            Application::ACCOUNTS_REVIEW,
-            Application::APPROVED_AWAITING_PAYMENT,
-            Application::PAYMENT_REJECTED,
-            Application::AWAITING_ACCOUNTS_VERIFICATION,
-            Application::REGISTRAR_APPROVED_PENDING_REG_FEE,
-        ];
-        if (!in_array($application->status ?? '', $allowedStatuses, true)) {
+        // Only allow when accounts review (ready to pay)
+        if (!in_array($application->status, [
+            Application::ACCOUNTS_REVIEW, 
+            Application::APPROVED_BY_OFFICER_AWAITING_PAYMENT_AND_REGISTRAR_MASTER,
+            Application::REGISTRAR_APPROVED_PENDING_REGISTRATION_FEE_PAYMENT
+        ], true)) {
             return response()->json(['ok' => false, 'message' => 'Payment proof can only be submitted when your application is ready for payment.'], 422);
         }
 
@@ -49,10 +46,18 @@ class ManualPaymentController extends Controller
         $hash = is_file($abs) ? hash_file('sha256', $abs) : null;
 
         $from = $application->status;
+        $newStatus = Application::AWAITING_ACCOUNTS_VERIFICATION;
+        if ($application->application_type === 'registration' && $application->status === Application::REGISTRAR_APPROVED_PENDING_REGISTRATION_FEE_PAYMENT) {
+            $newStatus = Application::REGISTRATION_FEE_AWAITING_VERIFICATION;
+        }
+
         $application->update([
+            'status' => $newStatus,
             'payment_proof_path' => $path,
             'payment_proof_uploaded_at' => now(),
             'proof_status' => 'submitted',
+            'payment_submission_method' => 'proof_upload',
+            'payment_submitted_at' => now(),
 
             'proof_payer_first_name' => $data['proof_first_name'],
             'proof_payer_last_name'  => $data['proof_last_name'],
@@ -63,11 +68,16 @@ class ManualPaymentController extends Controller
             'proof_mime'             => $file->getMimeType(),
             'proof_file_hash'        => $hash,
 
-            'status'                 => Application::AWAITING_ACCOUNTS_VERIFICATION,
+            // keep payment_status as pending until accounts clears
             'payment_status'         => $application->payment_status ?: 'pending',
             'last_action_at'         => now(),
             'last_action_by'         => Auth::id(),
         ]);
+        
+        // Also update the current_stage if relevant
+        if ($newStatus === Application::REGISTRATION_FEE_AWAITING_VERIFICATION) {
+            $application->update(['current_stage' => 'accounts_verification_reg_fee']);
+        }
 
         // Supporting documents
         if ($request->hasFile('supporting_docs')) {
@@ -108,13 +118,11 @@ class ManualPaymentController extends Controller
             return response()->json(['ok' => false, 'message' => 'Unauthorized'], 403);
         }
 
-        $allowedStatuses = [
-            Application::ACCOUNTS_REVIEW,
-            Application::APPROVED_AWAITING_PAYMENT,
-            Application::PAYMENT_REJECTED,
-            Application::REGISTRAR_APPROVED_PENDING_REG_FEE,
-        ];
-        if (!in_array($application->status ?? '', $allowedStatuses, true)) {
+        if (!in_array($application->status, [
+            Application::ACCOUNTS_REVIEW, 
+            Application::APPROVED_BY_OFFICER_AWAITING_PAYMENT_AND_REGISTRAR_MASTER,
+            Application::REGISTRAR_APPROVED_PENDING_REGISTRATION_FEE_PAYMENT
+        ], true)) {
             return response()->json(['ok' => false, 'message' => 'Waiver can only be submitted when your application is ready for payment.'], 422);
         }
 
@@ -135,9 +143,17 @@ class ManualPaymentController extends Controller
         $hash = is_file($abs) ? hash_file('sha256', $abs) : null;
 
         $from = $application->status;
+        $newStatus = Application::AWAITING_ACCOUNTS_VERIFICATION;
+        if ($application->application_type === 'registration' && $application->status === Application::REGISTRAR_APPROVED_PENDING_REGISTRATION_FEE_PAYMENT) {
+            $newStatus = Application::REGISTRATION_FEE_AWAITING_VERIFICATION;
+        }
+
         $application->update([
+            'status' => $newStatus,
             'waiver_path' => $path,
             'waiver_status' => 'submitted',
+            'payment_submission_method' => 'waiver',
+            'payment_submitted_at' => now(),
 
             'waiver_beneficiary_first_name' => $data['waiver_first_name'],
             'waiver_beneficiary_last_name'  => $data['waiver_last_name'],
@@ -147,7 +163,6 @@ class ManualPaymentController extends Controller
             'waiver_mime'                   => $file->getMimeType(),
             'waiver_file_hash'              => $hash,
 
-            'status'                        => Application::AWAITING_ACCOUNTS_VERIFICATION,
             'payment_status'                => $application->payment_status ?: 'pending',
             'last_action_at'                => now(),
             'last_action_by'                => Auth::id(),
@@ -180,46 +195,6 @@ class ManualPaymentController extends Controller
                 'uploaded_at' => now()->toDateTimeString(),
                 'hash' => $application->waiver_file_hash,
             ]
-        ]);
-    }
-
-    public function submitReference(Request $request, Application $application)
-    {
-        if ((int)$application->applicant_user_id !== (int)Auth::id()) {
-            return response()->json(['ok' => false, 'message' => 'Unauthorized'], 403);
-        }
-
-        $allowedStatuses = [
-            Application::ACCOUNTS_REVIEW,
-            Application::APPROVED_AWAITING_PAYMENT,
-            Application::PAYMENT_REJECTED,
-            Application::REGISTRAR_APPROVED_PENDING_REG_FEE,
-        ];
-        if (!in_array($application->status ?? '', $allowedStatuses, true)) {
-            return response()->json(['ok' => false, 'message' => 'PayNow reference can only be submitted when your application is ready for payment.'], 422);
-        }
-
-        $data = $request->validate([
-            'paynow_reference' => ['required', 'string', 'max:100'],
-        ]);
-
-        $from = $application->status;
-        $application->update([
-            'paynow_ref_submitted' => $data['paynow_reference'],
-            'status' => Application::AWAITING_ACCOUNTS_VERIFICATION,
-            'payment_status' => $application->payment_status ?: 'pending',
-            'last_action_at' => now(),
-            'last_action_by' => Auth::id(),
-        ]);
-
-        ActivityLogger::log('applicant_paynow_ref_submitted', $application, $from, $application->status, [
-            'actor_role' => 'public',
-            'paynow_reference' => $data['paynow_reference'],
-        ]);
-
-        return response()->json([
-            'ok' => true,
-            'message' => 'PayNow reference submitted successfully. Accounts will verify your payment shortly.',
         ]);
     }
 }

@@ -13,13 +13,15 @@
 
     <style>
         :root{
-            --bg: #f0f7f0;
+            --bg: #fafafa;
             --card: #ffffff;
             --border: #e2e8f0;
             --muted: #64748b;
             --text: #111827;
-            --green: #2e7d32;
-            --green-hover: #1b5e20;
+            --primary: #2d5016;
+            --primary-hover: #1f3a0f;
+            --accent: #facc15;
+            --accent-dark: #eab308;
             --shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
             --radius: 16px;
         }
@@ -27,8 +29,12 @@
         *{box-sizing:border-box}
         body{
             margin:0;
-            font-family: 'Inter', sans-serif;
-            background: url('{{ asset("zmc_building.png") }}') no-repeat center center fixed;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background: #000 url('{{ asset("zmc_building.png") }}') no-repeat center center fixed;
             background-size: cover;
             color: var(--text);
             display: flex;
@@ -42,11 +48,11 @@
             content: "";
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, rgba(240, 247, 240, 0.92) 0%, rgba(220, 237, 220, 0.95) 100%);
-            z-index: -1;
+            background: rgba(45, 80, 22, 0.45);
+            pointer-events: none;
         }
 
-        .wrap{ width: 100%; max-width: 480px; }
+        .wrap{ width: 100%; max-width: 480px; position: relative; z-index: 1; }
 
         /* BRAND SECTION */
         .brand{
@@ -57,24 +63,14 @@
             margin-bottom: 25px;
             text-decoration: none;
         }
-        .brand img { width: 100%; height: 100%; object-fit: contain; display: block; margin: 0; mix-blend-mode: multiply; }
-        .logo-circle {
-            width: 110px;
-            height: 110px;
-            flex-shrink: 0;
-            background: #fff;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            overflow: hidden;
+        .brand img {
+            height: 40px; /* Adjust height to fit with text */
+            width: auto;
         }
         .brand span{
-            font-family: 'Roboto';
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             font-weight: 900;
-            font-size: 28px;
+            font-size: 20px;
             color: var(--text);
             letter-spacing: -0.5px;
             text-transform: uppercase;
@@ -85,42 +81,45 @@
             border: 1px solid var(--border);
             border-radius: var(--radius);
             box-shadow: var(--shadow);
-            padding: 40px;
+            padding: 30px;
         }
 
-        .header{ text-align: center; margin-bottom: 28px; }
-        .title{ margin: 0 0 8px; font-size: 26px; font-weight: 800; color: #111827; }
-        .subtitle{ margin: 0; font-size: 14px; color: var(--muted); }
+        .header{ text-align: center; margin-bottom: 20px; }
+        .title{ margin: 0 0 8px; font-size: 22px; font-weight: 800; color: #111827; }
+        .subtitle{ margin: 0; font-size: 13px; color: var(--muted); }
 
         /* FORM STYLING */
         .grid{ 
             display: grid; 
             grid-template-columns: 1fr 1fr; 
-            gap: 15px; 
-            margin-bottom: 20px;
+            gap: 12px; 
+            margin-bottom: 15px;
         }
 
-        .field{ margin-bottom: 20px; }
+        .field{ margin-bottom: 15px; }
         label{ 
             display: block; 
-            font-size: 13px; 
+            font-size: 12px; 
             font-weight: 700; 
-            margin-bottom: 8px; 
+            margin-bottom: 4px; 
             color: #111827;
         }
 
         .input-group{ position: relative; }
         .input{
             width: 100%;
-            height: 46px;
+            height: 40px;
             padding: 0 14px;
             border-radius: 10px;
             border: 1px solid var(--border);
-            font-size: 14px;
+            font-size: 13px;
             outline: none;
             transition: border-color 0.2s;
         }
-        .input:focus{ border-color: var(--green); }
+        .input:focus{ 
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(250, 204, 21, 0.15);
+        }
 
         .toggle{
             position: absolute;
@@ -138,27 +137,31 @@
 
         .btn{
             width: 100%;
-            height: 50px;
-            background-color: var(--green);
-            color: white;
-            border: none;
+            height: 44px;
+            background-color: var(--primary);
+            color: var(--accent);
+            border: 2px solid var(--accent);
             border-radius: 12px;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 700;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
-            margin-top: 10px;
-            transition: background 0.2s;
+            margin-top: 5px;
+            transition: all 0.2s ease;
         }
-        .btn:hover{ background-color: var(--green-hover); }
+        .btn:hover{ 
+            background-color: var(--accent);
+            color: var(--primary);
+            border-color: var(--primary);
+        }
 
         .divider{
             display: flex;
             align-items: center;
-            margin: 25px 0;
+            margin: 15px 0;
             color: #94a3b8;
             font-size: 12px;
         }
@@ -172,12 +175,16 @@
 
         .footer-link{
             text-align: center;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 700;
         }
         .footer-link a{
-            color: var(--green);
+            color: var(--primary);
             text-decoration: none;
+        }
+        .footer-link a:hover{
+            color: var(--accent-dark);
+            text-decoration: underline;
         }
         .footer-link a:hover{ text-decoration: underline; }
 
@@ -199,9 +206,7 @@
         @endphp
         {{-- BRAND SECTION WITH IMAGE LOGO --}}
         <div class="brand">
-            <div class="logo-circle">
-                <img src="{{ asset('zmc_logo_circular.png') }}" alt="ZMC Logo">
-            </div>
+            <img src="{{ asset('zimbabwe_media_commission_transparent_edges.png') }}" alt="ZMC Logo">
             <span>ZMC PORTAL</span>
         </div>
 
@@ -244,13 +249,16 @@
 
                 <div class="grid">
                     <div>
-                        <label for="phone_country_code">Country Code</label>
-                        <x-country-code-select 
-                            name="phone_country_code" 
-                            id="phone_country_code" 
-                            class="input"
-                            :value="old('phone_country_code', '+263')"
-                        />
+                        <label for="phone_country_code">Phone Country Code</label>
+                        <select id="phone_country_code" name="phone_country_code" class="input">
+                            <option value="">Select</option>
+                            <option value="+263" @selected(old('phone_country_code')=='+263')>🇿🇼 +263 (Zimbabwe)</option>
+                            <option value="+27" @selected(old('phone_country_code')=='+27')>🇿🇦 +27 (South Africa)</option>
+                            <option value="+260" @selected(old('phone_country_code')=='+260')>🇿🇲 +260 (Zambia)</option>
+                            <option value="+258" @selected(old('phone_country_code')=='+258')>🇲🇿 +258 (Mozambique)</option>
+                            <option value="+1" @selected(old('phone_country_code')=='+1')>🇺🇸 +1 (US/Canada)</option>
+                            <option value="+44" @selected(old('phone_country_code')=='+44')>🇬🇧 +44 (UK)</option>
+                        </select>
                         @error('phone_country_code') <div class="error">{{ $message }}</div> @enderror
                     </div>
                     <div>

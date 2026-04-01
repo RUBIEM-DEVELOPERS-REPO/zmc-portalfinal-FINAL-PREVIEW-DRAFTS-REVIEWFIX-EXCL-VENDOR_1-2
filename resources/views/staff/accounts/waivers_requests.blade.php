@@ -2,11 +2,11 @@
 @section('title', 'Waiver Requests')
 
 @section('content')
-<div class="zmc-dashboard-wrapper" style="font-family:'Roboto', sans-serif; color:#334155;">
+<div class="zmc-dashboard-wrapper" style="font-family: var(--font-primary); color: var(--zmc-text-dark);">
   <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4">
     <div>
-      <h4 class="fw-bold m-0" style="font-size:22px; color:#1e293b;">Waiver Requests</h4>
-      <div class="text-muted mt-1" style="font-size:13px;">Review waiver requests and supporting documents, then approve or reject with notes.</div>
+      <h4 class="fw-bold m-0" style="font-size: var(--font-size-2xl); color:#1e293b;">Waiver Requests</h4>
+      <div class="text-muted mt-1" style="font-size: var(--font-size-base);">Review waiver requests and supporting documents, then approve or reject with notes.</div>
     </div>
     <a href="{{ url()->current() }}" class="btn btn-white border shadow-sm btn-sm px-3"><i class="ri-refresh-line me-1"></i> Refresh</a>
   </div>
@@ -66,7 +66,7 @@
                     @csrf
                     <div class="modal-header zmc-modal-header">
                       <div>
-                        <div class="zmc-modal-title"><i class="ri-check-line me-2" style="color:var(--zmc-accent)"></i> Approve waiver <span class="ms-2 text-muted" style="font-weight:800;font-size:12px;">{{ $ref }}</span></div>
+                        <div class="zmc-modal-title"><i class="ri-check-line me-2" style="color:var(--zmc-accent)"></i> Approve waiver <span class="ms-2 text-muted" style="font-weight:800;font-size: var(--font-size-sm);">{{ $ref }}</span></div>
                         <div class="zmc-modal-sub">Approving a waiver should be backed by policy/authority. Notes are optional but recommended.</div>
                       </div>
                       <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -89,7 +89,7 @@
                     @csrf
                     <div class="modal-header zmc-modal-header">
                       <div>
-                        <div class="zmc-modal-title"><i class="ri-close-line me-2" style="color:#dc2626"></i> Reject waiver <span class="ms-2 text-muted" style="font-weight:800;font-size:12px;">{{ $ref }}</span></div>
+                        <div class="zmc-modal-title"><i class="ri-close-line me-2" style="color:#dc2626"></i> Reject waiver <span class="ms-2 text-muted" style="font-weight:800;font-size: var(--font-size-sm);">{{ $ref }}</span></div>
                         <div class="zmc-modal-sub">Rejection reason is mandatory.</div>
                       </div>
                       <button type="button" class="btn-close" data-bs-dismiss="modal"></button>

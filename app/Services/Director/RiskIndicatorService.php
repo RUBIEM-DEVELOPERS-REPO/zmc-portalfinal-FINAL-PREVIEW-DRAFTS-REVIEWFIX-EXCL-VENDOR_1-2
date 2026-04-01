@@ -7,12 +7,31 @@ use App\Models\Payment;
 use App\Models\ActivityLog;
 use Carbon\Carbon;
 
+/**
+ * Risk Indicator Service
+ * 
+ * Evaluates operational risk indicators using configurable thresholds and
+ * provides color-coded risk levels (green/amber/red) for executive monitoring.
+ * Monitors waivers, rejections, processing times, revenue, reprints, and more.
+ * 
+ * @package App\Services\Director
+ */
 class RiskIndicatorService
 {
     /**
-     * Get all risk indicators with color coding
+     * Get all risk indicators with color coding.
      * 
-     * @return array
+     * Returns comprehensive risk assessment across 7 key operational areas,
+     * each with calculated risk level based on configured thresholds.
+     * 
+     * @return array Associative array containing risk indicators:
+     *               - excessive_waivers: Waiver approval risk assessment
+     *               - rejection_spike: Application rejection rate risk
+     *               - processing_time_sla: Processing time SLA compliance risk
+     *               - revenue_drop: Revenue trend risk assessment
+     *               - reprint_frequency: Excessive reprint risk
+     *               - category_reassignment: Category reassignment frequency risk
+     *               - payment_delay: Payment verification delay risk
      */
     public function getAllRiskIndicators(): array
     {
@@ -28,9 +47,18 @@ class RiskIndicatorService
     }
 
     /**
-     * Evaluate excessive waivers risk
+     * Evaluate excessive waivers risk.
      * 
-     * @return array ['status' => string, 'level' => string, 'value' => mixed, 'threshold' => mixed]
+     * Assesses risk based on number of waivers approved in the current month
+     * against configured thresholds (default: green ≤5, amber 6-10, red ≥11).
+     * 
+     * @return array Risk indicator data containing:
+     *               - title: Indicator name
+     *               - status: Risk level (green/amber/red)
+     *               - level: Risk level (duplicate for compatibility)
+     *               - value: Current waiver count
+     *               - description: Human-readable description
+     *               - threshold: Configured threshold values
      */
     public function evaluateExcessiveWaivers(): array
     {
@@ -57,9 +85,12 @@ class RiskIndicatorService
     }
 
     /**
-     * Evaluate high rejection spike risk
+     * Evaluate high rejection spike risk.
      * 
-     * @return array
+     * Assesses risk based on rejection rate percentage in the current month
+     * against configured thresholds (default: green ≤10%, amber 11-20%, red ≥21%).
+     * 
+     * @return array Risk indicator data with rejection rate percentage
      */
     public function evaluateRejectionSpike(): array
     {
@@ -92,9 +123,12 @@ class RiskIndicatorService
     }
 
     /**
-     * Evaluate processing time SLA risk
+     * Evaluate processing time SLA risk.
      * 
-     * @return array
+     * Assesses risk based on average processing time in days for the past month
+     * against configured thresholds (default: green ≤5 days, amber 6-10 days, red ≥11 days).
+     * 
+     * @return array Risk indicator data with average processing time in days
      */
     public function evaluateProcessingTimeSLA(): array
     {
@@ -133,9 +167,12 @@ class RiskIndicatorService
     }
 
     /**
-     * Evaluate revenue drop risk
+     * Evaluate revenue drop risk.
      * 
-     * @return array
+     * Assesses risk based on month-over-month revenue change percentage
+     * against configured thresholds (default: green ≥-5%, amber -6% to -15%, red ≤-16%).
+     * 
+     * @return array Risk indicator data with percentage change value
      */
     public function evaluateRevenueDrop(): array
     {
@@ -173,9 +210,12 @@ class RiskIndicatorService
     }
 
     /**
-     * Evaluate reprint frequency risk
+     * Evaluate reprint frequency risk.
      * 
-     * @return array
+     * Assesses risk based on count of applications with excessive reprints
+     * against configured thresholds (default: green ≤2, amber 3-4, red ≥5).
+     * 
+     * @return array Risk indicator data with excessive reprint count
      */
     public function evaluateReprintFrequency(): array
     {
@@ -201,9 +241,12 @@ class RiskIndicatorService
     }
 
     /**
-     * Evaluate category reassignment risk
+     * Evaluate category reassignment risk.
      * 
-     * @return array
+     * Assesses risk based on number of category reassignments in the current month
+     * against configured thresholds (default: green ≤3, amber 4-7, red ≥8).
+     * 
+     * @return array Risk indicator data with reassignment count
      */
     public function evaluateCategoryReassignment(): array
     {
@@ -230,9 +273,12 @@ class RiskIndicatorService
     }
 
     /**
-     * Evaluate payment verification delay risk
+     * Evaluate payment verification delay risk.
      * 
-     * @return array
+     * Assesses risk based on count of payments pending for more than 3 days
+     * against configured thresholds (default: green ≤2, amber 3-5, red ≥6).
+     * 
+     * @return array Risk indicator data with delayed payment count
      */
     public function evaluatePaymentDelay(): array
     {
@@ -259,11 +305,15 @@ class RiskIndicatorService
     }
 
     /**
-     * Determine risk level based on value and thresholds
+     * Determine risk level based on value and thresholds.
      * 
-     * @param float $value
-     * @param array $thresholds
-     * @return string
+     * Evaluates a numeric value against configured threshold ranges to
+     * determine the appropriate risk level (green/amber/red).
+     * 
+     * @param float $value The value to evaluate
+     * @param array $thresholds Threshold configuration with 'green', 'amber', 'red' keys,
+     *                          each containing 'min' and/or 'max' values
+     * @return string Risk level: 'green', 'amber', or 'red'
      */
     private function determineRiskLevel(float $value, array $thresholds): string
     {
@@ -287,10 +337,12 @@ class RiskIndicatorService
     }
 
     /**
-     * Get risk level color CSS class
+     * Get risk level color CSS class.
      * 
-     * @param string $level 'green', 'amber', 'red'
-     * @return string CSS class
+     * Converts risk level to Bootstrap-compatible CSS class for UI rendering.
+     * 
+     * @param string $level Risk level: 'green', 'amber', or 'red'
+     * @return string CSS class: 'success', 'warning', 'danger', or 'secondary'
      */
     public function getRiskLevelColor(string $level): string
     {

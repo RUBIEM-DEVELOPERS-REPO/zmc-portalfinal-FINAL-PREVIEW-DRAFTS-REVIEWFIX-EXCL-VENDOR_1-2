@@ -11,16 +11,32 @@ use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Staff Performance Service
+ * 
+ * Provides staff productivity metrics, processing time analysis, approval
+ * distribution tracking, and activity monitoring for performance evaluation.
+ * 
+ * @package App\Services\Director
+ */
 class StaffPerformanceService
 {
+    /**
+     * Create a new StaffPerformanceService instance.
+     * 
+     * @param UserRepository $userRepo Repository for user data queries
+     */
     public function __construct(
         private UserRepository $userRepo
     ) {}
 
     /**
-     * Get applications processed per officer
+     * Get applications processed per officer.
      * 
-     * @return Collection
+     * Returns accreditation officers and registrars with counts of applications
+     * they processed in the current month, sorted by count descending.
+     * 
+     * @return Collection Collection of User models with processed_count field
      */
     public function getApplicationsProcessedPerOfficer(): Collection
     {
@@ -35,9 +51,13 @@ class StaffPerformanceService
     }
 
     /**
-     * Get average review time per registrar
+     * Get average review time per registrar.
      * 
-     * @return Collection
+     * Calculates average hours spent in registrar review stage for each
+     * registrar, based on applications processed in the current month.
+     * 
+     * @return Collection Collection of User models with avg_review_hours field,
+     *                    sorted by review time descending
      */
     public function getAverageReviewTimePerRegistrar(): Collection
     {
@@ -74,9 +94,12 @@ class StaffPerformanceService
     }
 
     /**
-     * Get payment verification turnaround per staff
+     * Get payment verification turnaround per staff.
      * 
-     * @return Collection
+     * Returns accounts staff with counts of payments they verified (applications
+     * issued) in the current month, sorted by count descending.
+     * 
+     * @return Collection Collection of User models with verified_count field
      */
     public function getPaymentVerificationTurnaround(): Collection
     {
@@ -94,9 +117,13 @@ class StaffPerformanceService
     }
 
     /**
-     * Get approval distribution per officer
+     * Get approval distribution per officer.
      * 
-     * @return Collection
+     * Returns accreditation officers with counts of approved and rejected
+     * applications, including calculated approval rate percentage.
+     * 
+     * @return Collection Collection of User models with total_reviewed, approved_count,
+     *                    rejected_count, and approval_rate fields, sorted by total reviewed
      */
     public function getApprovalDistributionPerOfficer(): Collection
     {
@@ -128,9 +155,13 @@ class StaffPerformanceService
     }
 
     /**
-     * Get category reassignment frequency per staff
+     * Get category reassignment frequency per staff.
      * 
-     * @return Collection
+     * Returns staff members who performed category reassignments in the current
+     * month, with counts sorted by frequency descending.
+     * 
+     * @return Collection Collection of ActivityLog aggregates with user_id, user_role,
+     *                    reassignment_count, and user relation
      */
     public function getReassignmentFrequencyPerStaff(): Collection
     {
@@ -144,11 +175,17 @@ class StaffPerformanceService
     }
 
     /**
-     * Get drill-down staff activity logs
+     * Get drill-down staff activity logs.
      * 
-     * @param int $userId
-     * @param array $filters
-     * @return Collection
+     * Retrieves up to 100 activity log entries for a specific staff member,
+     * with optional filtering by action type and date range.
+     * 
+     * @param int $userId User ID of the staff member
+     * @param array $filters Associative array of filter criteria:
+     *                       - action_type: Filter by specific action
+     *                       - date_from: Start date for created_at filter
+     *                       - date_to: End date for created_at filter
+     * @return Collection Collection of ActivityLog models with entity relation
      */
     public function getDrillDownStaffActivity(int $userId, array $filters): Collection
     {
@@ -170,9 +207,13 @@ class StaffPerformanceService
     }
 
     /**
-     * Get print actions by staff
+     * Get print actions by staff.
      * 
-     * @return Collection
+     * Returns staff members with counts of print and reprint actions performed
+     * in the current month. Returns empty collection if PrintLog model unavailable.
+     * 
+     * @return Collection Collection of PrintLog aggregates with user_id, print_type,
+     *                    print_count, and user relation, sorted by count descending
      */
     public function getPrintActionsByStaff(): Collection
     {

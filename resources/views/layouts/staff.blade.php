@@ -4,15 +4,6 @@
     <meta charset="utf-8">
     <title>@yield('title', 'ZMC Staff Portal')</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    
-    <!-- CSRF Token -->
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    
-    <!-- Session Management -->
-    @auth
-    <meta name="user-authenticated" content="true">
-    <meta name="session-lifetime" content="{{ config('session.lifetime') * 60 }}">
-    @endauth
 
     {{-- Bootstrap 5 (if you already load via Vite/app, remove these 2 lines) --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -21,11 +12,62 @@
     {{-- Icons (optional) --}}
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" rel="stylesheet">
 
+    {{-- Green Theme CSS --}}
+    <link href="{{ asset('css/green-theme.css') }}" rel="stylesheet">
+
     <style>
         :root{
-            --zmc-green:#388e3c;
-            --zmc-green-dark:#2e7d32;
+            --zmc-primary:#2d5016;
+            --zmc-primary-dark:#1f3a0f;
+            --zmc-accent:#facc15;
+            --zmc-accent-dark:#eab308;
+            
+            /* Typography System */
+            --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-size-xs: 9px;
+            --font-size-sm: 10px;
+            --font-size-base: 13px;
+            --font-size-lg: 15px;
+            --font-size-xl: 18px;
+            --font-size-2xl: 22px;
+            --font-size-3xl: 28px;
+            --font-weight-normal: 400;
+            --font-weight-medium: 500;
+            --font-weight-semibold: 600;
+            --font-weight-bold: 700;
+            --font-weight-black: 900;
+            --line-height-tight: 1.2;
+            --line-height-normal: 1.5;
+            --line-height-relaxed: 1.75;
         }
+        body {
+            font-family: var(--font-primary);
+            font-size: var(--font-size-base);
+            line-height: var(--line-height-normal);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        h1, h2, h3, h4, h5, h6 { font-family: var(--font-primary); line-height: var(--line-height-tight); }
+        .fw-black { font-weight: var(--font-weight-black) !important; }
+        .fw-bold { font-weight: var(--font-weight-bold) !important; }
+        .fw-semibold { font-weight: var(--font-weight-semibold) !important; }
+        .btn-primary, .btn-success{
+            background: var(--zmc-primary) !important;
+            border-color: var(--zmc-accent) !important;
+            color: var(--zmc-accent) !important;
+        }
+        .btn-primary:hover, .btn-success:hover{
+            background: var(--zmc-accent) !important;
+            border-color: var(--zmc-primary) !important;
+            color: var(--zmc-primary) !important;
+        }
+        .badge.bg-success-subtle{ background: rgba(250,204,21,.15) !important; color: #78350f !important; }
+        .text-success{ color: var(--zmc-accent-dark) !important; }
+        .bg-success{ background-color: var(--zmc-accent) !important; }
+        .border-success{ border-color: var(--zmc-accent) !important; }
+        .bg-success-subtle{ background-color: rgba(250,204,21,.15) !important; }
+        .border-success-subtle{ border-color: rgba(250,204,21,.3) !important; }
+        
         .zmc-topbar{
             background: url('{{ asset("zmc_building.png") }}') center center / cover no-repeat;
             position: relative;
@@ -34,7 +76,7 @@
             content: "";
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(90deg, rgba(46, 125, 50, 0.82), rgba(27, 94, 32, 0.85));
+            background: linear-gradient(90deg, rgba(45, 80, 22, 0.85), rgba(31, 58, 15, 0.88));
             z-index: 0;
         }
         .zmc-topbar > *{
@@ -56,15 +98,10 @@
             color:#fff;
         }
         body{ 
-            background: url('{{ asset("zmc_building.png") }}') no-repeat center center fixed !important;
-            background-size: cover !important;
+            background: #f3f4f6 !important;
         }
         body::before{
-            content: "";
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, rgba(240, 247, 240, 0.88) 0%, rgba(220, 237, 220, 0.92) 100%);
-            z-index: -1;
+            display: none;
         }
     </style>
 
@@ -75,7 +112,7 @@
 <nav class="navbar navbar-expand-lg navbar-dark zmc-topbar">
     <div class="container-fluid px-3">
         <span class="navbar-brand fw-bold d-flex align-items-center gap-2">
-            <img src="{{ asset('zmc_logo.png') }}" alt="ZMC" style="height:48px">
+            <img src="{{ asset('zmc_logo.png') }}" alt="ZMC" style="height:34px">
             ZMC Staff Portal
         </span>
 
@@ -109,71 +146,6 @@
 <main class="container-fluid py-3 px-3">
     @yield('content')
 </main>
-
-<script>
-(function(){
-  var p='_auth_token', u=new URLSearchParams(window.location.search), t=u.get(p);
-  if(t) localStorage.setItem(p,t);
-  var s=localStorage.getItem(p);
-  if(!s) return;
-  document.addEventListener('click',function(e){
-    var a=e.target.closest('a');
-    if(!a||!a.href) return;
-    try{
-      var l=new URL(a.href);
-      if(l.origin===window.location.origin && !l.searchParams.has(p)){
-        l.searchParams.set(p,s);
-        a.href=l.toString();
-      }
-    }catch(x){}
-  },true);
-  document.addEventListener('submit',function(e){
-    var f=e.target;
-    if(f.tagName==='FORM' && !f.querySelector('input[name="'+p+'"]')){
-      var i=document.createElement('input');
-      i.type='hidden'; i.name=p; i.value=s;
-      f.appendChild(i);
-    }
-  },true);
-  var origFetch=window.fetch;
-  window.fetch=function(url,opts){
-    if(typeof url==='string'){
-      try{
-        var u2=new URL(url,window.location.origin);
-        if((u2.origin===window.location.origin||url.startsWith('/'))&&!u2.searchParams.has(p)){
-          u2.searchParams.set(p,s);
-          url=u2.toString();
-        }
-      }catch(x){
-        if(url.startsWith('/')){var sep=url.indexOf('?')>=0?'&':'?';url+=sep+p+'='+s;}
-      }
-    }
-    return origFetch.call(this,url,opts);
-  };
-  var origOpen=XMLHttpRequest.prototype.open;
-  XMLHttpRequest.prototype.open=function(method,url){
-    if(typeof url==='string'){
-      try{
-        var u3=new URL(url,window.location.origin);
-        if((u3.origin===window.location.origin||url.startsWith('/'))&&!u3.searchParams.has(p)){
-          u3.searchParams.set(p,s);
-          url=u3.toString();
-        }
-      }catch(x){
-        if(url.startsWith('/')){var sep=url.indexOf('?')>=0?'&':'?';url+=sep+p+'='+s;}
-      }
-    }
-    var args=Array.prototype.slice.call(arguments);args[1]=url;
-      return origOpen.apply(this,args);
-  };
-})();
-</script>
-
-<!-- Session Timeout Management -->
-@auth
-<script src="{{ asset('js/session-timeout.js') }}"></script>
-<script src="{{ asset('js/session-indicator.js') }}"></script>
-@endauth
 
 </body>
 </html>

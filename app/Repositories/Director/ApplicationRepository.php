@@ -7,13 +7,24 @@ use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Application Repository
+ * 
+ * Provides data access methods for application queries with SQLite-compatible
+ * implementations. Uses strftime() for date operations and PHP-based calculations
+ * for complex aggregations.
+ * 
+ * @package App\Repositories\Director
+ */
 class ApplicationRepository
 {
     /**
-     * Get applications by status
+     * Get applications by status.
      * 
-     * @param string|array $status
-     * @return Collection
+     * Retrieves applications matching a single status or array of statuses.
+     * 
+     * @param string|array $status Single status string or array of status values
+     * @return Collection Collection of Application models
      */
     public function getByStatus($status): Collection
     {
@@ -29,11 +40,14 @@ class ApplicationRepository
     }
 
     /**
-     * Get applications submitted in date range
+     * Get applications submitted in date range.
      * 
-     * @param Carbon $startDate
-     * @param Carbon $endDate
-     * @return Collection
+     * Retrieves applications where submitted_at falls within the specified
+     * date range (inclusive).
+     * 
+     * @param Carbon $startDate Start of date range
+     * @param Carbon $endDate End of date range
+     * @return Collection Collection of Application models
      */
     public function getSubmittedInRange(Carbon $startDate, Carbon $endDate): Collection
     {
@@ -43,11 +57,14 @@ class ApplicationRepository
     }
 
     /**
-     * Get applications issued in date range
+     * Get applications issued in date range.
      * 
-     * @param Carbon $startDate
-     * @param Carbon $endDate
-     * @return Collection
+     * Retrieves applications with status 'issued' where issued_at falls
+     * within the specified date range (inclusive).
+     * 
+     * @param Carbon $startDate Start of date range
+     * @param Carbon $endDate End of date range
+     * @return Collection Collection of Application models
      */
     public function getIssuedInRange(Carbon $startDate, Carbon $endDate): Collection
     {
@@ -58,35 +75,52 @@ class ApplicationRepository
     }
 
     /**
-     * Get monthly application counts
+     * Get monthly application counts (SQLite compatible using strftime).
      * 
-     * @param int $months
-     * @return Collection
+     * Aggregates application counts by month for the specified number of months,
+     * including total submitted, approved, and rejected counts per month.
+     * 
+     * SQLite Note: Uses strftime('%Y-%m', created_at) for month extraction,
+     * which is SQLite-specific. MySQL would use DATE_FORMAT().
+     * 
+     * @param int $months Number of months to retrieve (default: 12)
+     * @return Collection Collection with month, total_submitted, total_approved,
+     *                    and total_rejected fields, ordered by month descending
      */
-    public function getMonthlyApplicationCounts(int $months = 12): Collection
+    public function getMonthlyApplicationCounts(int $months = 12, ?int $year = null): Collection
     {
-        $startDate = now()->subMonths($months)->startOfMonth();
-        
-        $monthFormat = DB::getDriverName() === 'pgsql' ? "TO_CHAR(created_at, 'YYYY-MM')" : "strftime('%Y-%m', created_at)";
-
-        return Application::select(
-            DB::raw("$monthFormat as month"),
+        $query = Application::select(
+            DB::raw("strftime('%Y-%m', created_at) as month"),
             DB::raw("COUNT(*) as total_submitted"),
             DB::raw("SUM(CASE WHEN status = 'issued' THEN 1 ELSE 0 END) as total_approved"),
-            DB::raw("SUM(CASE WHEN status LIKE '%rejected%' THEN 1 ELSE 0 END) as total_returned")
-        )
-        ->where('created_at', '>=', $startDate)
-        ->whereNotNull('created_at')
-        ->groupBy('month')
-        ->orderBy('month', 'desc')
-        ->get();
+            DB::raw("SUM(CASE WHEN status LIKE '%rejected%' THEN 1 ELSE 0 END) as total_rejected")
+        );
+
+        if ($year) {
+            $query->whereYear('created_at', $year);
+        } else {
+            $startDate = now()->subMonths($months)->startOfMonth();
+            $query->where('created_at', '>=', $startDate);
+        }
+
+        return $query->whereNotNull('created_at')
+            ->groupBy('month')
+            ->orderBy('month', 'desc')
+            ->get();
     }
 
     /**
-     * Get average processing time in hours
+     * Get average processing time in hours (calculated in PHP for SQLite compatibility).
      * 
-     * @param string|null $stage
-     * @return float
+     * Calculates average hours between submission and issuance for completed
+     * applications. Uses PHP-based calculation instead of database functions
+     * for better SQLite compatibility.
+     * 
+     * SQLite Note: While SQLite supports julianday() for date arithmetic,
+     * this implementation uses PHP's Carbon for consistency and precision.
+     * 
+     * @param string|null $stage Optional stage filter (currently unused, reserved for future)
+     * @return float Average processing time in hours (0.0 if no applications)
      */
     public function getAverageProcessingTime(?string $stage = null): float
     {
@@ -115,9 +149,11 @@ class ApplicationRepository
     }
 
     /**
-     * Get applications by category
+     * Get applications by category.
      * 
-     * @return Collection
+     * Aggregates application counts grouped by accreditation category code.
+     * 
+     * @return Collection Collection with accreditation_category_code and count fields
      */
     public function getByCategory(): Collection
     {
@@ -131,10 +167,14 @@ class ApplicationRepository
     }
 
     /**
-     * Get applications with excessive prints
+     * Get applications with excessive prints.
      * 
-     * @param int $threshold
-     * @return Collection
+     * Retrieves applications where print_count exceeds the specified threshold,
+     * with related applicant and print log data.
+     * 
+     * @param int $threshold Minimum print count to include (default: 1)
+     * @return Collection Collection of Application models with applicant and printLogs relations,
+     *                    ordered by print_count descending
      */
     public function getWithExcessivePrints(int $threshold = 1): Collection
     {
@@ -145,10 +185,14 @@ class ApplicationRepository
     }
 
     /**
-     * Get applications nearing expiry
+     * Get applications nearing expiry.
      * 
-     * @param int $days
-     * @return Collection
+     * Retrieves issued applications with expiry dates within the specified
+     * number of days from now, with related applicant data.
+     * 
+     * @param int $days Number of days ahead to check for expiry (default: 30)
+     * @return Collection Collection of Application models with applicant relation,
+     *                    ordered by expiry_date ascending
      */
     public function getNearingExpiry(int $days = 30): Collection
     {

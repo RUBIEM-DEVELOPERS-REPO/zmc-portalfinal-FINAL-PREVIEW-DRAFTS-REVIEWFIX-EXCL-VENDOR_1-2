@@ -26,7 +26,7 @@
                         <td class="ps-4 small text-slate-700 fw-bold">{{ $log->created_at->format('d M Y, H:i') }}</td>
                         <td>
                             <div class="d-flex align-items-center gap-2">
-                                <div class="avatar-xs rounded-circle bg-slate-100 text-slate-400 d-flex align-items-center justify-content-center fw-bold" style="width:24px; height:24px; font-size:10px;">
+                                <div class="avatar-xs rounded-circle bg-slate-100 text-slate-400 d-flex align-items-center justify-content-center fw-bold" style="width:24px; height:24px; font-size: var(--font-size-sm);">
                                     {{ substr($log->user_name ?? 'S', 0, 1) }}
                                 </div>
                                 <span class="small fw-bold text-slate-700">{{ $log->user_name ?: 'System' }}</span>

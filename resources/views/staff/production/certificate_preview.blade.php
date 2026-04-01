@@ -264,7 +264,7 @@
 .cert-header-text{
   font-weight:900;
   letter-spacing:.6px;
-  font-size:22px;
+  font-size: var(--font-size-2xl);
   text-align: center;
 }
 

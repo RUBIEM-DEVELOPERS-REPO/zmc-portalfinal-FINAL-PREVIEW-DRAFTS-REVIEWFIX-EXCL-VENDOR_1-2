@@ -2,15 +2,15 @@
 @section('title', $pageTitle ?? 'Production')
 
 @section('content')
-<div class="zmc-dashboard-wrapper" style="font-family:'Roboto', sans-serif; color:#334155;">
+<div class="zmc-dashboard-wrapper" style="font-family: var(--font-primary); color: var(--zmc-text-dark);">
 
   <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4">
     <div>
-      <h4 class="fw-bold m-0" style="font-size:22px; color:#1e293b;">
+      <h4 class="fw-bold m-0" style="font-size: var(--font-size-2xl); color:#1e293b;">
         {{ $pageTitle ?? 'Production' }}
       </h4>
       @if(!empty($pageNote))
-        <div class="text-muted mt-1" style="font-size:13px;">
+        <div class="text-muted mt-1" style="font-size: var(--font-size-base);">
           <i class="ri-information-line me-1"></i> {!! $pageNote !!}
         </div>
       @endif
@@ -238,7 +238,7 @@
       <div class="modal-body">
         <div id="mdl_loading" class="d-none text-center py-5">
           <div class="spinner-border" style="color:var(--zmc-accent-dark)"></div>
-          <div class="text-muted mt-2" style="font-size:12px;">Loading…</div>
+          <div class="text-muted mt-2" style="font-size: var(--font-size-sm);">Loading…</div>
         </div>
 
         <div id="mdl_error" class="alert alert-danger d-none"></div>

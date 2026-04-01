@@ -76,28 +76,36 @@ class ApplicationDetailsController extends Controller
             ];
         })->values();
 
-        // Payment details for accounts dashboard
-        $paymentDetails = [
-            'payment_status' => $application->payment_status,
-            'payment_proof_path' => $application->payment_proof_path,
-            'payment_proof_uploaded_at' => $application->payment_proof_uploaded_at,
-            'proof_status' => $application->proof_status,
-            'proof_reviewed_by' => $application->proof_reviewed_by,
-            'proof_reviewed_at' => $application->proof_reviewed_at,
-            'proof_review_notes' => $application->proof_review_notes,
-            'proof_payer_first_name' => $application->proof_payer_first_name,
-            'proof_payer_last_name' => $application->proof_payer_last_name,
-            'proof_payment_date' => $application->proof_payment_date,
-            'proof_amount_paid' => $application->proof_amount_paid,
-            'proof_bank_name' => $application->proof_bank_name,
-            'paynow_reference' => $application->paynow_reference,
-            'paynow_confirmed_at' => $application->paynow_confirmed_at,
-            'waiver_path' => $application->waiver_path,
-            'waiver_status' => $application->waiver_status,
-            'waiver_reviewed_by' => $application->waiver_reviewed_by,
-            'waiver_reviewed_at' => $application->waiver_reviewed_at,
-            'waiver_review_notes' => $application->waiver_review_notes,
-        ];
+        // Previous applications
+        $previousApplications = Application::where('applicant_id', $application->applicant_id)
+            ->where('id', '!=', $application->id)
+            ->orderBy('created_at', 'desc')
+            ->get(['id', 'reference', 'application_type', 'status', 'created_at'])
+            ->map(function($pa) {
+                return [
+                    'id' => $pa->id,
+                    'reference' => $pa->reference,
+                    'type' => $pa->application_type,
+                    'status' => $pa->status,
+                    'date' => $pa->created_at?->format('d M Y'),
+                ];
+            });
+
+        // Previous payments
+        $previousPayments = Payment::where('payer_user_id', $application->user_id)
+            ->orderBy('created_at', 'desc')
+            ->get(['id', 'reference', 'amount', 'currency', 'method', 'status', 'created_at'])
+            ->map(function($p) {
+                return [
+                    'id' => $p->id,
+                    'reference' => $p->reference,
+                    'amount' => $p->amount,
+                    'currency' => $p->currency,
+                    'method' => $p->method,
+                    'status' => $p->status,
+                    'date' => $p->created_at?->format('d M Y'),
+                ];
+            });
 
         return response()->json([
             'ok' => true,
@@ -106,7 +114,8 @@ class ApplicationDetailsController extends Controller
             'directors' => $directors,
             'managers' => $managers,
             'documents' => $documents,
-            'payment_details' => $paymentDetails,
+            'previous_applications' => $previousApplications,
+            'previous_payments' => $previousPayments,
         ]);
     }
 

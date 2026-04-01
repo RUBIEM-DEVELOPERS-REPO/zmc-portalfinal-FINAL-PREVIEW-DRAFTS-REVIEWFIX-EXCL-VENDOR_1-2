@@ -19,8 +19,16 @@ class AdminDashboardController extends Controller
      * We treat anything created via signup as PUBLIC and anything created by IT Admin/Super Admin as STAFF.
      * (Stored in users.account_type)
      */
-    public function index()
+    public function index(Request $request)
     {
+        $year = $request->get('year', now()->year);
+        $availableYears = range(2024, now()->year);
+        rsort($availableYears);
+
+        $isCurrentYear = ($year == now()->year);
+        $yearStart = \Carbon\Carbon::create($year)->startOfYear();
+        $yearEnd = \Carbon\Carbon::create($year)->endOfYear();
+
         $workflowCfg = SystemConfig::getValue('workflow', config('zmc.workflow'));
         $slaHours = $workflowCfg['sla_hours'] ?? config('zmc.workflow.sla_hours');
 
@@ -52,35 +60,45 @@ class AdminDashboardController extends Controller
             'total_users' => User::count(),
             'staff_users' => User::where('account_type', 'staff')->count(),
             'public_users' => User::where('account_type', 'public')->count(),
-            'new_users_today' => User::whereDate('created_at', Carbon::today())->count(),
-            'new_users_week' => User::where('created_at', '>=', Carbon::now()->subWeek())->count(),
+            'new_users_today' => $isCurrentYear ? User::whereDate('created_at', Carbon::today())->count() : 0,
+            'new_users_week' => $isCurrentYear ? User::where('created_at', '>=', Carbon::now()->subWeek())->count() : 0,
             'roles' => Role::count(),
             'permissions' => Permission::count(),
 
             // Applications
-            'total_applications' => Application::count(),
-            'applications_today' => Application::whereDate('created_at', Carbon::today())->count(),
-            'mediahouse_registrations' => Application::where('application_type', 'registration')->count(),
-            'journalist_accreditations' => Application::where('application_type', 'accreditation')->count(),
-            'pending_applications' => Application::whereIn('status', $pendingStatuses)->count(),
-            'approved_applications' => Application::whereIn('status', $approvedStatuses)->count(),
-            'rejected_applications' => Application::whereIn('status', $rejectedStatuses)->count(),
+            'total_applications' => Application::when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))->count(),
+            'applications_today' => $isCurrentYear ? Application::whereDate('created_at', Carbon::today())->count() : 0,
+            'mediahouse_registrations' => Application::where('application_type', 'registration')
+                ->when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))->count(),
+            'journalist_accreditations' => Application::where('application_type', 'accreditation')
+                ->when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))->count(),
+            'pending_applications' => Application::whereIn('status', $pendingStatuses)
+                ->when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))->count(),
+            'approved_applications' => Application::whereIn('status', $approvedStatuses)
+                ->when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))->count(),
+            'rejected_applications' => Application::whereIn('status', $rejectedStatuses)
+                ->when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))->count(),
 
-            'audit_entries' => AuditTrail::count(),
+            'audit_entries' => AuditTrail::when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))->count(),
         ];
 
         // Applications by stage (Officer/Accounts/Registrar/Production)
         $applicationsByStage = [
-            'Officer' => Application::whereIn('status', [Application::SUBMITTED, Application::OFFICER_REVIEW, Application::CORRECTION_REQUESTED])->count(),
-            'Accounts' => Application::whereIn('status', [Application::OFFICER_APPROVED, Application::ACCOUNTS_REVIEW])->count(),
-            'Registrar' => Application::whereIn('status', [Application::PAID_CONFIRMED, Application::REGISTRAR_REVIEW])->count(),
-            'Production' => Application::whereIn('status', [Application::REGISTRAR_APPROVED, Application::PRODUCTION_QUEUE, Application::CARD_GENERATED, Application::CERT_GENERATED, Application::PRINTED])->count(),
+            'Officer' => Application::whereIn('status', [Application::SUBMITTED, Application::OFFICER_REVIEW, Application::CORRECTION_REQUESTED])
+                ->when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))->count(),
+            'Accounts' => Application::whereIn('status', [Application::OFFICER_APPROVED, Application::ACCOUNTS_REVIEW])
+                ->when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))->count(),
+            'Registrar' => Application::whereIn('status', [Application::PAID_CONFIRMED, Application::REGISTRAR_REVIEW])
+                ->when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))->count(),
+            'Production' => Application::whereIn('status', [Application::REGISTRAR_APPROVED, Application::PRODUCTION_QUEUE, Application::CARD_GENERATED, Application::CERT_GENERATED, Application::PRINTED])
+                ->when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))->count(),
         ];
 
-        // Average turnaround (Issued) in hours, last 30 days
+        // Average turnaround (Issued) in hours, last 30 days or based on year
         $avgTurnaroundHours = (float) Application::query()
             ->where('status', Application::ISSUED)
-            ->where('updated_at', '>=', Carbon::now()->subDays(30))
+            ->when($isCurrentYear, fn($q) => $q->where('updated_at', '>=', Carbon::now()->subDays(30)))
+            ->when(!$isCurrentYear, fn($q) => $q->whereBetween('updated_at', [$yearStart, $yearEnd]))
             ->selectRaw('AVG((julianday(updated_at) - julianday(created_at)) * 24) as avg_hours')
             ->value('avg_hours');
 
@@ -161,28 +179,34 @@ class AdminDashboardController extends Controller
 
 
 
-        $recentAudit = AuditTrail::latest()->take(10)->get();
+        $recentAudit = AuditTrail::when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))
+            ->latest()->take(10)->get();
 
-        $activityStream = AuditLog::latest()->take(15)->get();
+        $activityStream = AuditLog::when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))
+            ->latest()->take(15)->get();
         
         $roles = Role::withCount('users')->get();
         
         $applicationsByStatus = Application::selectRaw('status, count(*) as count')
+            ->when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))
             ->groupBy('status')
             ->pluck('count', 'status')
             ->toArray();
         
         $applicationsByType = Application::selectRaw('application_type, count(*) as count')
+            ->when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))
             ->groupBy('application_type')
             ->pluck('count', 'application_type')
             ->toArray();
 
         $recentApplications = Application::with('applicant')
+            ->when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))
             ->latest()
             ->take(10)
             ->get();
 
         return view('admin.dashboard', compact(
+            'year', 'availableYears',
             'stats',
             'applicationsByStage',
             'avgTurnaroundHours',
@@ -203,8 +227,13 @@ class AdminDashboardController extends Controller
     /**
      * JSON endpoint used by the admin dashboard for real-time counters.
      */
-    public function stats()
+    public function stats(Request $request)
     {
+        $year = $request->get('year', now()->year);
+        $isCurrentYear = ($year == now()->year);
+        $yearStart = \Carbon\Carbon::create($year)->startOfYear();
+        $yearEnd = \Carbon\Carbon::create($year)->endOfYear();
+
         $pendingStatuses = [
             Application::SUBMITTED,
             Application::OFFICER_REVIEW,
@@ -217,9 +246,12 @@ class AdminDashboardController extends Controller
             'total_users' => User::count(),
             'staff_users' => User::where('account_type', 'staff')->count(),
             'public_users' => User::where('account_type', 'public')->count(),
-            'mediahouse_registrations' => Application::where('application_type', 'registration')->count(),
-            'journalist_accreditations' => Application::where('application_type', 'accreditation')->count(),
-            'pending_applications' => Application::whereIn('status', $pendingStatuses)->count(),
+            'mediahouse_registrations' => Application::where('application_type', 'registration')
+                ->when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))->count(),
+            'journalist_accreditations' => Application::where('application_type', 'accreditation')
+                ->when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))->count(),
+            'pending_applications' => Application::whereIn('status', $pendingStatuses)
+                ->when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))->count(),
         ]);
     }
 }

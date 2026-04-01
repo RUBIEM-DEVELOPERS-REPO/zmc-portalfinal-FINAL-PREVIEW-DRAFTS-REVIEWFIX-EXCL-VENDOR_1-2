@@ -6,6 +6,7 @@
 @php
   use Illuminate\Support\Facades\Route;
   use Illuminate\Support\Str;
+  use App\Models\Application;
 
   $detailsUrlTemplate = Route::has('portal.applications.details')
     ? route('portal.applications.details', ['application' => '__ID__'])
@@ -26,7 +27,10 @@
     </div>
 
     <div class="d-flex align-items-center gap-2">
-      <a href="{{ route('mediahouse.renewals') }}" class="btn btn-white border shadow-sm btn-sm px-3">
+      <button type="button" class="btn btn-outline-success border shadow-sm btn-sm px-3" onclick="showRequirementsModal()">
+        <i class="ri-file-list-3-line me-1"></i> View Requirements
+      </button>
+      <a href="{{ route('mediahouse.renewals.index') }}" class="btn btn-white border shadow-sm btn-sm px-3">
         <i class="ri-refresh-line me-1"></i> Renew / Replace
       </a>
       <a href="{{ route('mediahouse.new') }}" class="btn btn-dark btn-sm px-3">
@@ -35,7 +39,53 @@
     </div>
   </div>
 
-  <div class="row g-3 mb-4">
+  @if($registration)
+     <div class="row g-3 mb-4">
+       <div class="col-12 col-md-6">
+         <div class="zmc-card h-100 border-0 shadow-lg" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%) !important; color: #fff;">
+           <div class="d-flex justify-content-between align-items-center">
+             <div>
+               <div class="opacity-75 small fw-bold text-uppercase letter-spacing-1">Registration Status</div>
+               <div class="h2 fw-black mb-0 d-flex align-items-center gap-2">
+                 @if($registration->status === 'active')
+                   <i class="ri-checkbox-circle-fill text-warning"></i> ACTIVE
+                 @else
+                   <i class="ri-error-warning-fill text-danger"></i> {{ strtoupper($registration->status) }}
+                 @endif
+               </div>
+               <div class="small opacity-75 mt-2">Registration No: {{ $registration->registration_no }}</div>
+             </div>
+             <div class="icon-box" style="font-size: 48px; opacity: 0.2;"><i class="ri-building-2-line"></i></div>
+           </div>
+         </div>
+       </div>
+       <div class="col-12 col-md-6">
+         <div class="zmc-card h-100 border-0 shadow-lg" style="background: linear-gradient(135deg, #2d5016 0%, #4c7c2b 100%) !important; color: #fff;">
+           <div class="d-flex justify-content-between align-items-center">
+             <div>
+               <div class="opacity-75 small fw-bold text-uppercase letter-spacing-1">Valid Until</div>
+               <div class="h2 fw-black mb-0">
+                 {{ $registration->expires_at ? $registration->expires_at->format('d M Y') : 'N/A' }}
+               </div>
+               <div class="small fw-bold mt-2 d-flex align-items-center gap-1">
+                 @if($yearsRemaining !== null)
+                    <i class="ri-calendar-check-line"></i> 
+                    @if($yearsRemaining <= 0)
+                      <span class="text-warning">EXPIRED</span>
+                    @else
+                      {{ number_format($yearsRemaining, 1) }} Years Remaining
+                    @endif
+                 @endif
+               </div>
+             </div>
+             <div class="icon-box" style="font-size: 48px; opacity: 0.2;"><i class="ri-time-line"></i></div>
+           </div>
+         </div>
+       </div>
+     </div>
+   @endif
+ 
+   <div class="row g-3 mb-4">
     <div class="col-12 col-md-3">
       <div class="zmc-card h-100">
         <div class="d-flex justify-content-between align-items-start">
@@ -87,103 +137,59 @@
     </div>
   </div>
 
-  <div class="row g-3 mb-4">
-    <div class="col-12 col-lg-6">
-      <div class="zmc-card h-100">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h6 class="fw-bold m-0"><i class="ri-shield-check-line me-2" style="color:var(--zmc-accent)"></i>License Status</h6>
+  {{-- Registration Fee Payment Alert --}}
+  @php
+    $pendingRegFee = $recentApplications->first(function($app) {
+      return $app->status === 'registrar_approved_pending_registration_fee_payment';
+    });
+  @endphp
+
+  @if($pendingRegFee)
+    <div class="alert shadow-sm mb-4" style="background: rgba(250, 204, 21, 0.1); border: 2px solid #facc15; border-radius: 8px;">
+      <div class="d-flex align-items-start gap-3">
+        <div style="font-size: 2.5rem; color: #ffffff;">
+          <i class="ri-alert-line"></i>
         </div>
-        @php
-          $record = $latestRecord ?? null;
-          $isActive = false;
-          $daysRemaining = 0;
-          if ($record && $record->expires_at) {
-            $now = now();
-            $isActive = $record->expires_at->isFuture();
-            $daysRemaining = $isActive ? $now->diffInDays($record->expires_at) : 0;
-          }
-        @endphp
-
-        @if($record)
-          <div class="d-flex align-items-center gap-3 mb-3">
-            @if($isActive)
-              <span class="badge bg-success px-3 py-2" style="font-size:13px;">
-                <i class="ri-checkbox-circle-line me-1"></i> Active
-              </span>
-            @else
-              <span class="badge bg-danger px-3 py-2" style="font-size:13px;">
-                <i class="ri-close-circle-line me-1"></i> Expired
-              </span>
+        <div class="flex-grow-1">
+          <h5 class="fw-bold mb-2" style="color: #000;">Registration Fee Payment Required</h5>
+          <p class="mb-3" style="color: #334155; font-size: 14px;">
+            Your media house registration application <strong>{{ $pendingRegFee->reference }}</strong> has been approved by the Registrar. 
+            Please download your official approval letter and proceed to pay the registration fee to complete your application.
+          </p>
+          
+          <div class="d-flex flex-wrap gap-2">
+            @if($pendingRegFee->officialLetter)
+              <a href="{{ route('portal.download-official-letter', $pendingRegFee) }}" 
+                 class="btn btn-sm shadow-sm" 
+                 style="background: #000; color: #ffffff; font-weight: 600;">
+                <i class="ri-download-line me-1"></i> Download Official Letter
+              </a>
             @endif
+            
+            <button type="button" 
+                    class="btn btn-sm shadow-sm js-pay-registration-fee" 
+                    data-app-id="{{ $pendingRegFee->id }}"
+                    data-app-ref="{{ $pendingRegFee->reference }}"
+                    style="background: #facc15; color: #000; font-weight: 600;">
+              <i class="ri-bank-card-line me-1"></i> Pay Registration Fee
+            </button>
           </div>
-
-          <div class="small">
-            <div class="d-flex justify-content-between mb-2">
-              <span class="text-muted fw-bold">Registration No:</span>
-              <span class="fw-bold">{{ $record->registration_no ?? $record->record_number ?? '—' }}</span>
-            </div>
-            <div class="d-flex justify-content-between mb-2">
-              <span class="text-muted fw-bold">Issued:</span>
-              <span>{{ $record->issued_at ? $record->issued_at->format('d M Y') : '—' }}</span>
-            </div>
-            <div class="d-flex justify-content-between mb-2">
-              <span class="text-muted fw-bold">Expires:</span>
-              <span>{{ $record->expires_at ? $record->expires_at->format('d M Y') : '—' }}</span>
-            </div>
-            @if($isActive)
-              <div class="d-flex justify-content-between">
-                <span class="text-muted fw-bold">Time Remaining:</span>
-                <span class="fw-bold {{ $daysRemaining <= 60 ? 'text-warning' : 'text-success' }}">
-                  {{ $daysRemaining }} days
-                </span>
-              </div>
-              @if($daysRemaining <= 60)
-                <div class="alert alert-warning mt-2 mb-0 py-2 px-3" style="font-size:12px;">
-                  <i class="ri-error-warning-line me-1"></i> Your license expires soon. Consider submitting a renewal (AP5).
-                </div>
-              @endif
-            @else
-              <div class="alert alert-danger mt-2 mb-0 py-2 px-3" style="font-size:12px;">
-                <i class="ri-error-warning-line me-1"></i> Your license has expired. Please submit a renewal application.
-              </div>
-            @endif
+          
+          <div class="mt-2 small" style="color: #64748b;">
+            <i class="ri-information-line me-1"></i>
+            Approved on {{ $pendingRegFee->registrar_reviewed_at ? \Carbon\Carbon::parse($pendingRegFee->registrar_reviewed_at)->format('d M Y H:i') : 'recently' }}
           </div>
-        @else
-          <div class="text-muted small">No license record found. Submit a registration application to get started.</div>
-        @endif
-      </div>
-    </div>
-
-    <div class="col-12 col-lg-6">
-      <div class="zmc-card h-100">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h6 class="fw-bold m-0"><i class="ri-alarm-warning-line me-2" style="color:var(--zmc-accent)"></i>Levy Reminders</h6>
-        </div>
-
-        <div class="small">
-          @forelse(($levyReminders ?? collect()) as $reminder)
-            <div class="d-flex gap-2 mb-2 p-2 border rounded" style="font-size:12px;">
-              <i class="ri-error-warning-fill text-warning" style="font-size:16px; margin-top:2px;"></i>
-              <div>
-                <div class="fw-bold">{{ $reminder->reminder_type ?? 'Levy Reminder' }}</div>
-                <div class="text-muted">{{ $reminder->message }}</div>
-                <div class="text-muted" style="font-size:10px;">{{ $reminder->created_at?->diffForHumans() }}</div>
-              </div>
-            </div>
-          @empty
-            <div class="text-muted">No outstanding levy reminders.</div>
-          @endforelse
         </div>
       </div>
     </div>
-  </div>
+  @endif
 
   <div class="row g-3 mb-4">
     <div class="col-12 col-lg-6">
       <div class="zmc-card h-100">
         <div class="d-flex justify-content-between align-items-center mb-2">
           <h6 class="fw-bold m-0"><i class="ri-megaphone-line me-2" style="color:var(--zmc-accent)"></i>Notices</h6>
-          <a href="{{ route('mediahouse.notices') }}" class="btn btn-sm btn-outline-dark">View all</a>
+          <a href="{{ url('/portal/notices-events') }}" class="btn btn-sm btn-outline-dark">View all</a>
         </div>
 
         <div class="small text-muted">
@@ -191,8 +197,8 @@
             <div class="d-flex gap-2 mb-2">
               <i class="ri-checkbox-blank-circle-fill" style="font-size:9px; margin-top:5px; color:var(--zmc-accent-dark)"></i>
               <div>
-                <div class="fw-bold" style="font-size:12px;">{{ $n->title }}</div>
-                <div class="text-muted" style="font-size:11px">{{ Str::limit(strip_tags($n->body), 90) }}</div>
+                <div class="fw-bold" style="font-size:12px; text-transform: none !important;">{{ $n->title }}</div>
+                <div class="text-muted" style="font-size:11px; text-transform: none !important;">{{ Str::limit(strip_tags($n->body), 90) }}</div>
               </div>
             </div>
           @empty
@@ -206,7 +212,7 @@
       <div class="zmc-card h-100">
         <div class="d-flex justify-content-between align-items-center mb-2">
           <h6 class="fw-bold m-0"><i class="ri-calendar-event-line me-2" style="color:var(--zmc-accent)"></i>Events</h6>
-          <a href="{{ route('mediahouse.notices') }}" class="btn btn-sm btn-outline-dark">View all</a>
+          <a href="{{ url('/portal/notices-events') }}" class="btn btn-sm btn-outline-dark">View all</a>
         </div>
 
         <div class="small text-muted">
@@ -229,216 +235,115 @@
   </div>
 
   <div class="zmc-card p-0 shadow-sm border-0">
-    <div class="p-3 border-bottom">
-      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <h6 class="fw-bold m-0"><i class="ri-list-check-2 me-2" style="color:var(--zmc-accent)"></i>My Applications</h6>
-        
-        <ul class="nav nav-pills" role="tablist" style="font-size: 13px;">
-          <li class="nav-item" role="presentation">
-            <button class="nav-link active px-3 py-1" id="all-tab" data-bs-toggle="tab" data-bs-target="#all-pane" type="button" role="tab">
-              <i class="ri-folders-line me-1"></i> All
-            </button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link px-3 py-1" id="drafts-tab" data-bs-toggle="tab" data-bs-target="#drafts-pane" type="button" role="tab">
-              <i class="ri-draft-line me-1"></i> Drafts <span class="badge bg-secondary ms-1">{{ $stats['drafts'] ?? 0 }}</span>
-            </button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link px-3 py-1" id="submitted-tab" data-bs-toggle="tab" data-bs-target="#submitted-pane" type="button" role="tab">
-              <i class="ri-send-plane-line me-1"></i> Submitted
-            </button>
-          </li>
-        </ul>
-      </div>
+    <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+      <h6 class="fw-bold m-0"><i class="ri-list-check-2 me-2" style="color:var(--zmc-accent)"></i>Recent applications</h6>
     </div>
 
-    <div class="tab-content">
-      {{-- ALL APPLICATIONS TAB --}}
-      <div class="tab-pane fade show active" id="all-pane" role="tabpanel">
-        <div class="table-responsive">
-          <table class="table table-hover align-middle mb-0 zmc-mini-table">
-            <thead>
-              <tr>
-                <th><i class="ri-hashtag me-1"></i> Ref</th>
-                <th><i class="ri-file-text-line me-1"></i> Form</th>
-                <th><i class="ri-calendar-line me-1"></i> Date</th>
-                <th><i class="ri-flag-line me-1"></i> Status</th>
-                <th class="text-end" style="min-width:140px;">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              @forelse($apps as $app)
-                @php
-                  $status = strtolower((string)($app->status ?? ''));
-                  $badge = match(true) {
-                    (bool)($app->is_draft) => 'secondary',
-                    in_array($status, ['payment_rejected'], true) => 'danger',
-                    str_contains($status, 'rejected') => 'danger',
-                    in_array($status, ['approved_awaiting_payment','registrar_approved_pending_reg_fee'], true) => 'warning',
-                    in_array($status, ['awaiting_accounts_verification'], true) => 'info',
-                    in_array($status, ['payment_verified','submitted_with_app_fee'], true) => 'success',
-                    str_contains($status, 'approved') || $status === 'issued' => 'success',
-                    in_array($status, ['needs_correction','correction_requested'], true) => 'warning',
-                    in_array($status, ['submitted','officer_review','registrar_review','accounts_review'], true) => 'info',
-                    default => 'warning',
-                  };
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0 zmc-mini-table">
+        <thead>
+          <tr>
+            <th><i class="ri-hashtag me-1"></i> Ref</th>
+            <th><i class="ri-file-text-line me-1"></i> Form</th>
+            <th><i class="ri-calendar-line me-1"></i> Date</th>
+            <th><i class="ri-flag-line me-1"></i> Status</th>
+            <th class="text-end" style="min-width:140px;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          @forelse($apps as $app)
+            @php
+              $status = strtolower((string)($app->status ?? ''));
+              $badge = match(true) {
+                (bool)($app->is_draft) => 'secondary',
+                str_contains($status, 'rejected') => 'danger',
+                str_contains($status, 'approved') || $status === 'issued' => 'success',
+                in_array($status, [
+                    'needs_correction',
+                    'correction_requested',
+                    'registrar_raised_fix_request',
+                    'returned_to_officer'
+                ], true) => 'warning',
+                in_array($status, [
+                    'submitted',
+                    'submitted_to_accreditation_officer',
+                    'officer_review',
+                    'approved_by_accreditation_officer_awaiting_payment',
+                    'approved_by_officer_awaiting_payment_and_registrar_master',
+                    'verified_by_officer_pending_registrar',
+                    'registrar_review',
+                    'registrar_approved_pending_registration_fee_payment',
+                    'accounts_review',
+                    'awaiting_accounts_verification',
+                    'registration_fee_awaiting_verification'
+                ], true) => 'info',
+                default => 'warning',
+              };
 
-                  $date = $app->is_draft
-                    ? 'Draft'
-                    : (($app->submitted_at?->format('d M Y')) ?? ($app->created_at?->format('d M Y') ?? '—'));
+              $date = $app->is_draft
+                ? 'Draft'
+                : (($app->submitted_at?->format('d M Y')) ?? ($app->created_at?->format('d M Y') ?? '—'));
 
-                  $form = $app->request_type === 'new'
-                    ? 'AP1 - New Registration'
-                    : ('AP5 - ' . ucfirst($app->request_type ?? 'renewal'));
-                @endphp
+              $form = match($app->request_type) {
+                'renewal' => 'AP5 - Renewal',
+                'replacement' => 'AP5 - Replacement',
+                default => 'AP1 - New Registration'
+              };
+            @endphp
 
-                <tr>
-                  <td class="fw-bold text-dark">{{ $app->reference ?? ('APP-' . $app->id) }}</td>
-                  <td>{{ $form }}</td>
-                  <td class="small text-muted">{{ $date }}</td>
-                  <td>
-                    <span class="badge rounded-pill bg-{{ $badge }} px-3">
-                      {{ ucwords(str_replace('_',' ', $status ?: ($app->is_draft ? 'draft' : 'processing'))) }}
-                    </span>
-                  </td>
-                  <td class="text-end">
-                    @include('portal.partials.application_actions', ['app' => $app, 'status' => $status])
-                  </td>
-                </tr>
-              @empty
-                <tr>
-                  <td colspan="5" class="text-center py-5 text-muted">No applications found.</td>
-                </tr>
-              @endforelse
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {{-- DRAFTS TAB --}}
-      <div class="tab-pane fade" id="drafts-pane" role="tabpanel">
-        <div class="alert alert-info border-0 shadow-sm mx-3 mt-3 mb-2" style="border-left: 4px solid #0ea5e9 !important;">
-          <div class="d-flex align-items-center">
-            <i class="ri-information-line fs-4 me-3 text-info"></i>
-            <div>
-              <div class="fw-bold text-dark" style="font-size:14px;">Draft Expiry Policy</div>
-              <div class="small text-slate-600">Applications in draft status are automatically deleted after <strong>14 days</strong> of inactivity. Please ensure you submit your application within this period to avoid losing your progress.</div>
-            </div>
-          </div>
-        </div>
-        <div class="table-responsive">
-          <table class="table table-hover align-middle mb-0 zmc-mini-table">
-            <thead>
-              <tr>
-                <th><i class="ri-hashtag me-1"></i> Ref</th>
-                <th><i class="ri-file-text-line me-1"></i> Form</th>
-                <th><i class="ri-calendar-line me-1"></i> Last Updated</th>
-                <th class="text-end" style="min-width:140px;">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              @php
-                $drafts = collect($apps)->filter(fn($app) => $app->is_draft);
-              @endphp
-              @forelse($drafts as $app)
-                @php
-                  $form = $app->request_type === 'new'
-                    ? 'AP1 - New Registration'
-                    : ('AP5 - ' . ucfirst($app->request_type ?? 'renewal'));
-                @endphp
-
-                <tr>
-                  <td class="fw-bold text-dark">{{ $app->reference ?? ('APP-' . $app->id) }}</td>
-                  <td>{{ $form }}</td>
-                  <td class="small text-muted">{{ $app->updated_at?->format('d M Y, H:i') ?? '—' }}</td>
-                  <td class="text-end">
-                    <div class="zmc-action-strip">
-                      <a class="btn btn-sm btn-primary" href="{{ route('mediahouse.new') }}" title="Continue Editing">
-                        <i class="ri-edit-line me-1"></i> Continue
-                      </a>
-                      <button type="button" class="btn btn-sm zmc-icon-btn btn-outline-danger js-delete-draft" data-app-id="{{ $app->id }}" title="Delete Draft">
-                        <i class="fa-regular fa-trash-can"></i>
+            <tr>
+              <td class="fw-bold text-dark">{{ $app->reference ?? ('APP-' . $app->id) }}</td>
+              <td>{{ $form }}</td>
+              <td class="small text-muted">{{ $date }}</td>
+              <td>
+                <span class="badge rounded-pill bg-{{ $badge }} px-3">
+                  {{ ucwords(str_replace('_',' ', $status ?: ($app->is_draft ? 'draft' : 'processing'))) }}
+                </span>
+              </td>
+              <td class="text-end">
+                <div class="zmc-action-strip">
+                  @if($app->is_draft)
+                    <a class="btn btn-sm zmc-icon-btn btn-outline-secondary" href="{{ route('mediahouse.new') }}" title="Continue">
+                      <i class="fa-regular fa-pen-to-square"></i>
+                    </a>
+                    <button type="button" class="btn btn-sm zmc-icon-btn btn-outline-danger js-delete-draft" data-app-id="{{ $app->id }}" title="Delete Draft">
+                      <i class="fa-regular fa-trash-can"></i>
+                    </button>
+                  @else
+                    <button type="button" class="btn btn-sm zmc-icon-btn btn-outline-primary js-view-more" data-app-id="{{ $app->id }}" title="View">
+                      <i class="fa-regular fa-eye"></i>
+                    </button>
+                    @php
+                      $canPay = in_array($app->status, [
+                        'accounts_review',
+                        'approved_by_officer_awaiting_payment_and_registrar_master',
+                        'registrar_approved_pending_registration_fee_payment'
+                      ], true);
+                    @endphp
+                    @if($canPay)
+                      <button type="button" class="btn btn-sm btn-success fw-bold js-pay-now" 
+                              data-app-id="{{ $app->id }}" 
+                              data-app-ref="{{ $app->reference }}"
+                              title="Pay Now">
+                        <i class="ri-bank-card-line me-1"></i> Pay
                       </button>
-                    </div>
-                  </td>
-                </tr>
-              @empty
-                <tr>
-                  <td colspan="4" class="text-center py-5 text-muted">
-                    <i class="ri-draft-line" style="font-size: 3rem; opacity: 0.3;"></i>
-                    <div class="mt-2">No drafts found.</div>
-                    <div class="small">Start a new registration to create a draft.</div>
-                  </td>
-                </tr>
-              @endforelse
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {{-- SUBMITTED TAB --}}
-      <div class="tab-pane fade" id="submitted-pane" role="tabpanel">
-        <div class="table-responsive">
-          <table class="table table-hover align-middle mb-0 zmc-mini-table">
-            <thead>
-              <tr>
-                <th><i class="ri-hashtag me-1"></i> Ref</th>
-                <th><i class="ri-file-text-line me-1"></i> Form</th>
-                <th><i class="ri-calendar-line me-1"></i> Submitted</th>
-                <th><i class="ri-flag-line me-1"></i> Status</th>
-                <th class="text-end" style="min-width:140px;">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              @php
-                $submitted = collect($apps)->filter(fn($app) => !$app->is_draft);
-              @endphp
-              @forelse($submitted as $app)
-                @php
-                  $status = strtolower((string)($app->status ?? ''));
-                  $badge = match(true) {
-                    in_array($status, ['payment_rejected'], true) => 'danger',
-                    str_contains($status, 'rejected') => 'danger',
-                    in_array($status, ['approved_awaiting_payment','registrar_approved_pending_reg_fee'], true) => 'warning',
-                    in_array($status, ['awaiting_accounts_verification'], true) => 'info',
-                    in_array($status, ['payment_verified','submitted_with_app_fee'], true) => 'success',
-                    str_contains($status, 'approved') || $status === 'issued' => 'success',
-                    in_array($status, ['needs_correction','correction_requested'], true) => 'warning',
-                    in_array($status, ['submitted','officer_review','registrar_review','accounts_review'], true) => 'info',
-                    default => 'warning',
-                  };
-
-                  $form = $app->request_type === 'new'
-                    ? 'AP1 - New Registration'
-                    : ('AP5 - ' . ucfirst($app->request_type ?? 'renewal'));
-                @endphp
-
-                <tr>
-                  <td class="fw-bold text-dark">{{ $app->reference ?? ('APP-' . $app->id) }}</td>
-                  <td>{{ $form }}</td>
-                  <td class="small text-muted">{{ $app->submitted_at?->format('d M Y') ?? '—' }}</td>
-                  <td>
-                    <span class="badge rounded-pill bg-{{ $badge }} px-3">
-                      {{ ucwords(str_replace('_',' ', $status ?: 'processing')) }}
-                    </span>
-                  </td>
-                  <td class="text-end">
-                    @include('portal.partials.application_actions', ['app' => $app, 'status' => $status])
-                  </td>
-                </tr>
-              @empty
-                <tr>
-                  <td colspan="5" class="text-center py-5 text-muted">
-                    <i class="ri-send-plane-line" style="font-size: 3rem; opacity: 0.3;"></i>
-                    <div class="mt-2">No submitted applications found.</div>
-                  </td>
-                </tr>
-              @endforelse
-            </tbody>
-          </table>
-        </div>
-      </div>
+                    @endif
+                    @if(in_array($status, ['submitted','officer_review','registrar_review','accounts_review']))
+                      <button type="button" class="btn btn-sm zmc-icon-btn btn-outline-danger js-withdraw-app" data-app-id="{{ $app->id }}" title="Withdraw Application">
+                        <i class="ri-arrow-go-back-line"></i>
+                      </button>
+                    @endif
+                  @endif
+                </div>
+              </td>
+            </tr>
+          @empty
+            <tr>
+              <td colspan="5" class="text-center py-5 text-muted">No applications found.</td>
+            </tr>
+          @endforelse
+        </tbody>
+      </table>
     </div>
   </div>
 
@@ -536,53 +441,56 @@
 
       let html = '';
 
-      if (formCode === 'AP1') {
-        const s = data.ap1 || {};
+      const fd = data.form_data || {};
+      const labels = data.labels || {};
+      const exclude = ['current_step', 'registration_scope', 'journalist_scope', 'directors', 'managers', 'directors_rows', 'managers_rows', 'ap1'];
 
-        html += zmcBlock(
-          `<i class="fa-regular fa-building"></i> Organisation details`,
-          `<div class="row g-3">
-            ${zmcInput('Category', s.category)}
-            ${zmcInput('Service name', s.service_name)}
-            ${zmcInput('Operating model', s.operating_model)}
-            ${zmcInput('Organisation', s.org_name)}
-            ${zmcInput('Reg no', s.reg_no)}
-            ${zmcInput('Website', s.website)}
-            ${zmcTextarea('Head office', s.head_office, 6)}
-            ${zmcTextarea('Postal address', s.postal_address, 6)}
-          </div>`
-        );
+      let fieldsHtml = '';
+      for (const [key, val] of Object.entries(fd)) {
+        if (exclude.includes(key) || !val) continue;
+        const label = labels[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        
+        if (typeof val === 'object' && val !== null) {
+          fieldsHtml += zmcTextarea(label, JSON.stringify(val, null, 2));
+        } else {
+          fieldsHtml += zmcInput(label, val);
+        }
+      }
 
-        html += zmcBlock(
-          `<i class="fa-regular fa-address-book"></i> Contact`,
-          `<div class="row g-3">
-            ${zmcInput('Contact person', s.contact_person, 4)}
-            ${zmcInput('Contact email', s.contact_email, 4)}
-            ${zmcInput('Contact phone', s.contact_phone, 4)}
-          </div>`
-        );
+      if (fieldsHtml) {
+        html += zmcBlock(`<i class="fa-regular fa-file-lines"></i> Application details`, `<div class="row g-3">${fieldsHtml}</div>`);
+      }
 
-        const directors = Array.isArray(data.directors) ? data.directors : [];
-        const managers  = Array.isArray(data.managers) ? data.managers : [];
-
-        let dRows = directors.length ? '' : `<tr><td colspan="5" class="text-muted text-center">—</td></tr>`;
+      const directors = Array.isArray(data.directors) ? data.directors : [];
+      if (directors.length > 0) {
+        let dRows = '';
         directors.forEach(d => {
-          dRows += `<tr><td>${zmcFmt(d.full_name)}</td><td>${zmcFmt(d.id_passport)}</td><td>${zmcFmt(d.nationality)}</td><td>${zmcFmt(d.role)}</td><td>${zmcFmt(d.shareholding)}</td></tr>`;
+          dRows += `<tr>
+            <td>${zmcFmt(d.name || d.director_name || d.full_name)}</td>
+            <td>${zmcFmt(d.nationality || d.director_nationality)}</td>
+            <td>${zmcFmt(d.address || d.director_address)}</td>
+          </tr>`;
         });
-
         html += zmcBlock(
           `<i class="fa-solid fa-people-group"></i> Directors`,
-          `<div class="table-responsive"><table class="table table-sm align-middle zmc-table-lite"><thead><tr><th>Full name</th><th>ID / Passport</th><th>Nationality</th><th>Role</th><th>Shareholding</th></tr></thead><tbody>${dRows}</tbody></table></div>`
+          `<div class="table-responsive"><table class="table table-sm align-middle zmc-table-lite"><thead><tr><th>Name</th><th>Nationality</th><th>Address</th></tr></thead><tbody>${dRows}</tbody></table></div>`
         );
+      }
 
-        let mRows = managers.length ? '' : `<tr><td colspan="4" class="text-muted text-center">—</td></tr>`;
+      const managers = Array.isArray(data.managers) ? data.managers : [];
+      if (managers.length > 0) {
+        let mRows = '';
         managers.forEach(m => {
-          mRows += `<tr><td>${zmcFmt(m.full_name)}</td><td>${zmcFmt(m.position)}</td><td>${zmcFmt(m.qualification)}</td><td>${zmcFmt(m.experience)}</td></tr>`;
+          mRows += `<tr>
+            <td>${zmcFmt(m.name || m.manager_name || m.full_name)}</td>
+            <td>${zmcFmt(m.nationality || m.manager_nationality)}</td>
+            <td>${zmcFmt(m.occupation || m.manager_occupation || m.position)}</td>
+            <td>${zmcFmt(m.address || m.manager_address)}</td>
+          </tr>`;
         });
-
         html += zmcBlock(
           `<i class="fa-solid fa-user-gear"></i> Managers`,
-          `<div class="table-responsive"><table class="table table-sm align-middle zmc-table-lite"><thead><tr><th>Full name</th><th>Position</th><th>Qualification</th><th>Experience</th></tr></thead><tbody>${mRows}</tbody></table></div>`
+          `<div class="table-responsive"><table class="table table-sm align-middle zmc-table-lite"><thead><tr><th>Name</th><th>Nationality</th><th>Occupation</th><th>Address</th></tr></thead><tbody>${mRows}</tbody></table></div>`
         );
       }
 
@@ -595,10 +503,46 @@
         docRows += `<tr><td class="fw-bold">${zmcFmt(doc.document_type)}</td><td>${zmcFmt(doc.original_name || doc.file_name)}</td><td class="text-end">${open}</td></tr>`;
       });
 
-      html += zmcBlock(
-        `<i class="fa-regular fa-folder-open"></i> Attachments`,
-        `<div class="table-responsive"><table class="table table-sm align-middle zmc-table-lite"><thead><tr><th>Type</th><th>File</th><th class="text-end">Open</th></tr></thead><tbody>${docRows}</tbody></table></div>`
-      );
+        html += zmcBlock(
+          `<i class="fa-regular fa-folder-open"></i> Attachments`,
+          `<div class="table-responsive"><table class="table table-sm align-middle zmc-table-lite"><thead><tr><th>Type</th><th>File</th><th class="text-end">Open</th></tr></thead><tbody>${docRows}</tbody></table></div>`
+        );
+
+        const prevApps = Array.isArray(data.previous_applications) ? data.previous_applications : [];
+        if (prevApps.length > 0) {
+          let prevRows = prevApps.map(pa => `
+            <tr>
+              <td>${zmcFmt(pa.reference)}</td>
+              <td class="text-capitalize">${zmcFmt(pa.type)}</td>
+              <td><span class="badge bg-light text-dark border">${zmcFmt(pa.status)}</span></td>
+              <td>${zmcFmt(pa.date)}</td>
+            </tr>
+          `).join('');
+
+          html += zmcBlock(
+            `<i class="fa-solid fa-history"></i> Previous Applications`,
+            `<div class="table-responsive"><table class="table table-sm align-middle zmc-table-lite"><thead><tr><th>Reference</th><th>Type</th><th>Status</th><th>Date</th></tr></thead><tbody>${prevRows}</tbody></table></div>`
+          );
+        }
+
+        // Previous Payments Block
+        const prevPays = Array.isArray(data.previous_payments) ? data.previous_payments : [];
+        if (prevPays.length > 0) {
+          let payRows = prevPays.map(p => `
+            <tr>
+              <td>${zmcFmt(p.reference)}</td>
+              <td>${zmcFmt(p.amount)} ${zmcFmt(p.currency)}</td>
+              <td class="text-capitalize">${zmcFmt(p.method)}</td>
+              <td><span class="badge bg-light text-dark border text-capitalize">${zmcFmt(p.status)}</span></td>
+              <td>${zmcFmt(p.date)}</td>
+            </tr>
+          `).join('');
+
+          html += zmcBlock(
+            `<i class="fa-solid fa-money-bill-transfer"></i> Payment History`,
+            `<div class="table-responsive"><table class="table table-sm align-middle zmc-table-lite"><thead><tr><th>Reference</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead><tbody>${payRows}</tbody></table></div>`
+          );
+        }
 
       if (area) {
         area.innerHTML = html;
@@ -676,8 +620,121 @@
           alert('Failed to connect to server.');
         }
       }
+
+      // Registration Fee Pay Button in Alert
+      const regFeeBtn = e.target.closest('.js-pay-registration-fee');
+      if(regFeeBtn){
+        const appId = regFeeBtn.getAttribute('data-app-id');
+        const ref = regFeeBtn.getAttribute('data-app-ref');
+        
+        // Trigger the payment modal
+        if(window.initPaymentModal){
+          window.initPaymentModal(appId, ref);
+        } else {
+          // Fallback if initPaymentModal is not yet loaded
+          const payModal = document.getElementById('paymentModal');
+          if(payModal){
+             document.getElementById('modal_app_id').value = appId;
+             document.getElementById('modal_app_ref_display').textContent = ref;
+             new bootstrap.Modal(payModal).show();
+          }
+        }
+      }
     });
+
+    // Show Media House welcome modal on every page load
+    const modalEl = document.getElementById('mediaHouseWelcomeModal');
+    if (modalEl) {
+      setTimeout(() => {
+        const m = bootstrap.Modal.getOrCreateInstance(modalEl);
+        m.show();
+      }, 800);
+    }
   });
+
+  // Function to manually show requirements modal
+  function showRequirementsModal() {
+    const modalEl = document.getElementById('mediaHouseWelcomeModal');
+    if (modalEl) {
+      const m = bootstrap.Modal.getOrCreateInstance(modalEl);
+      m.show();
+    }
+  }
 </script>
 @endpush
+</div>
+
+{{-- Media House Requirements Welcome Modal --}}
+<div class="modal fade" id="mediaHouseWelcomeModal" tabindex="-1" aria-labelledby="mhWelcomeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content overflow-hidden border-0 shadow-lg" style="border-radius: 24px;">
+      <div class="modal-body p-0">
+        <div class="row g-0">
+          <div class="col-md-4 d-none d-md-block position-relative" style="background: url('{{ asset('zmc_building.png') }}') center center / cover no-repeat;">
+            <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, rgba(45, 80, 22, 0.75), rgba(31, 58, 15, 0.80)); z-index: 1;"></div>
+            <div class="h-100 d-flex flex-column justify-content-center p-5 text-white position-relative" style="z-index: 2;">
+              <i class="ri-building-2-line mb-4" style="font-size: 80px; color: #facc15;"></i>
+              <h2 class="fw-black mb-3" style="color: #ffffff;">Welcome, Partner!</h2>
+              <p style="color: rgba(255,255,255,0.9);">Registering your media house is a significant step. Ensure you have all necessary documents to complete the AP1 process smoothly.</p>
+            </div>
+          </div>
+          <div class="col-md-8">
+            <div class="p-4 p-md-5">
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-black m-0" id="mhWelcomeModalLabel" style="color: #1e293b;">Media House Registration Requirements</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+
+              <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                  <div class="fw-bold mb-3" style="color: #2d5016;"><i class="ri-funds-line me-2"></i>Financial Documents</div>
+                  <ul class="list-unstyled small mb-0">
+                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #2d5016;"></i>Projected Cash Flow Statement (3 Years)</li>
+                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #2d5016;"></i>Projected Balance Sheet (3 Years)</li>
+                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #2d5016;"></i>Market Analysis</li>
+                  </ul>
+                </div>
+                <div class="col-md-6">
+                  <div class="fw-bold mb-3" style="color: #2d5016;"><i class="ri-shield-user-line me-2"></i>Ethics & Conduct</div>
+                  <ul class="list-unstyled small mb-0">
+                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #2d5016;"></i>Editorial Charter</li>
+                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #2d5016;"></i>Code of Ethics</li>
+                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #2d5016;"></i>Code of Conduct for Employees</li>
+                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #2d5016;"></i>In-house Style Book</li>
+                  </ul>
+                </div>
+                <div class="col-md-6">
+                  <div class="fw-bold mb-3" style="color: #2d5016;"><i class="ri-government-line me-2"></i>Legal & Corporate</div>
+                  <ul class="list-unstyled small mb-0">
+                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #2d5016;"></i>Certificate of Incorporation</li>
+                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #2d5016;"></i>Memorandum of Association</li>
+                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #2d5016;"></i>CR14 Form (Latest list of directors)</li>
+                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #2d5016;"></i>Certified Copies of Directors' National IDs</li>
+                  </ul>
+                </div>
+                <div class="col-md-6">
+                  <div class="fw-bold mb-3" style="color: #2d5016;"><i class="ri-newspaper-line me-2"></i>Operational & Strategic</div>
+                  <ul class="list-unstyled small mb-0">
+                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #2d5016;"></i>Mission Statement</li>
+                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #2d5016;"></i>Dummy Copy of Publication (Sample publication if applicable)</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="d-grid">
+                <button type="button" class="btn btn-lg py-3 rounded-pill fw-bold shadow-sm" data-bs-dismiss="modal" style="background: #2d5016; border-color: #facc15; color: #facc15;">
+                  I Understand, Let's Begin <i class="ri-arrow-right-line ms-2"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .fw-black { font-weight: 900 !important; }
+</style>
 @endsection

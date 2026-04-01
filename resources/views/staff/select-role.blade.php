@@ -6,7 +6,7 @@
   <title>Staff Portal | ZMC Online Portal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" rel="stylesheet">
   <style>
     :root{
@@ -15,16 +15,22 @@
       --border: #e2e8f0;
       --muted: #64748b;
       --text: #0f172a;
-      --green: #2e7d32;
-      --green-hover: #1b5e20;
+      --primary: #2d5016;
+      --primary-hover: #1f3a0f;
+      --accent: #facc15;
+      --accent-dark: #eab308;
       --shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
       --radius: 16px;
     }
     *{box-sizing:border-box}
     body{
       margin:0;
-      font-family: Roboto, Inter, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
-      background: url('{{ asset("zmc_building.png") }}') no-repeat center center fixed;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      background: #000 url('{{ asset("zmc_building.png") }}') no-repeat center center fixed;
       background-size: cover;
       color: var(--text);
       display:flex;
@@ -38,10 +44,10 @@
       content: "";
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: linear-gradient(135deg, rgba(240, 247, 240, 0.92) 0%, rgba(220, 237, 220, 0.95) 100%);
-      z-index: -1;
+      background: rgba(45, 80, 22, 0.45);
+      pointer-events: none;
     }
-    .wrap{ width:100%; max-width:480px; }
+    .wrap{ width:100%; max-width:480px; position: relative; z-index: 1; }
     .brand{
       display:flex; justify-content:center; align-items:center; gap:12px;
       margin-bottom:25px; text-decoration:none;
@@ -61,8 +67,8 @@
     .header{text-align:center; margin-bottom:28px;}
     .eyebrow{
       display:inline-flex; align-items:center; gap:6px;
-      background: rgba(46, 125, 50, 0.1);
-      color: var(--green);
+      background: rgba(45, 80, 22, 0.08);
+      color: var(--primary);
       padding:6px 14px;
       border-radius:99px;
       font-size:11px;
@@ -74,7 +80,7 @@
     .title{ margin:0 0 8px; font-size:26px; font-weight:900; color:#111827;}
     .subtitle{ margin:0; font-size:14px; color:var(--muted); }
     .field{ margin-bottom: 20px; }
-    label{ display:block; font-size:13px; font-weight:900; margin-bottom:8px; color:#111827; }
+    label{ display:block; font-size: var(--font-size-base); font-weight:900; margin-bottom:8px; color:#111827; }
     .select{
       width:100%;
       height:52px;
@@ -88,15 +94,15 @@
       font-weight:600;
     }
     .select:focus{
-      border-color:var(--green);
-      box-shadow:0 0 0 4px rgba(46, 125, 50, 0.1);
+      border-color:var(--accent);
+      box-shadow:0 0 0 4px rgba(250, 204, 21, 0.15);
     }
     .role-desc{
       margin-top:10px;
       padding:12px 14px;
-      background:rgba(46, 125, 50, 0.05);
+      background:rgba(26, 58, 26, 0.05);
       border-radius:10px;
-      font-size:13px;
+      font-size: var(--font-size-base);
       color:var(--muted);
       min-height:60px;
       display:none;
@@ -105,9 +111,9 @@
     .btn{
       width:100%;
       height:52px;
-      background:var(--green);
-      color:#fff;
-      border:none;
+      background:var(--primary);
+      color:var(--accent);
+      border:2px solid var(--accent);
       border-radius:12px;
       font-size:15px;
       font-weight:900;
@@ -119,9 +125,18 @@
       margin-top:10px;
       transition: background .2s, transform .08s ease;
     }
-    .btn:hover{ background: var(--green-hover); }
+    .btn:hover{ 
+      background: var(--accent);
+      color: var(--primary);
+      border-color: var(--primary);
+    }
     .btn:active{ transform: translateY(1px); }
-    .btn:disabled{ background:#9ca3af; cursor:not-allowed; }
+    .btn:disabled{ 
+      background: rgba(45, 80, 22, 0.4);
+      color: rgba(250, 204, 21, 0.5);
+      border-color: rgba(250, 204, 21, 0.5);
+      cursor:not-allowed; 
+    }
     .footer-text{
       text-align:center;
       font-size: 13px;
@@ -132,8 +147,8 @@
       display:block;
       text-align:center;
       margin-top:16px;
-      color:var(--green);
-      font-size:13px;
+      color:var(--primary);
+      font-size: var(--font-size-base);
       font-weight:700;
       text-decoration:none;
     }
@@ -143,7 +158,7 @@
 <body>
 <div class="wrap">
   <a href="{{ url('/') }}" class="brand">
-    <img src="{{ asset('zmc_logo_circular.png') }}" alt="ZMC Logo">
+    <img src="{{ asset('zimbabwe_media_commission_transparent_edges.png') }}" alt="ZMC Logo">
     <span>ZMC Portal</span>
   </a>
 

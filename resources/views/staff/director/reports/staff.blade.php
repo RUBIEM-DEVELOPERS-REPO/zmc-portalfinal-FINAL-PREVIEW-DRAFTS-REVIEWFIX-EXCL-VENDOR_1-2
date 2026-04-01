@@ -1,243 +1,68 @@
 @extends('layouts.portal')
-@section('title', 'Staff Performance')
+@section('title', 'Staff Performance Metrics')
 
 @section('content')
-<div class="zmc-dashboard-wrapper" style="font-family:'Roboto', sans-serif; color:#334155;">
+<div class="zmc-dashboard-wrapper" style="font-family: var(--font-primary); color: var(--zmc-text-dark);">
     <div class="mb-4">
         <a href="{{ route('staff.director.dashboard') }}" class="btn btn-sm btn-link p-0 text-muted mb-2 text-decoration-none">
             <i class="ri-arrow-left-line"></i> Back to Overview
         </a>
-        <h4 class="fw-bold m-0" style="font-size:22px; color:#1e293b;">Staff Performance & Productivity Overview</h4>
+        <h4 class="fw-bold m-0" style="font-size: var(--font-size-2xl); color:#1e293b;">Staff Performance & Productivity Metrics</h4>
     </div>
 
-    {{-- KPI Summary Cards --}}
-    <div class="row g-4 mb-4">
-        <div class="col-md-3">
-            <div class="zmc-card border-start border-4 border-primary">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="text-muted small fw-bold text-uppercase mb-1">Total Staff</div>
-                        <div class="h2 fw-black mb-0 text-primary">{{ $performance->count() }}</div>
-                    </div>
-                    <i class="ri-team-line fs-1 text-primary opacity-25"></i>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="zmc-card border-start border-4 border-success">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="text-muted small fw-bold text-uppercase mb-1">Total Processed</div>
-                        <div class="h2 fw-black mb-0 text-success">{{ number_format($performance->sum('processed_count')) }}</div>
-                    </div>
-                    <i class="ri-file-check-line fs-1 text-success opacity-25"></i>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="zmc-card border-start border-4 border-info">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="text-muted small fw-bold text-uppercase mb-1">Avg Per Staff</div>
-                        <div class="h2 fw-black mb-0 text-info">
-                            {{ $performance->count() > 0 ? number_format($performance->sum('processed_count') / $performance->count(), 1) : 0 }}
-                        </div>
-                    </div>
-                    <i class="ri-bar-chart-line fs-1 text-info opacity-25"></i>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="zmc-card border-start border-4 border-warning">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="text-muted small fw-bold text-uppercase mb-1">High Performers</div>
-                        <div class="h2 fw-black mb-0 text-warning">
-                            {{ $performance->filter(fn($s) => $s->processed_count > 50)->count() }}
-                        </div>
-                    </div>
-                    <i class="ri-medal-line fs-1 text-warning opacity-25"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Charts Row --}}
-    <div class="row g-4 mb-4">
-        <div class="col-md-8">
-            <div class="zmc-card">
-                <h6 class="fw-bold mb-3">Applications Processed by Staff</h6>
-                <div style="height: 350px;">
-                    <canvas id="processedChart"></canvas>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="zmc-card">
-                <h6 class="fw-bold mb-3">Performance Distribution</h6>
-                <div style="height: 350px;">
-                    <canvas id="performanceDistChart"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Detailed Performance Table --}}
-    <div class="row g-4 mb-4">
-        <div class="col-12">
-            <div class="zmc-card p-0">
-                <div class="p-3 border-bottom bg-light">
-                    <h6 class="fw-bold m-0">Detailed Performance by Officer</h6>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-sm align-middle mb-0">
-                        <thead class="bg-light">
-                            <tr>
-                                <th class="ps-3">Name</th>
-                                <th>Role</th>
-                                <th class="text-center">Applications Processed</th>
-                                <th class="text-center">Performance Level</th>
-                                <th class="text-center">Contribution %</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($performance as $staff)
-                            @php
-                                $totalProcessed = $performance->sum('processed_count');
-                                $contribution = $totalProcessed > 0 ? ($staff->processed_count / $totalProcessed) * 100 : 0;
-                            @endphp
-                            <tr>
-                                <td class="ps-3 fw-bold">{{ $staff->name }}</td>
-                                <td>
-                                    <span class="badge bg-secondary">
-                                        {{ strtoupper(str_replace('_', ' ', $staff->getRoleNames()->first() ?? 'N/A')) }}
-                                    </span>
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge bg-primary rounded-pill fs-6">{{ $staff->processed_count }}</span>
-                                </td>
-                                <td class="text-center">
-                                    @if($staff->processed_count > 50)
-                                        <span class="badge bg-success">
-                                            <i class="ri-star-fill"></i> High Performer
-                                        </span>
-                                    @elseif($staff->processed_count > 20)
-                                        <span class="badge bg-info">
-                                            <i class="ri-arrow-up-line"></i> Active
-                                        </span>
-                                    @else
-                                        <span class="badge bg-secondary">
-                                            <i class="ri-checkbox-circle-line"></i> Standard
-                                        </span>
-                                    @endif
-                                </td>
-                                <td class="text-center">
-                                    <div class="d-flex align-items-center justify-content-center gap-2">
-                                        <div class="progress" style="width: 100px; height: 20px;">
-                                            <div class="progress-bar bg-primary" style="width: {{ $contribution }}%"></div>
-                                        </div>
-                                        <span class="small fw-bold">{{ number_format($contribution, 1) }}%</span>
-                                    </div>
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="5" class="text-center text-muted py-4">
-                                    No staff performance data available
-                                </td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Additional Metrics --}}
     <div class="row g-4">
-        @if($averageReviewTime->isNotEmpty())
-        <div class="col-md-6">
+        <!-- Applications Processed Per Officer -->
+        <div class="col-md-12">
             <div class="zmc-card">
-                <h6 class="fw-bold mb-3">
-                    <i class="ri-time-line me-1 text-info"></i>
-                    Average Review Time by Registrar
-                </h6>
+                <h6 class="fw-bold mb-3">Applications Processed by Accreditation Officers</h6>
                 <div style="height: 300px;">
-                    <canvas id="reviewTimeChart"></canvas>
+                    <canvas id="officerProcessedChart"></canvas>
                 </div>
             </div>
         </div>
-        @endif
 
-        @if($approvalDistribution->isNotEmpty())
-        <div class="col-md-6">
+        <!-- Average Review Time Per Registrar -->
+        <div class="col-md-12">
             <div class="zmc-card">
-                <h6 class="fw-bold mb-3">
-                    <i class="ri-checkbox-circle-line me-1 text-success"></i>
-                    Approval Distribution by Officer
-                </h6>
+                <h6 class="fw-bold mb-3">Average Review Time by Registrars (Hours)</h6>
                 <div style="height: 300px;">
-                    <canvas id="approvalChart"></canvas>
+                    <canvas id="registrarReviewChart"></canvas>
                 </div>
             </div>
         </div>
-        @endif
 
-        @if($reassignmentFrequency->isNotEmpty())
-        <div class="col-md-6">
+        <!-- Payment Verification Turnaround -->
+        <div class="col-md-12">
             <div class="zmc-card">
-                <h6 class="fw-bold mb-3">
-                    <i class="ri-arrow-left-right-line me-1 text-warning"></i>
-                    Reassignment Frequency
-                </h6>
-                <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                <h6 class="fw-bold mb-3">Payment Verification Turnaround (Accounts Staff)</h6>
+                <div class="table-responsive">
                     <table class="table table-sm table-hover mb-0">
-                        <thead class="bg-light sticky-top">
+                        <thead>
                             <tr class="smaller text-muted">
                                 <th>Staff Member</th>
-                                <th class="text-end">Reassignments</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($reassignmentFrequency as $staff)
-                            <tr>
-                                <td class="fw-bold">{{ $staff->name }}</td>
-                                <td class="text-end">
-                                    <span class="badge {{ $staff->reassignment_count > 10 ? 'bg-danger' : ($staff->reassignment_count > 5 ? 'bg-warning' : 'bg-info') }}">
-                                        {{ $staff->reassignment_count }}
-                                    </span>
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        @endif
-
-        @if($paymentVerificationTurnaround->isNotEmpty())
-        <div class="col-md-6">
-            <div class="zmc-card">
-                <h6 class="fw-bold mb-3">
-                    <i class="ri-money-dollar-circle-line me-1 text-success"></i>
-                    Payment Verification Turnaround
-                </h6>
-                <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
-                    <table class="table table-sm table-hover mb-0">
-                        <thead class="bg-light sticky-top">
-                            <tr class="smaller text-muted">
-                                <th>Staff Member</th>
-                                <th class="text-end">Avg. Time (hours)</th>
+                                <th class="text-end">Payments Verified</th>
+                                <th class="text-end">Avg. Turnaround (Hours)</th>
+                                <th class="text-end">Status</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($paymentVerificationTurnaround as $staff)
                             <tr>
                                 <td class="fw-bold">{{ $staff->name }}</td>
+                                <td class="text-end">{{ number_format($staff->payments_verified) }}</td>
                                 <td class="text-end">
-                                    <span class="badge bg-info">{{ round($staff->avg_turnaround_time, 1) }}h</span>
+                                    <span class="badge bg-{{ $staff->avg_turnaround_hours < 24 ? 'success' : ($staff->avg_turnaround_hours < 48 ? 'warning' : 'danger') }}">
+                                        {{ number_format($staff->avg_turnaround_hours, 1) }}h
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    @if($staff->avg_turnaround_hours < 24)
+                                        <i class="ri-checkbox-circle-fill text-success"></i>
+                                    @elseif($staff->avg_turnaround_hours < 48)
+                                        <i class="ri-error-warning-fill text-warning"></i>
+                                    @else
+                                        <i class="ri-close-circle-fill text-danger"></i>
+                                    @endif
                                 </td>
                             </tr>
                             @endforeach
@@ -246,7 +71,59 @@
                 </div>
             </div>
         </div>
-        @endif
+
+        <!-- Approval Distribution Per Officer -->
+        <div class="col-md-12">
+            <div class="zmc-card">
+                <h6 class="fw-bold mb-3">Approval Distribution by Officers</h6>
+                <div style="height: 300px;">
+                    <canvas id="approvalDistributionChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Reassignment Frequency -->
+        <div class="col-md-12">
+            <div class="zmc-card">
+                <h6 class="fw-bold mb-3">
+                    <i class="ri-exchange-line text-warning me-2"></i>Category Reassignment Frequency
+                </h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead>
+                            <tr class="smaller text-muted">
+                                <th>Staff Member</th>
+                                <th>Role</th>
+                                <th class="text-end">Reassignments</th>
+                                <th class="text-end">Risk Level</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($reassignmentFrequency as $staff)
+                            <tr>
+                                <td class="fw-bold">{{ $staff->name }}</td>
+                                <td>{{ ucwords(str_replace('_', ' ', $staff->role)) }}</td>
+                                <td class="text-end">
+                                    <span class="badge bg-{{ $staff->reassignment_count < 3 ? 'success' : ($staff->reassignment_count < 5 ? 'warning' : 'danger') }}">
+                                        {{ $staff->reassignment_count }}
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    @if($staff->reassignment_count < 3)
+                                        <span class="badge bg-success">Low</span>
+                                    @elseif($staff->reassignment_count < 5)
+                                        <span class="badge bg-warning">Medium</span>
+                                    @else
+                                        <span class="badge bg-danger">High</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -254,35 +131,31 @@
 (function() {
     function initCharts() {
         if (typeof Chart === 'undefined') {
-            console.error('Chart.js not loaded, retrying...');
             setTimeout(initCharts, 100);
             return;
         }
 
-        const performanceData = {!! json_encode($performance) !!};
-        
-        // Applications Processed Chart (Horizontal Bar)
-        const processedCanvas = document.getElementById('processedChart');
-        if (processedCanvas && performanceData.length > 0) {
-            new Chart(processedCanvas, {
+        // Applications Processed Chart
+        const officerProcessedCanvas = document.getElementById('officerProcessedChart');
+        if (officerProcessedCanvas) {
+            new Chart(officerProcessedCanvas, {
                 type: 'bar',
                 data: {
-                    labels: performanceData.map(s => s.name),
+                    labels: {!! json_encode($applicationsProcessed->pluck('name')->toArray()) !!},
                     datasets: [{
                         label: 'Applications Processed',
-                        data: performanceData.map(s => s.processed_count),
+                        data: {!! json_encode($applicationsProcessed->pluck('processed_count')->toArray()) !!},
                         backgroundColor: '#3b82f6'
                     }]
                 },
                 options: {
-                    indexAxis: 'y',
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
                         legend: { display: false }
                     },
                     scales: {
-                        x: {
+                        y: {
                             beginAtZero: true,
                             ticks: { precision: 0 }
                         }
@@ -291,54 +164,25 @@
             });
         }
 
-        // Performance Distribution (Doughnut)
-        const distCanvas = document.getElementById('performanceDistChart');
-        if (distCanvas && performanceData.length > 0) {
-            const highPerformers = performanceData.filter(s => s.processed_count > 50).length;
-            const active = performanceData.filter(s => s.processed_count > 20 && s.processed_count <= 50).length;
-            const standard = performanceData.filter(s => s.processed_count <= 20).length;
-            
-            new Chart(distCanvas, {
-                type: 'doughnut',
+        // Registrar Review Time Chart
+        const registrarReviewCanvas = document.getElementById('registrarReviewChart');
+        if (registrarReviewCanvas) {
+            new Chart(registrarReviewCanvas, {
+                type: 'bar',
                 data: {
-                    labels: ['High Performers', 'Active', 'Standard'],
+                    labels: {!! json_encode($averageReviewTime->pluck('name')->toArray()) !!},
                     datasets: [{
-                        data: [highPerformers, active, standard],
-                        backgroundColor: ['#10b981', '#3b82f6', '#6b7280']
+                        label: 'Average Review Time (Hours)',
+                        data: {!! json_encode($averageReviewTime->pluck('avg_review_hours')->toArray()) !!},
+                        backgroundColor: '#10b981'
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { padding: 15, font: { size: 11 } }
-                        }
-                    }
-                }
-            });
-        }
-
-        // Review Time Chart
-        const reviewTimeCanvas = document.getElementById('reviewTimeChart');
-        @if($averageReviewTime->isNotEmpty())
-        if (reviewTimeCanvas) {
-            const reviewTimeData = {!! json_encode($averageReviewTime) !!};
-            new Chart(reviewTimeCanvas, {
-                type: 'bar',
-                data: {
-                    labels: reviewTimeData.map(r => r.name),
-                    datasets: [{
-                        label: 'Avg Review Time (hours)',
-                        data: reviewTimeData.map(r => parseFloat(r.avg_review_time)),
-                        backgroundColor: '#06b6d4'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
+                        legend: { display: false }
+                    },
                     scales: {
                         y: {
                             beginAtZero: true,
@@ -352,35 +196,44 @@
                 }
             });
         }
-        @endif
 
         // Approval Distribution Chart
-        const approvalCanvas = document.getElementById('approvalChart');
-        @if($approvalDistribution->isNotEmpty())
-        if (approvalCanvas) {
-            const approvalData = {!! json_encode($approvalDistribution) !!};
-            new Chart(approvalCanvas, {
-                type: 'pie',
+        const approvalDistributionCanvas = document.getElementById('approvalDistributionChart');
+        if (approvalDistributionCanvas) {
+            new Chart(approvalDistributionCanvas, {
+                type: 'bar',
                 data: {
-                    labels: approvalData.map(a => a.name),
-                    datasets: [{
-                        data: approvalData.map(a => a.approval_count),
-                        backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4']
-                    }]
+                    labels: {!! json_encode($approvalDistribution->pluck('name')->toArray()) !!},
+                    datasets: [
+                        {
+                            label: 'Approved',
+                            data: {!! json_encode($approvalDistribution->pluck('approved_count')->toArray()) !!},
+                            backgroundColor: '#10b981'
+                        },
+                        {
+                            label: 'Rejected',
+                            data: {!! json_encode($approvalDistribution->pluck('rejected_count')->toArray()) !!},
+                            backgroundColor: '#ef4444'
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { padding: 10, font: { size: 10 } }
+                        legend: { position: 'bottom' }
+                    },
+                    scales: {
+                        x: { stacked: true },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            ticks: { precision: 0 }
                         }
                     }
                 }
             });
         }
-        @endif
     }
 
     if (document.readyState === 'loading') {

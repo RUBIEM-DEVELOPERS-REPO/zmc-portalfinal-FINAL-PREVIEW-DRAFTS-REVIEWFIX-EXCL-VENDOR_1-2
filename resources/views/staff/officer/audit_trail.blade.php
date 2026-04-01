@@ -2,7 +2,7 @@
 @section('title', $title ?? 'Audit Trail')
 
 @section('content')
-<div class="container py-3" style="font-family:'Roboto', sans-serif; color:#334155;">
+<div class="container py-3" style="font-family: var(--font-primary); color: var(--zmc-text-dark);">
   <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
     <div>
       <h4 class="fw-bold m-0">{{ $title ?? 'Audit Trail' }}</h4>

@@ -7,15 +7,28 @@ use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Activity Log Repository
+ * 
+ * Provides data access methods for activity log and audit trail queries with
+ * SQLite-compatible implementations. Supports filtering by action type, user,
+ * and date range for compliance monitoring.
+ * 
+ * @package App\Repositories\Director
+ */
 class ActivityLogRepository
 {
     /**
-     * Get logs by action type
+     * Get logs by action type.
      * 
-     * @param string|array $action
-     * @param Carbon|null $startDate
-     * @param Carbon|null $endDate
-     * @return Collection
+     * Retrieves activity logs matching a single action or array of actions,
+     * with optional date range filtering and related user data.
+     * 
+     * @param string|array $action Single action string or array of action types
+     * @param Carbon|null $startDate Optional start date for filtering
+     * @param Carbon|null $endDate Optional end date for filtering
+     * @return Collection Collection of ActivityLog models with user relation,
+     *                    ordered by created_at descending
      */
     public function getByAction($action, ?Carbon $startDate = null, ?Carbon $endDate = null): Collection
     {
@@ -37,11 +50,17 @@ class ActivityLogRepository
     }
 
     /**
-     * Get logs by user
+     * Get logs by user.
      * 
-     * @param int $userId
-     * @param array $filters
-     * @return Collection
+     * Retrieves activity logs for a specific user with optional filtering
+     * by action type and date range.
+     * 
+     * @param int $userId User ID to filter by
+     * @param array $filters Optional filters:
+     *                       - action: Filter by specific action type
+     *                       - date_from: Start date for created_at filter
+     *                       - date_to: End date for created_at filter
+     * @return Collection Collection of ActivityLog models ordered by created_at descending
      */
     public function getByUser(int $userId, array $filters = []): Collection
     {
@@ -62,10 +81,15 @@ class ActivityLogRepository
     }
 
     /**
-     * Get high-risk actions
+     * Get high-risk actions.
      * 
-     * @param Carbon|null $startDate
-     * @return Collection
+     * Retrieves activity logs for predefined high-risk action types including
+     * category reassignments, manual overrides, certificate edits, application
+     * reopenings, system overrides, and excessive reprints.
+     * 
+     * @param Carbon|null $startDate Optional start date for filtering (default: no filter)
+     * @return Collection Collection of ActivityLog models with user relation,
+     *                    ordered by created_at descending
      */
     public function getHighRiskActions(?Carbon $startDate = null): Collection
     {
@@ -90,10 +114,17 @@ class ActivityLogRepository
     }
 
     /**
-     * Get action counts by staff member
+     * Get action counts by staff member.
      * 
-     * @param string $action
-     * @return Collection
+     * Aggregates counts of a specific action type grouped by staff member
+     * for the current month, with related user data.
+     * 
+     * SQLite Note: Uses standard GROUP BY and COUNT() which are fully
+     * compatible with SQLite.
+     * 
+     * @param string $action Action type to count
+     * @return Collection Collection with user_id, user_role, action_count, and
+     *                    user relation, ordered by count descending
      */
     public function getActionCountsByStaff(string $action): Collection
     {
@@ -111,9 +142,20 @@ class ActivityLogRepository
     }
 
     /**
-     * Get suspicious activity patterns
+     * Get suspicious activity patterns.
      * 
-     * @return array
+     * Analyzes activity logs to detect suspicious patterns including failed
+     * logins, repeated reassignments, high waiver frequency, and system overrides.
+     * 
+     * SQLite Note: Uses HAVING clause with COUNT() aggregation which is fully
+     * supported by SQLite. The subquery for repeated_reassignments counts users
+     * with more than 5 reassignments in the current month.
+     * 
+     * @return array Associative array containing:
+     *               - failed_logins: Count of failed login attempts this month
+     *               - repeated_reassignments: Count of users with >5 reassignments
+     *               - high_waiver_frequency: Count of waivers approved this month
+     *               - system_overrides: Count of system override actions this month
      */
     public function getSuspiciousActivityPatterns(): array
     {

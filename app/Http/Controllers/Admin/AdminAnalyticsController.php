@@ -10,56 +10,72 @@ use Illuminate\Support\Facades\DB;
 
 class AdminAnalyticsController extends Controller
 {
-    public function __construct()
+    public function index(Request $request)
     {
-        $this->middleware(['auth', 'role:super_admin|it_admin|director|pr_officer|research_training_standards']);
-    }
+        $year = $request->get('year', now()->year);
+        $availableYears = range(2024, now()->year);
+        rsort($availableYears);
 
-    public function index()
-    {
-        // Last 30 days daily counts
-        $from = Carbon::now()->startOfDay()->subDays(29);
+        $isCurrentYear = ($year == now()->year);
+        $yearStart = \Carbon\Carbon::create($year)->startOfYear();
+        $yearEnd = \Carbon\Carbon::create($year)->endOfYear();
+
+        // Daily counts for the selected year
+        if ($isCurrentYear) {
+            $from = Carbon::now()->startOfDay()->subDays(29);
+        } else {
+            $from = $yearStart;
+        }
+        $to = $isCurrentYear ? Carbon::now() : $yearEnd;
 
         $dailyApplications = Application::query()
             ->selectRaw("date(created_at) as d, application_type, count(*) as c")
-            ->where('created_at', '>=', $from)
+            ->whereBetween('created_at', [$from, $to])
             ->groupBy('d', 'application_type')
             ->orderBy('d')
             ->get();
 
         $dailyPublicUsers = User::query()
             ->selectRaw("date(created_at) as d, count(*) as c")
-            ->where('created_at', '>=', $from)
+            ->whereBetween('created_at', [$from, $to])
             ->where('account_type', 'public')
             ->groupBy('d')
             ->orderBy('d')
             ->get();
 
         $statusBreakdown = Application::selectRaw('status, count(*) as c')
+            ->when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))
             ->groupBy('status')
             ->orderByDesc('c')
             ->get();
 
         $typeBreakdown = Application::selectRaw('application_type, count(*) as c')
+            ->when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))
             ->groupBy('application_type')
             ->orderByDesc('c')
             ->get();
 
         $regionBreakdown = Application::selectRaw('collection_region, count(*) as c')
             ->whereNotNull('collection_region')
+            ->when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))
             ->groupBy('collection_region')
             ->orderByDesc('c')
             ->get();
 
         $totals = [
-            'public_users' => User::where('account_type', 'public')->count(),
-            'staff_users' => User::where('account_type', 'staff')->count(),
-            'accreditation' => Application::where('application_type', 'accreditation')->count(),
-            'registration' => Application::where('application_type', 'registration')->count(),
+            'public_users' => User::where('account_type', 'public')
+                ->when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))->count(),
+            'staff_users' => User::where('account_type', 'staff')
+                ->when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))->count(),
+            'accreditation' => Application::where('application_type', 'accreditation')
+                ->when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))->count(),
+            'registration' => Application::where('application_type', 'registration')
+                ->when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))->count(),
         ];
 
         return view('admin.analytics.index', compact(
-            'from',
+            'year', 'availableYears',
+            'from', 'to',
             'dailyApplications',
             'dailyPublicUsers',
             'statusBreakdown',

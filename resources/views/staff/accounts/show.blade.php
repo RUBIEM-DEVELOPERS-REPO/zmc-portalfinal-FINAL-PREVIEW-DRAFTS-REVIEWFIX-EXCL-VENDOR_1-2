@@ -45,66 +45,51 @@
         @endif
 
         <hr>
-        <div class="fw-bold mb-3"><i class="ri-file-list-3-line me-1"></i>Application Details</div>
-        
-        @if($application->form_data)
-          @php
-            $formData = $application->form_data;
-            if (is_string($formData)) $formData = json_decode($formData, true);
-            
-            $labels = [
-              // Accreditation (AP3/AP5)
-              'title' => 'Title',
-              'surname' => 'Surname',
-              'first_name' => 'First Name',
-              'other_names' => 'Other Names',
-              'dob' => 'Date of Birth',
-              'birth_place' => 'Place & Country of Birth',
-              'marital_status' => 'Marital Status',
-              'gender' => 'Sex',
-              'national_reg_no' => 'National ID',
-              'passport_no' => 'Passport No',
-              'nationality' => 'Nationality',
-              'address' => 'Residential Address',
-              'phone' => 'Phone',
-              'email' => 'Email',
-              'employment_type' => 'Employment Type',
-              'medium_type' => 'Medium Type',
-              'designation' => 'Designation',
-              'media_org' => 'Media Organization',
-              'collection_region' => 'Collection Office',
-              
-              // Media House (AP1)
-              'contact_name' => 'Contact Person',
-              'organization_name' => 'Organization Name',
-              'organization_address' => 'Physical Address',
-              'organization_email' => 'Organization Email',
-              'organization_phone' => 'Organization Phone',
-              'website' => 'Website',
-            ];
-          @endphp
+        @include('staff.partials.application_details_card', ['application' => $application])
+      </div>
+    </div>
 
-          <div class="form-viewer">
-            <table class="table table-sm table-bordered">
+    <div class="card mt-3">
+      <div class="card-header fw-bold bg-light d-flex justify-content-between align-items-center">
+        <span><i class="ri-history-line me-1"></i> Payment History for this Applicant</span>
+        <span class="badge bg-white text-dark border">{{ $userPayments->count() }} found</span>
+      </div>
+      <div class="card-body p-0">
+        @if($userPayments->count())
+          <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0 align-middle small">
+              <thead class="bg-light">
+                <tr>
+                  <th class="ps-3">Ref</th>
+                  <th>Amount</th>
+                  <th>Method</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
               <tbody>
-                @foreach($formData as $key => $value)
-                  @php if(in_array($key, ['current_step', 'registration_scope', 'journalist_scope'])) continue; @endphp
+                @foreach($userPayments as $p)
+                  @php
+                    $pStatus = strtolower((string)$p->status);
+                    $pBadge = match(true) {
+                      $pStatus === 'paid' || $pStatus === 'confirmed' => 'success',
+                      $pStatus === 'reversed' || $pStatus === 'failed' => 'danger',
+                      default => 'info'
+                    };
+                  @endphp
                   <tr>
-                    <td class="bg-light fw-semibold" style="width: 40%;">{{ $labels[$key] ?? ucwords(str_replace('_', ' ', $key)) }}</td>
-                    <td>
-                      @if(is_array($value))
-                        <pre class="small mb-0">{{ json_encode($value, JSON_PRETTY_PRINT) }}</pre>
-                      @else
-                        {{ $value }}
-                      @endif
-                    </td>
+                    <td class="ps-3 fw-bold">{{ $p->reference }}</td>
+                    <td>{{ number_format($p->amount, 2) }} {{ $p->currency }}</td>
+                    <td class="text-capitalize">{{ $p->method }}</td>
+                    <td><span class="badge bg-{{ $pBadge }}-subtle text-{{ $pBadge }} border border-{{ $pBadge }} text-capitalize">{{ $p->status }}</span></td>
+                    <td>{{ $p->created_at?->format('d M Y') }}</td>
                   </tr>
                 @endforeach
               </tbody>
             </table>
           </div>
         @else
-          <div class="text-muted italic">No specific form data captured.</div>
+          <div class="p-4 text-center text-muted small">No previous payments found for this applicant.</div>
         @endif
       </div>
     </div>

@@ -18,8 +18,8 @@
   @endif
 
   <div class="form-container">
-    <div class="form-header">
-      <h5 class="m-0"><i class="ri-bank-card-line me-2"></i>Transaction History</h5>
+    <div class="form-header" style="background: transparent !important; border-bottom: 2px solid #e5e7eb !important;">
+      <h5 class="m-0" style="color: #1f2937 !important;"><i class="ri-bank-card-line me-2"></i>Transaction History</h5>
     </div>
 
     <div class="form-steps-container">

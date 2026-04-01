@@ -2,32 +2,34 @@
 @section('title', 'Production Dashboard')
 
 @section('content')
-<div class="zmc-dashboard-wrapper" style="font-family:'Roboto', sans-serif; color:#334155;">
+<div class="zmc-dashboard-wrapper" style="font-family: var(--font-primary); color: var(--zmc-text-dark);">
+
+  {{-- Header --}}
   <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4">
     <div>
-      <h4 class="fw-bold m-0" style="font-size:22px; color:#1e293b;">Production Dashboard</h4>
-      <div class="text-muted mt-1" style="font-size:13px;">
+      <h4 class="fw-bold m-0" style="font-size: var(--font-size-2xl); color: var(--zmc-text-dark);">
+        Production Dashboard
+      </h4>
+      <div class="text-muted mt-1" style="font-size: var(--font-size-base);">
         <i class="ri-information-line me-1"></i>
-        Manage card/certificate generation, printing, and issuance for approved applications.
+        Items approved by Registrar arrive here. Generate card/certificate, batch print, and mark as issued.
       </div>
     </div>
 
-    <div class="d-flex gap-2 flex-wrap align-items-center">
-      <span class="text-muted small me-2">
-        <i class="ri-map-pin-user-line me-1"></i>
-        Region: <strong>{{ auth()->user()->region ?? 'NOT SET' }}</strong>
+    <div class="d-flex align-items-center gap-2">
+      <form action="{{ route('staff.production.dashboard') }}" method="GET" id="yearFilterForm" class="me-2">
+        <select name="year" class="form-select border shadow-sm fw-bold bg-white btn-sm" style="height: 31px;" onchange="document.getElementById('yearFilterForm').submit()">
+            @foreach($availableYears ?? [] as $y)
+                <option value="{{ $y }}" {{ (isset($year) && $year == $y) ? 'selected' : '' }}>
+                    Year: {{ $y }}
+                </option>
+            @endforeach
+        </select>
+      </form>
+      <span class="zmc-pill zmc-pill-dark">
+        <i class="ri-map-pin-user-line"></i>
+        <span>Region: {{ auth()->user()->region ?? 'NOT SET' }}</span>
       </span>
-      <div class="btn-group me-2" role="group">
-        <button type="button" class="btn btn-outline-primary active" id="productionModeBtn">
-          <i class="ri-printer-line me-1"></i>Production
-        </button>
-        <button type="button" class="btn btn-outline-secondary" id="designerModeBtn">
-          <i class="ri-palette-line me-1"></i>Designer
-        </button>
-      </div>
-      <a href="{{ route('staff.switch-role', ['role' => 'accreditation_officer']) }}" class="btn btn-white border shadow-sm btn-sm px-3 me-2">
-        <i class="ri-dashboard-3-line me-1"></i>Back to Officer
-      </a>
       <a href="{{ url()->current() }}" class="btn btn-white border shadow-sm btn-sm px-3" title="Refresh">
         <i class="ri-refresh-line me-1"></i> Refresh
       </a>
@@ -36,7 +38,7 @@
 
   @if(session('success'))
     <div class="alert alert-success d-flex align-items-start gap-2">
-      <i class="ri-checkbox-circle-line" style="font-size:18px;line-height:1;"></i>
+      <i class="ri-checkbox-circle-line" style="font-size: var(--font-size-lg); line-height: 1;"></i>
       <div>{{ session('success') }}</div>
     </div>
   @endif
@@ -54,7 +56,7 @@
             <div>
               <div class="text-muted small fw-bold">In queue</div>
               <div class="h3 fw-black mb-0">{{ $kpiQueue ?? 0 }}</div>
-              <div class="text-muted" style="font-size:12px;">Waiting production</div>
+              <div class="text-muted" style="font-size: var(--font-size-sm);">Waiting production</div>
             </div>
             <div class="icon-box" style="background:transparent;border-left:3px solid var(--zmc-accent);border-radius:0;">
               <i class="ri-time-line" style="color:var(--zmc-accent)"></i>
@@ -71,7 +73,7 @@
             <div>
               <div class="text-muted small fw-bold">Pending printing</div>
               <div class="h3 fw-black mb-0">{{ $kpiToPrint ?? 0 }}</div>
-              <div class="text-muted" style="font-size:12px;">Generated items</div>
+              <div class="text-muted" style="font-size: var(--font-size-sm);">Generated items</div>
             </div>
             <div class="icon-box text-info"><i class="ri-printer-cloud-line"></i></div>
           </div>
@@ -86,7 +88,7 @@
             <div>
               <div class="text-muted small fw-bold">Printed</div>
               <div class="h3 fw-black mb-0">{{ $kpiPrinted ?? 0 }}</div>
-              <div class="text-muted" style="font-size:12px;">Ready to issue</div>
+              <div class="text-muted" style="font-size: var(--font-size-sm);">Ready to issue</div>
             </div>
             <div class="icon-box text-secondary"><i class="ri-printer-line"></i></div>
           </div>
@@ -101,7 +103,7 @@
             <div>
               <div class="text-muted small fw-bold">Issued</div>
               <div class="h3 fw-black mb-0">{{ $kpiIssued ?? 0 }}</div>
-              <div class="text-muted" style="font-size:12px;">Total issued</div>
+              <div class="text-muted" style="font-size: var(--font-size-sm);">Total issued</div>
             </div>
             <div class="icon-box text-success"><i class="ri-checkbox-circle-line"></i></div>
           </div>
@@ -115,9 +117,9 @@
       <div class="zmc-card h-100">
         <div class="d-flex justify-content-between align-items-start">
           <div>
-            <div class="text-muted small fw-bold">Generated today</div>
+            <div class="text-muted small fw-bold">Generated {{ (isset($year) && $year != now()->year) ? 'in '.$year : 'today' }}</div>
             <div class="h3 fw-black mb-0">{{ $kpiGeneratedToday ?? 0 }}</div>
-            <div class="text-muted" style="font-size:12px;">Card/cert generated</div>
+            <div class="text-muted" style="font-size: var(--font-size-sm);">Card/cert generated</div>
           </div>
           <div class="icon-box text-primary"><i class="ri-magic-line"></i></div>
         </div>
@@ -127,9 +129,9 @@
       <div class="zmc-card h-100">
         <div class="d-flex justify-content-between align-items-start">
           <div>
-            <div class="text-muted small fw-bold">Issued today</div>
+            <div class="text-muted small fw-bold">Issued {{ (isset($year) && $year != now()->year) ? 'in '.$year : 'today' }}</div>
             <div class="h3 fw-black mb-0">{{ $kpiIssuedToday ?? 0 }}</div>
-            <div class="text-muted" style="font-size:12px;">Collected/Dispatched</div>
+            <div class="text-muted" style="font-size: var(--font-size-sm);">Collected/Dispatched</div>
           </div>
           <div class="icon-box text-success"><i class="ri-hand-heart-line"></i></div>
         </div>
@@ -140,7 +142,7 @@
         <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
           <div>
             <div class="text-muted small fw-bold">Quick actions</div>
-            <div class="text-muted" style="font-size:12px;">Jump straight to the work queues.</div>
+            <div class="text-muted" style="font-size: var(--font-size-sm);">Jump straight to the work queues.</div>
           </div>
           <div class="d-flex gap-2 flex-wrap">
             <a href="{{ route('staff.production.cards') }}" class="btn btn-sm btn-outline-success fw-bold"><i class="ri-id-card-line me-1"></i>Cards</a>
@@ -172,12 +174,15 @@
       <table class="table table-hover align-middle mb-0 zmc-mini-table">
         <thead>
           <tr>
-            <th><input class="form-check-input" type="checkbox" id="checkAll"></th>
-            <th class="text-muted small">No</th>
-            <th>Reference</th>
-            <th>Applicant</th>
-            <th>Region</th>
-            <th class="text-end">Status</th>
+            <th style="width:40px;"></th>
+            <th style="width:60px;">#</th>
+            <th><i class="ri-hashtag me-1"></i> Ref</th>
+            <th><i class="ri-user-line me-1"></i> Applicant</th>
+            <th style="font-size: var(--font-size-dense);"><i class="ri-file-text-line me-1"></i> Type</th>
+            <th style="font-size: var(--font-size-dense);"><i class="ri-information-line me-1"></i> Request</th>
+            <th style="font-size: var(--font-size-dense);"><i class="ri-global-line me-1"></i> Scope</th>
+            <th><i class="ri-map-pin-line me-1"></i> Region</th>
+            <th><i class="ri-flag-line me-1"></i> Status</th>
             <th class="text-end" style="min-width:210px;">Action</th>
           </tr>
         </thead>
@@ -213,6 +218,14 @@
             <td class="text-muted small">{{ $rowNo }}</td>
             <td class="fw-bold text-dark">{{ $ref }}</td>
             <td>{{ $app->applicant?->name ?? '—' }}</td>
+            @php
+              $appType = ucwords($app->application_type ?? '—');
+              $reqType = ucwords($app->request_type ?? '—');
+              $scope = ucwords($app->journalist_scope ?? $app->residency_type ?? 'Local');
+            @endphp
+            <td style="font-size: var(--font-size-dense);">{{ $appType }}</td>
+            <td style="font-size: var(--font-size-dense);">{{ $reqType }}</td>
+            <td style="font-size: var(--font-size-dense);">{{ $scope }}</td>
             <td class="small text-uppercase">{{ $app->collection_region ?? '—' }}</td>
             <td>
               <span class="badge rounded-pill bg-{{ $badge }} px-3">
@@ -316,7 +329,7 @@
       <div class="modal-body">
         <div id="mdl_loading" class="d-none text-center py-5">
           <div class="spinner-border" style="color:var(--zmc-accent-dark)"></div>
-          <div class="text-muted mt-2" style="font-size:12px;">Loading…</div>
+          <div class="text-muted mt-2" style="font-size: var(--font-size-sm);">Loading…</div>
         </div>
 
         <div id="mdl_error" class="alert alert-danger d-none"></div>
@@ -465,6 +478,43 @@
             ${zmcInput('Contact phone', s.contact_phone, 4)}
           </div>
           `
+        );
+      }
+
+      // Previous Applications Block
+      const prevApps = Array.isArray(data.previous_applications) ? data.previous_applications : [];
+      if (prevApps.length > 0) {
+        let prevRows = prevApps.map(pa => `
+          <tr>
+            <td>${zmcFmt(pa.reference)}</td>
+            <td class="text-capitalize">${zmcFmt(pa.type)}</td>
+            <td><span class="badge bg-light text-dark border">${zmcFmt(pa.status)}</span></td>
+            <td>${zmcFmt(pa.date)}</td>
+          </tr>
+        `).join('');
+
+        html += zmcBlock(
+          `<i class="fa-solid fa-history"></i> Previous Applications`,
+          `<div class="table-responsive"><table class="table table-sm align-middle zmc-table-lite"><thead><tr><th>Reference</th><th>Type</th><th>Status</th><th>Date</th></tr></thead><tbody>${prevRows}</tbody></table></div>`
+        );
+      }
+
+      // Previous Payments Block
+      const prevPays = Array.isArray(data.previous_payments) ? data.previous_payments : [];
+      if (prevPays.length > 0) {
+        let payRows = prevPays.map(p => `
+          <tr>
+            <td>${zmcFmt(p.reference)}</td>
+            <td>${zmcFmt(p.amount)} ${zmcFmt(p.currency)}</td>
+            <td class="text-capitalize">${zmcFmt(p.method)}</td>
+            <td><span class="badge bg-light text-dark border text-capitalize">${zmcFmt(p.status)}</span></td>
+            <td>${zmcFmt(p.date)}</td>
+          </tr>
+        `).join('');
+
+        html += zmcBlock(
+          `<i class="fa-solid fa-money-bill-transfer"></i> Payment History`,
+          `<div class="table-responsive"><table class="table table-sm align-middle zmc-table-lite"><thead><tr><th>Reference</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead><tbody>${payRows}</tbody></table></div>`
         );
       }
 

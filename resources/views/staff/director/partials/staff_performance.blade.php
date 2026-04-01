@@ -14,7 +14,7 @@
                 @foreach($staffPerformance as $staff)
                     <tr>
                         <td class="ps-3 py-3 d-flex align-items-center gap-3">
-                            <div class="avatar bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width:32px; height:32px; font-size:12px;">
+                            <div class="avatar bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width:32px; height:32px; font-size: var(--font-size-sm);">
                                 {{ substr($staff->name, 0, 2) }}
                             </div>
                             <span class="fw-bold">{{ $staff->name }}</span>

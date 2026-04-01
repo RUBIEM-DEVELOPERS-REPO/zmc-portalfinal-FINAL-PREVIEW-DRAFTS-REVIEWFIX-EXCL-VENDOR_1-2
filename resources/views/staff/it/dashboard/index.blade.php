@@ -11,7 +11,7 @@
             <h2 class="fw-bold m-0" style="letter-spacing: -0.02em; color: #0f172a;">IT Dashboard</h2>
             <p class="text-slate-600 m-0 small mt-1">Unified System Administration & Monitoring</p>
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 align-items-center">
             <div class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill d-flex align-items-center">
                 <span class="pulse-dot me-2"></span> System Online
             </div>

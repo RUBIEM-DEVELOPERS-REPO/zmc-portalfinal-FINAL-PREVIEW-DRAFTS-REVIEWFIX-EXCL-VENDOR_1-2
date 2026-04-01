@@ -34,7 +34,7 @@
         <div class="col-6 col-md-3">
             <div class="card border-0 shadow-sm">
                 <div class="card-body py-2 px-3">
-                    <div class="text-muted" style="font-size:12px;">Total Applications</div>
+                    <div class="text-muted" style="font-size: var(--font-size-sm);">Total Applications</div>
                     <div class="fw-bold" style="font-size:20px;">{{ number_format(array_sum($seriesApplications)) }}</div>
                 </div>
             </div>
@@ -42,7 +42,7 @@
         <div class="col-6 col-md-3">
             <div class="card border-0 shadow-sm">
                 <div class="card-body py-2 px-3">
-                    <div class="text-muted" style="font-size:12px;">Approval Velocity</div>
+                    <div class="text-muted" style="font-size: var(--font-size-sm);">Approval Velocity</div>
                     <div class="fw-bold text-success" style="font-size:20px;">{{ number_format(array_sum($seriesApproved)) }}</div>
                 </div>
             </div>
@@ -50,7 +50,7 @@
         <div class="col-6 col-md-3">
             <div class="card border-0 shadow-sm">
                 <div class="card-body py-2 px-3">
-                    <div class="text-muted" style="font-size:12px;">Total Anomalies</div>
+                    <div class="text-muted" style="font-size: var(--font-size-sm);">Total Anomalies</div>
                     <div class="fw-bold text-danger" style="font-size:20px;">{{ number_format(array_sum($anomalySeries)) }}</div>
                 </div>
             </div>
@@ -58,7 +58,7 @@
         <div class="col-6 col-md-3">
             <div class="card border-0 shadow-sm">
                 <div class="card-body py-2 px-3">
-                    <div class="text-muted" style="font-size:12px;">Period Verifications</div>
+                    <div class="text-muted" style="font-size: var(--font-size-sm);">Period Verifications</div>
                     <div class="fw-bold" style="font-size:20px;">{{ number_format(array_sum($paymentSeries)) }}</div>
                 </div>
             </div>
@@ -87,7 +87,7 @@
                     <div class="mt-4 px-2">
                         @foreach($anomalyLabels as $index => $label)
                             <div class="d-flex justify-content-between align-items-center mb-2 small">
-                                <span class="text-slate-600"><i class="ri-checkbox-blank-circle-fill me-2" style="color: {{ ['#EF4444', '#F59E0B', '#10B981'][$index] }}"></i>{{ $label }}</span>
+                                <span class="text-slate-600"><i class="ri-checkbox-blank-circle-fill me-2" style="color: {{ ['#EF4444', '#F59E0B', '#facc15'][$index] }}"></i>{{ $label }}</span>
                                 <span class="fw-bold text-slate-800">{{ $anomalySeries[$index] }}</span>
                             </div>
                         @endforeach
@@ -142,7 +142,7 @@
                 toolbar: { show: false },
                 fontFamily: 'Inter, sans-serif'
             },
-            colors: ['#3b82f6', '#10b981', '#ef4444'],
+            colors: ['#000000', '#facc15', '#ef4444'],
             dataLabels: { enabled: false },
             stroke: { curve: 'smooth', width: 3 },
             fill: {
@@ -165,7 +165,7 @@
             series: @json($anomalySeries),
             chart: { type: 'donut', height: 260 },
             labels: @json($anomalyLabels),
-            colors: ['#EF4444', '#F59E0B', '#10B981'],
+            colors: ['#EF4444', '#F59E0B', '#facc15'],
             legend: { show: false },
             plotOptions: {
                 pie: {

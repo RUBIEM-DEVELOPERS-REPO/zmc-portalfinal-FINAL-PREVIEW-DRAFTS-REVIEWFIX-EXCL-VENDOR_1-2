@@ -37,6 +37,7 @@ class SettingsController extends Controller
             'email' => ['required', 'email', 'max:255'],
             'phone_number' => ['nullable', 'string', 'max:20'],
             'profile' => ['required', 'array'],
+            'profile.secondary_phone' => ['nullable', 'string', 'max:20'],
             'profile_picture' => ['nullable', 'image', 'max:2048'],
         ]);
 
@@ -64,7 +65,7 @@ class SettingsController extends Controller
 
         $user->update(['profile_data' => $profile]);
 
-        return back()->with('success', 'Profile updated.');
+        return back()->with('success', 'Profile updated successfully.');
     }
 
     public function updateSecurity(Request $request)

@@ -2,11 +2,11 @@
 @section('title', 'Revenue Reports')
 
 @section('content')
-<div class="zmc-dashboard-wrapper" style="font-family:'Roboto', sans-serif; color:#334155;">
+<div class="zmc-dashboard-wrapper" style="font-family: var(--font-primary); color: var(--zmc-text-dark);">
   <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4">
     <div>
-      <h4 class="fw-bold m-0" style="font-size:22px; color:#1e293b;">Revenue Reports</h4>
-      <div class="text-muted mt-1" style="font-size:13px;">Summary counts now; wire to fee schedules to compute monetary totals.</div>
+      <h4 class="fw-bold m-0" style="font-size: var(--font-size-2xl); color:#1e293b;">Revenue Reports</h4>
+      <div class="text-muted mt-1" style="font-size: var(--font-size-base);">Summary counts now; wire to fee schedules to compute monetary totals.</div>
     </div>
     <div class="d-flex gap-2">
       <button class="btn btn-sm btn-outline-dark" disabled><i class="ri-download-2-line me-1"></i> Export CSV</button>
@@ -18,7 +18,7 @@
     <div class="col-6 col-md-4">
       <div class="card border-0 shadow-sm">
         <div class="card-body py-2 px-3">
-          <div class="text-muted" style="font-size:12px;">Paid (PayNow / Proof)</div>
+          <div class="text-muted" style="font-size: var(--font-size-sm);">Paid (PayNow / Proof)</div>
           <div class="fw-bold" style="font-size:20px;">{{ $paidCount }}</div>
         </div>
       </div>
@@ -26,7 +26,7 @@
     <div class="col-6 col-md-4">
       <div class="card border-0 shadow-sm">
         <div class="card-body py-2 px-3">
-          <div class="text-muted" style="font-size:12px;">Waived</div>
+          <div class="text-muted" style="font-size: var(--font-size-sm);">Waived</div>
           <div class="fw-bold text-warning" style="font-size:20px;">{{ $waivedCount }}</div>
         </div>
       </div>
@@ -34,7 +34,7 @@
     <div class="col-12 col-md-4">
       <div class="card border-0 shadow-sm">
         <div class="card-body py-2 px-3">
-          <div class="text-muted" style="font-size:12px;">Fee Breakdown</div>
+          <div class="text-muted" style="font-size: var(--font-size-sm);">Fee Breakdown</div>
           <div class="small text-muted" style="font-size:11px;">Enable fee schedule to compute totals per category.</div>
         </div>
       </div>

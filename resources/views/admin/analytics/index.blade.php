@@ -22,9 +22,20 @@
 
 <div class="zmc-dashboard-wrapper" style="font-family:'Roboto', sans-serif; color:#334155;">
   <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
-    <div>
-      <h4 class="fw-bold m-0" style="font-size:22px; color:#1e293b;">Analytics</h4>
-      <div class="text-muted mt-1" style="font-size:13px;">Trends and breakdowns across applications and users (last 30 days).</div>
+    <div class="d-flex align-items-center gap-3">
+      <div>
+        <h4 class="fw-bold m-0" style="font-size:22px; color:#1e293b;">Analytics</h4>
+        <div class="text-muted mt-1" style="font-size:13px;">Trends and breakdowns across applications and users.</div>
+      </div>
+      <form action="{{ route('admin.analytics.index') }}" method="GET" id="yearFilterForm" class="ms-2">
+          <select name="year" class="form-select border shadow-sm fw-bold bg-white btn-sm" style="height: 31px;" onchange="document.getElementById('yearFilterForm').submit()">
+              @foreach($availableYears ?? [] as $y)
+                  <option value="{{ $y }}" {{ (isset($year) && $year == $y) ? 'selected' : '' }}>
+                      Year: {{ $y }}
+                  </option>
+              @endforeach
+          </select>
+      </form>
     </div>
     <a href="{{ route('admin.dashboard') }}" class="btn btn-sm btn-outline-dark">
       <i class="ri-arrow-left-line me-1"></i> Back to Dashboard

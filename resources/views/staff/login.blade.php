@@ -7,34 +7,49 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" rel="stylesheet">
 
     <style>
         :root{
-            --bg: #f3f6f9;
+            --bg: #fafafa;
             --card: #ffffff;
             --border: #e2e8f0;
             --muted: #64748b;
             --text: #0f172a;
-            --green: #0f6a4f;
-            --green-hover: #0a4d39;
+            --primary: #2d5016;
+            --primary-hover: #1f3a0f;
+            --accent: #facc15;
+            --accent-dark: #eab308;
             --shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
             --radius: 16px;
         }
         *{box-sizing:border-box}
         body{
             margin:0;
-            font-family: Roboto, Inter, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
-            background-color: var(--bg);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background: #000 url('{{ asset("zmc_building.png") }}') no-repeat center center fixed;
+            background-size: cover;
             color: var(--text);
             display:flex;
             align-items:center;
             justify-content:center;
             min-height:100vh;
             padding:20px;
+            position: relative;
         }
-        .wrap{ width:100%; max-width:480px; }
+        body::before{
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(45, 80, 22, 0.45);
+            pointer-events: none;
+        }
+        .wrap{ width:100%; max-width:480px; position: relative; z-index: 1; }
         .brand{
             display:flex; justify-content:center; align-items:center; gap:12px;
             margin-bottom:25px; text-decoration:none;
@@ -67,8 +82,8 @@
         .header{text-align:center; margin-bottom:28px;}
         .eyebrow{
             display:inline-flex; align-items:center; gap:6px;
-            background: rgba(15, 106, 79, 0.08);
-            color: var(--green);
+            background: rgba(45, 80, 22, 0.08);
+            color: var(--primary);
             padding:6px 14px;
             border-radius:99px;
             font-size:11px;
@@ -93,7 +108,7 @@
         }
 
         .field{ margin-bottom: 20px; }
-        label{ display:block; font-size:13px; font-weight:900; margin-bottom:8px; color:#111827; }
+        label{ display:block; font-size: var(--font-size-base); font-weight:900; margin-bottom:8px; color:#111827; }
         .input-group{ position:relative; }
         .input{
             width:100%;
@@ -107,16 +122,20 @@
             background:#fff;
         }
         .input:focus{
-            border-color:var(--green);
-            box-shadow:0 0 0 4px rgba(15, 106, 79, 0.1);
+            border-color:var(--accent);
+            box-shadow:0 0 0 4px rgba(250, 204, 21, 0.15);
         }
         .pwd-row{
             display:flex; align-items:center; justify-content:space-between;
             margin-bottom:8px; gap:10px;
         }
         .forgot{
-            font-size:12px; font-weight:900; color:var(--green);
+            font-size: var(--font-size-sm); font-weight:900; color:var(--primary);
             text-decoration:none; white-space:nowrap;
+        }
+        .forgot:hover{ 
+            color: var(--accent-dark);
+            text-decoration: underline; 
         }
         .forgot:hover{ text-decoration:underline; }
         .toggle{
@@ -131,9 +150,9 @@
         .btn{
             width:100%;
             height:52px;
-            background:var(--green);
-            color:#fff;
-            border:none;
+            background:var(--primary);
+            color:var(--accent);
+            border:2px solid var(--accent);
             border-radius:12px;
             font-size:15px;
             font-weight:900;
@@ -145,7 +164,11 @@
             margin-top:10px;
             transition: background .2s, transform .08s ease;
         }
-        .btn:hover{ background: var(--green-hover); }
+        .btn:hover{ 
+            background: var(--accent);
+            color: var(--primary);
+            border-color: var(--primary);
+        }
         .btn:active{ transform: translateY(1px); }
         .footer-text{
             text-align:center;
@@ -224,7 +247,7 @@
 
             <div class="field" style="margin-bottom: 10px;">
                 <label style="display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--muted);font-weight:700;">
-                    <input type="checkbox" name="remember" style="width:16px;height:16px;accent-color:var(--green);">
+                    <input type="checkbox" name="remember" style="width:16px;height:16px;accent-color:var(--primary);">
                     Remember me
                 </label>
             </div>

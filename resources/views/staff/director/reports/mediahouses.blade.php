@@ -2,351 +2,189 @@
 @section('title', 'Media House Oversight')
 
 @section('content')
-<div class="zmc-dashboard-wrapper" style="font-family:'Roboto', sans-serif; color:#334155;">
+<div class="zmc-dashboard-wrapper" style="font-family: var(--font-primary); color: var(--zmc-text-dark);">
     <div class="mb-4">
         <a href="{{ route('staff.director.dashboard') }}" class="btn btn-sm btn-link p-0 text-muted mb-2 text-decoration-none">
             <i class="ri-arrow-left-line"></i> Back to Overview
         </a>
-        <h4 class="fw-bold m-0" style="font-size:22px; color:#1e293b;">Media House Oversight & Monitoring</h4>
+        <h4 class="fw-bold m-0" style="font-size: var(--font-size-2xl); color:#1e293b;">Media House Oversight & Monitoring</h4>
     </div>
 
-    {{-- KPI Cards --}}
-    <div class="row g-4 mb-4">
-        <div class="col-md-3">
-            <div class="zmc-card border-start border-4 border-success">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="text-muted small fw-bold text-uppercase mb-1">Issued/Active</div>
-                        <div class="h2 fw-black mb-0 text-success">{{ number_format($statusCounts['active']) }}</div>
-                    </div>
-                    <i class="ri-building-line fs-1 text-success opacity-25"></i>
+    <div class="row g-4">
+        <!-- Status Counts -->
+        <div class="col-md-4">
+            <div class="zmc-card text-center">
+                <div class="mb-2">
+                    <i class="ri-building-2-line" style="font-size: 48px; color: #10b981;"></i>
                 </div>
+                <div class="h2 fw-bold mb-1">{{ number_format($statusCounts['active']) }}</div>
+                <div class="text-muted">Active Media Houses</div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="zmc-card border-start border-4 border-warning">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="text-muted small fw-bold text-uppercase mb-1">In Progress</div>
-                        <div class="h2 fw-black mb-0 text-warning">{{ number_format($statusCounts['in_progress']) }}</div>
-                    </div>
-                    <i class="ri-time-line fs-1 text-warning opacity-25"></i>
+        <div class="col-md-4">
+            <div class="zmc-card text-center">
+                <div class="mb-2">
+                    <i class="ri-pause-circle-line" style="font-size: 48px; color: #f59e0b;"></i>
                 </div>
+                <div class="h2 fw-bold mb-1">{{ number_format($statusCounts['suspended']) }}</div>
+                <div class="text-muted">Suspended</div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="zmc-card border-start border-4 border-primary">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="text-muted small fw-bold text-uppercase mb-1">New This Year</div>
-                        <div class="h2 fw-black mb-0 text-primary">{{ number_format($statusCounts['new_this_year']) }}</div>
-                    </div>
-                    <i class="ri-add-circle-line fs-1 text-primary opacity-25"></i>
+        <div class="col-md-4">
+            <div class="zmc-card text-center">
+                <div class="mb-2">
+                    <i class="ri-add-circle-line" style="font-size: 48px; color: #3b82f6;"></i>
                 </div>
+                <div class="h2 fw-bold mb-1">{{ number_format($statusCounts['new_registrations']) }}</div>
+                <div class="text-muted">New Registrations (30 days)</div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="zmc-card border-start border-4 border-info">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="text-muted small fw-bold text-uppercase mb-1">Total Registrations</div>
-                        <div class="h2 fw-black mb-0 text-info">{{ number_format($statusCounts['total']) }}</div>
-                    </div>
-                    <i class="ri-file-list-line fs-1 text-info opacity-25"></i>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    {{-- Charts Row --}}
-    <div class="row g-4 mb-4">
-        <div class="col-md-6">
+        <!-- Average Staff Per House -->
+        <div class="col-md-12">
             <div class="zmc-card">
-                <h6 class="fw-bold mb-3">Status Distribution</h6>
-                <div style="height: 300px;">
-                    <canvas id="statusChart"></canvas>
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h6 class="fw-bold mb-2">Average Staff Accreditations per Media House</h6>
+                        <p class="text-muted mb-0">Monitoring organizational capacity and compliance thresholds</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <div class="h1 fw-bold mb-0" style="color: #3b82f6;">{{ number_format($averageStaffPerHouse, 1) }}</div>
+                        <div class="text-muted small">Average Staff Members</div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-6">
+
+        <!-- Houses Exceeding Thresholds -->
+        <div class="col-md-12">
             <div class="zmc-card">
-                <h6 class="fw-bold mb-3">Detailed Status Breakdown</h6>
-                <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                <h6 class="fw-bold mb-3">
+                    <i class="ri-alert-line text-warning me-2"></i>Media Houses Exceeding Staff Thresholds
+                </h6>
+                @if($housesExceedingThresholds->count() > 0)
+                <div class="alert alert-warning alert-sm mb-3">
+                    <strong>{{ $housesExceedingThresholds->count() }}</strong> media houses have exceeded the staff threshold of {{ config('director-dashboard.media_house_staff_threshold', 50) }}
+                </div>
+                <div class="table-responsive">
                     <table class="table table-sm table-hover mb-0">
-                        <thead class="bg-light sticky-top">
+                        <thead>
                             <tr class="smaller text-muted">
-                                <th>Status</th>
-                                <th class="text-end">Count</th>
-                                <th class="text-end">Percentage</th>
+                                <th>Media House</th>
+                                <th>Type</th>
+                                <th class="text-end">Staff Count</th>
+                                <th class="text-end">Status</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($statusBreakdown as $status)
+                            @foreach($housesExceedingThresholds as $house)
                             <tr>
-                                <td class="fw-bold text-uppercase small">{{ str_replace('_', ' ', $status->status) }}</td>
+                                <td class="fw-bold">{{ $house->organization_name }}</td>
+                                <td>{{ ucwords($house->media_type ?? 'N/A') }}</td>
                                 <td class="text-end">
-                                    <span class="badge bg-primary">{{ $status->count }}</span>
+                                    <span class="badge bg-warning">{{ $house->staff_count }}</span>
                                 </td>
                                 <td class="text-end">
-                                    {{ $statusCounts['total'] > 0 ? number_format(($status->count / $statusCounts['total']) * 100, 1) : 0 }}%
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="3" class="text-center text-muted py-3">No data available</td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Expiry and Threshold Tables --}}
-    <div class="row g-4 mb-4">
-        <div class="col-md-6">
-            <div class="zmc-card">
-                <h6 class="fw-bold mb-3">Accreditations Nearing Expiry (30 Days)</h6>
-                <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
-                    <table class="table table-sm table-hover mb-0">
-                        <thead class="bg-light sticky-top">
-                            <tr class="smaller text-muted">
-                                <th>Applicant</th>
-                                <th>Application #</th>
-                                <th>Expiry Date</th>
-                                <th>Days Left</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($accreditationsNearingExpiry as $app)
-                            <tr>
-                                <td class="fw-bold">{{ $app->applicant->name ?? 'N/A' }}</td>
-                                <td class="smaller">{{ $app->application_number }}</td>
-                                <td>{{ $app->expiry_date ? \Carbon\Carbon::parse($app->expiry_date)->format('d M Y') : 'N/A' }}</td>
-                                <td>
-                                    @php
-                                        $daysLeft = $app->expiry_date ? \Carbon\Carbon::parse($app->expiry_date)->diffInDays(now()) : 0;
-                                    @endphp
-                                    <span class="badge {{ $daysLeft <= 7 ? 'bg-danger' : ($daysLeft <= 14 ? 'bg-warning' : 'bg-info') }}">
-                                        {{ $daysLeft }} days
+                                    <span class="badge bg-{{ $house->status === 'active' ? 'success' : 'secondary' }}">
+                                        {{ ucwords($house->status) }}
                                     </span>
                                 </td>
                             </tr>
-                            @empty
-                            <tr>
-                                <td colspan="4" class="text-center text-muted py-3">No accreditations expiring soon</td>
-                            </tr>
-                            @endforelse
+                            @endforeach
                         </tbody>
                     </table>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Houses Exceeding Thresholds --}}
-    <div class="row g-4 mb-4">
-        <div class="col-md-6">
-            <div class="zmc-card">
-                <h6 class="fw-bold mb-3">
-                    <i class="ri-alarm-warning-line me-1 text-warning"></i>
-                    Houses Exceeding Staff Threshold (>50)
-                </h6>
-                <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
-                    <table class="table table-sm table-hover mb-0">
-                        <thead class="bg-light sticky-top">
-                            <tr class="smaller text-muted">
-                                <th>Media House</th>
-                                <th>Application #</th>
-                                <th class="text-end">Staff Count</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($housesExceedingThresholds as $house)
-                            <tr>
-                                <td class="fw-bold">{{ $house->applicant->name ?? 'N/A' }}</td>
-                                <td class="smaller">{{ $house->application_number }}</td>
-                                <td class="text-end">
-                                    <span class="badge bg-warning text-dark">{{ $house->staff_accreditations_count }}</span>
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="3" class="text-center text-muted py-3">No houses exceeding threshold</td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                @else
+                <div class="alert alert-success alert-sm">
+                    <i class="ri-checkbox-circle-line me-2"></i>All media houses are within acceptable staff thresholds
                 </div>
+                @endif
             </div>
         </div>
 
+        <!-- Accreditations Nearing Expiry -->
         <div class="col-md-6">
             <div class="zmc-card">
                 <h6 class="fw-bold mb-3">
-                    <i class="ri-error-warning-line me-1 text-danger"></i>
-                    High-Risk Non-Renewals (Expired Last 30 Days)
+                    <i class="ri-time-line text-danger me-2"></i>Accreditations Nearing Expiry (30 Days)
                 </h6>
-                <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                @if($accreditationsNearingExpiry->count() > 0)
+                <div class="alert alert-danger alert-sm mb-3">
+                    <strong>{{ $accreditationsNearingExpiry->count() }}</strong> accreditations expiring soon
+                </div>
+                <div class="table-responsive">
                     <table class="table table-sm table-hover mb-0">
-                        <thead class="bg-light sticky-top">
+                        <thead>
                             <tr class="smaller text-muted">
                                 <th>Applicant</th>
-                                <th>Application #</th>
-                                <th>Expired On</th>
+                                <th>Media House</th>
+                                <th class="text-end">Expires</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($highRiskNonRenewals as $app)
+                            @foreach($accreditationsNearingExpiry->take(10) as $accreditation)
                             <tr>
-                                <td class="fw-bold">{{ $app->applicant->name ?? 'N/A' }}</td>
-                                <td class="smaller">{{ $app->application_number }}</td>
-                                <td class="text-danger">{{ $app->expiry_date ? \Carbon\Carbon::parse($app->expiry_date)->format('d M Y') : 'N/A' }}</td>
+                                <td>{{ $accreditation->applicant_name }}</td>
+                                <td class="small">{{ $accreditation->media_house_name }}</td>
+                                <td class="text-end">
+                                    <span class="badge bg-danger">
+                                        {{ \Carbon\Carbon::parse($accreditation->expiry_date)->format('d M Y') }}
+                                    </span>
+                                </td>
                             </tr>
-                            @empty
-                            <tr>
-                                <td colspan="3" class="text-center text-muted py-3">No recent non-renewals</td>
-                            </tr>
-                            @endforelse
+                            @endforeach
                         </tbody>
                     </table>
                 </div>
+                @else
+                <div class="alert alert-success alert-sm">
+                    <i class="ri-checkbox-circle-line me-2"></i>No accreditations expiring in the next 30 days
+                </div>
+                @endif
             </div>
         </div>
-    </div>
 
-    {{-- Strategic Insights --}}
-    <div class="row g-4">
-        <div class="col-12">
-            <div class="zmc-card bg-light border-0">
+        <!-- High-Risk Non-Renewals -->
+        <div class="col-md-6">
+            <div class="zmc-card">
                 <h6 class="fw-bold mb-3">
-                    <i class="ri-lightbulb-line me-1 text-warning"></i>
-                    Strategic Insights & Summary
+                    <i class="ri-error-warning-line text-danger me-2"></i>High-Risk Non-Renewal Cases
                 </h6>
-                <div class="row g-3">
-                    <div class="col-md-3">
-                        <div class="p-3 bg-white rounded-3 border">
-                            <div class="small text-muted mb-1">Total Registrations</div>
-                            <div class="h4 fw-bold mb-0">{{ number_format($statusCounts['total']) }}</div>
-                            <div class="smaller text-muted">All time</div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="p-3 bg-white rounded-3 border">
-                            <div class="small text-muted mb-1">Issued/Active</div>
-                            <div class="h4 fw-bold mb-0 text-success">{{ number_format($statusCounts['active']) }}</div>
-                            <div class="smaller text-muted">Fully processed</div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="p-3 bg-white rounded-3 border">
-                            <div class="small text-muted mb-1">In Progress</div>
-                            <div class="h4 fw-bold mb-0 text-warning">{{ number_format($statusCounts['in_progress']) }}</div>
-                            <div class="smaller text-muted">Pending review/payment</div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="p-3 bg-white rounded-3 border">
-                            <div class="small text-muted mb-1">New This Year</div>
-                            <div class="h4 fw-bold mb-0 text-primary">{{ number_format($statusCounts['new_this_year']) }}</div>
-                            <div class="smaller text-muted">{{ now()->year }} applications</div>
-                        </div>
-                    </div>
+                @if($highRiskNonRenewals->count() > 0)
+                <div class="alert alert-danger alert-sm mb-3">
+                    <strong>{{ $highRiskNonRenewals->count() }}</strong> high-risk non-renewal cases identified
                 </div>
-                
-                @if($statusCounts['total'] > 0)
-                <div class="mt-4 p-3 bg-white rounded-3 border">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="small text-muted mb-2">Processing Rate</div>
-                            <div class="progress" style="height: 25px;">
-                                @php
-                                    $processedRate = $statusCounts['total'] > 0 ? ($statusCounts['active'] / $statusCounts['total']) * 100 : 0;
-                                @endphp
-                                <div class="progress-bar bg-success" style="width: {{ $processedRate }}%">
-                                    {{ number_format($processedRate, 1) }}%
-                                </div>
-                            </div>
-                            <div class="smaller text-muted mt-1">{{ $statusCounts['active'] }} of {{ $statusCounts['total'] }} issued</div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="small text-muted mb-2">Pending Applications</div>
-                            <div class="progress" style="height: 25px;">
-                                @php
-                                    $pendingRate = $statusCounts['total'] > 0 ? ($statusCounts['in_progress'] / $statusCounts['total']) * 100 : 0;
-                                @endphp
-                                <div class="progress-bar bg-warning" style="width: {{ $pendingRate }}%">
-                                    {{ number_format($pendingRate, 1) }}%
-                                </div>
-                            </div>
-                            <div class="smaller text-muted mt-1">{{ $statusCounts['in_progress'] }} applications in progress</div>
-                        </div>
-                    </div>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead>
+                            <tr class="smaller text-muted">
+                                <th>Applicant</th>
+                                <th>Media House</th>
+                                <th class="text-end">Expired</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($highRiskNonRenewals->take(10) as $case)
+                            <tr>
+                                <td>{{ $case->applicant_name }}</td>
+                                <td class="small">{{ $case->media_house_name }}</td>
+                                <td class="text-end">
+                                    <span class="badge bg-dark">
+                                        {{ \Carbon\Carbon::parse($case->expiry_date)->diffForHumans() }}
+                                    </span>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                @else
+                <div class="alert alert-success alert-sm">
+                    <i class="ri-checkbox-circle-line me-2"></i>No high-risk non-renewal cases at this time
                 </div>
                 @endif
             </div>
         </div>
     </div>
 </div>
-
-<script>
-(function() {
-    function initCharts() {
-        if (typeof Chart === 'undefined') {
-            console.error('Chart.js not loaded, retrying...');
-            setTimeout(initCharts, 100);
-            return;
-        }
-
-        // Status Distribution Pie Chart
-        const statusCanvas = document.getElementById('statusChart');
-        if (statusCanvas) {
-            const statusData = {!! json_encode($statusBreakdown) !!};
-            const labels = statusData.map(s => s.status.replace(/_/g, ' ').toUpperCase());
-            const counts = statusData.map(s => s.count);
-            const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
-            
-            new Chart(statusCanvas, {
-                type: 'doughnut',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: counts,
-                        backgroundColor: colors.slice(0, labels.length)
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                padding: 15,
-                                font: { size: 11 }
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const total = counts.reduce((a, b) => a + b, 0);
-                                    const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : 0;
-                                    return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        }
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initCharts);
-    } else {
-        initCharts();
-    }
-})();
-</script>
 @endsection

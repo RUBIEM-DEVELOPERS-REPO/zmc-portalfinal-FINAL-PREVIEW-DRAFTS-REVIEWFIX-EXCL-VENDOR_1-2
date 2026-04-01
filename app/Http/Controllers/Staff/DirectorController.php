@@ -16,6 +16,31 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
+/**
+ * Director Dashboard Controller
+ * 
+ * Provides executive oversight and analytics for the Director role.
+ * 
+ * SECURITY: This controller enforces STRICT VIEW-ONLY access.
+ * Directors can:
+ * - View all dashboard data and analytics
+ * - Generate and download reports (PDF, Excel, CSV)
+ * 
+ * Directors CANNOT:
+ * - Edit application data
+ * - Approve or reject applications
+ * - Assign or reassign applications
+ * - Generate certificates or cards
+ * - Print or reprint documents
+ * - Modify payment records
+ * - Grant waivers
+ * - Perform any operational actions
+ * 
+ * All methods in this controller are read-only except for report generation
+ * which only creates downloadable files without modifying system data.
+ * 
+ * @see \App\Http\Middleware\DirectorViewOnly
+ */
 class DirectorController extends Controller
 {
     public function __construct(
@@ -28,27 +53,79 @@ class DirectorController extends Controller
         private RiskIndicatorService $riskService,
         private ReportGenerationService $reportService
     ) {
-        $this->middleware('auth');
-        // Director can see everything; Registrar can see accreditation performance
-        $this->middleware('role:director')->except(['accreditationPerformance']);
-        $this->middleware('role:director,registrar')->only(['accreditationPerformance']);
+        // Ensure view-only access - directors can only view data and generate reports
+        $this->middleware(['auth', 'role:director', 'director.view_only']);
     }
+
     /**
-     * Executive Overview Dashboard
-     * Requirements: 1.1-1.10
+     * Verify that the current user has director role and view-only access
+     * This is a defense-in-depth check in addition to middleware
+     *
+     * @throws \Symfony\Component\HttpKernel\Exception\HttpException
      */
+    private function ensureViewOnlyAccess(): void
+    {
+        if (!auth()->check() || !auth()->user()->hasRole('director')) {
+            abort(403, 'This action requires director role.');
+        }
+    }
+
+    /**
+     * Verify that a request is for a read-only operation
+     * Directors cannot perform any data modification operations
+     *
+     * @param Request $request
+     * @throws \Symfony\Component\HttpKernel\Exception\HttpException
+     */
+    private function ensureReadOnlyOperation(Request $request): void
+    {
+        // Report generation is allowed (POST) but no other modifications
+        $allowedPostRoutes = [
+            'staff.director.generate.monthly-accreditation',
+            'staff.director.generate.revenue-financial',
+            'staff.director.generate.compliance-audit',
+            'staff.director.generate.mediahouse-status',
+            'staff.director.generate.operational-performance',
+        ];
+
+        if (!$request->isMethod('GET') && !in_array($request->route()->getName(), $allowedPostRoutes)) {
+            abort(403, 'Directors have view-only access and cannot perform operational actions.');
+        }
+    }
+
     /**
      * Executive Overview Dashboard
      * Requirements: 1.1-1.10
+     * 
+     * SECURITY: Read-only operation - displays data without modification
      */
     public function dashboard(Request $request)
     {
         $activeTab = $request->get('tab', 'perf');
-        
+        $year = now()->year;
+
         // KPIs and risk indicators for main dashboard
-        $kpis = $this->metricsService->getExecutiveKPIs();
-        $riskIndicators = $this->riskService->getAllRiskIndicators();
+        $kpis = $this->metricsService->getExecutiveKPIs($year);
+        $riskIndicators = $this->riskService->getAllRiskIndicators(); // Risk indicators are usually immediate
         $highRiskActivity = $this->complianceService->getHighRiskActions(5);
+
+        // Handle AJAX requests for real-time updates
+        if ($request->ajax() || $request->get('ajax') == '1') {
+            $section = $request->get('section');
+            
+            if ($section === 'highRiskActivity') {
+                return response()->json([
+                    'highRiskActivity' => $highRiskActivity
+                ]);
+            }
+            
+            // Return KPIs and risk indicators for polling
+            return response()->json([
+                'kpis' => $kpis,
+                'riskIndicators' => $riskIndicators,
+                'highRiskActivity' => $highRiskActivity
+            ]);
+        }
 
         // Performance partial data (performance.blade.php)
         $ratios = $this->accreditationService->getApprovalRatioByApplicationType();
@@ -58,12 +135,11 @@ class DirectorController extends Controller
         ];
         $categories = $this->accreditationService->getCategoryDistribution();
         
-        // Get monthly trends for dashboard - ensure all 12 months have data
+        // Get monthly trends for dashboard (always current year's last 12 months)
         $months = collect();
         for ($i = 11; $i >= 0; $i--) {
             $months->push(now()->subMonths($i)->format('Y-m'));
         }
-        
         $trendsData = $this->accreditationService->getMonthlyTrends(12)->keyBy('month');
         
         // Fill in missing months with zeros
@@ -73,7 +149,7 @@ class DirectorController extends Controller
                 'month' => $month,
                 'submitted' => $data->total_submitted ?? 0,
                 'approved' => $data->total_approved ?? 0,
-                'returned' => $data->total_returned ?? 0,
+                'rejected' => $data->total_rejected ?? 0,
             ];
         });
 
@@ -165,45 +241,14 @@ class DirectorController extends Controller
         $applicationsProcessed = $staffPerformance; // for backward compatibility if needed
         $averageReviewTime = $this->staffService->getAverageReviewTimePerRegistrar();
         $approvalDistribution = $this->staffService->getApprovalDistributionPerOfficer();
- 
-        // Trend Analytics (Simplified for Director Overview)
-        $trendRange = request()->get('trend_range', '12_months');
-        $trendCutoff = now()->subMonths(12);
-        $currentRangeLabel = 'Last 12 Months';
-
-        switch ($trendRange) {
-            case '30_days': $trendCutoff = now()->subDays(30); $currentRangeLabel = 'Last 30 Days'; break;
-            case '90_days': $trendCutoff = now()->subDays(90); $currentRangeLabel = 'Last 90 Days'; break;
-            case '6_months': $trendCutoff = now()->subMonths(6); $currentRangeLabel = 'Last 6 Months'; break;
-            case 'this_year': $trendCutoff = now()->startOfYear(); $currentRangeLabel = 'This Year (' . date('Y') . ')'; break;
-            case 'all_time': $trendCutoff = now()->subYears(10); $currentRangeLabel = 'All Time'; break;
-        }
-
-        $accreditationTrends = [];
-        $registrationTrends = [];
-        $trendLabels = [];
-
-        try {
-            $trends = Application::selectRaw("strftime('%Y-%m', created_at) as month, 
-                SUM(CASE WHEN application_type = 'accreditation' THEN 1 ELSE 0 END) as acc_count,
-                SUM(CASE WHEN application_type = 'registration' THEN 1 ELSE 0 END) as reg_count")
-                ->where('created_at', '>=', $trendCutoff)
-                ->groupBy('month')
-                ->orderBy('month')
-                ->get();
-
-            foreach ($trends as $t) {
-                $trendLabels[] = date('M Y', strtotime($t->month . '-01'));
-                $accreditationTrends[] = (int) $t->acc_count;
-                $registrationTrends[] = (int) $t->reg_count;
-            }
-        } catch (\Exception $e) {}
 
         return view('staff.director.dashboard', compact(
             'kpis',
             'riskIndicators',
             'highRiskActivity',
             'activeTab',
+            'year',
+            'availableYears',
             // Performance partial
             'ratio',
             'categories',
@@ -229,15 +274,15 @@ class DirectorController extends Controller
             'staffPerformance',
             'applicationsProcessed',
             'averageReviewTime',
-            'approvalDistribution',
-            // Trends
-            'trendLabels', 'accreditationTrends', 'registrationTrends', 'currentRangeLabel'
+            'approvalDistribution'
         ));
     }
 
     /**
      * Accreditation Performance Report
      * Requirements: 2.1-2.6
+     * 
+     * SECURITY: Read-only operation - displays data without modification
      */
     public function accreditationPerformance()
     {
@@ -252,10 +297,8 @@ class DirectorController extends Controller
             $months->push(now()->subMonths($i)->format('Y-m'));
         }
         
-        $monthFormat = DB::getDriverName() === 'pgsql' ? "TO_CHAR(created_at, 'YYYY-MM')" : "strftime('%Y-%m', created_at)";
-
         // Accreditation trends (excluding registrations)
-        $accreditationData = Application::selectRaw("$monthFormat as month")
+        $accreditationData = Application::selectRaw("strftime('%Y-%m', created_at) as month")
             ->selectRaw('COUNT(*) as total_submitted')
             ->selectRaw("SUM(CASE WHEN status = 'issued' THEN 1 ELSE 0 END) as total_approved")
             ->where('application_type', '!=', 'registration')
@@ -266,7 +309,7 @@ class DirectorController extends Controller
             ->keyBy('month');
         
         // Registration trends
-        $registrationData = Application::selectRaw("$monthFormat as month")
+        $registrationData = Application::selectRaw("strftime('%Y-%m', created_at) as month")
             ->selectRaw('COUNT(*) as total_submitted')
             ->selectRaw("SUM(CASE WHEN status = 'issued' THEN 1 ELSE 0 END) as total_approved")
             ->where('application_type', 'registration')
@@ -328,6 +371,8 @@ class DirectorController extends Controller
     /**
      * Financial Performance Report
      * Requirements: 3.1-3.8
+     * 
+     * SECURITY: Read-only operation - displays data without modification
      */
     public function financialOverview()
     {
@@ -363,6 +408,8 @@ class DirectorController extends Controller
     /**
      * Compliance and Risk Monitoring
      * Requirements: 4.1-4.12
+     * 
+     * SECURITY: Read-only operation - displays data without modification
      */
     public function complianceRisk()
     {
@@ -399,6 +446,8 @@ class DirectorController extends Controller
     /**
      * Media House Oversight
      * Requirements: 5.1-5.7
+     * 
+     * SECURITY: Read-only operation - displays data without modification
      */
     public function mediaHouseOversight()
     {
@@ -427,6 +476,8 @@ class DirectorController extends Controller
     /**
      * Staff Performance Metrics
      * Requirements: 7.1-7.6
+     * 
+     * SECURITY: Read-only operation - displays data without modification
      */
     public function staffPerformance()
     {
@@ -452,6 +503,8 @@ class DirectorController extends Controller
     /**
      * Issuance and Print Oversight
      * Requirements: 8.1-8.5
+     * 
+     * SECURITY: Read-only operation - displays data without modification
      */
     public function issuanceOversight()
     {
@@ -467,6 +520,8 @@ class DirectorController extends Controller
     /**
      * Reports and Downloads Page
      * Requirements: 10.1-10.8, 12.1
+     * 
+     * SECURITY: Read-only operation - displays report generation interface
      */
     public function reportsDownloads()
     {
@@ -476,9 +531,13 @@ class DirectorController extends Controller
     /**
      * Generate Monthly Accreditation Report
      * Requirements: 10.1, 10.6, 10.7, 10.8
+     * 
+     * SECURITY: Read-only operation - generates report without modifying data
      */
     public function generateMonthlyAccreditationReport(Request $request)
     {
+        $this->ensureViewOnlyAccess();
+        
         $format = $request->input('format', 'pdf');
         $month = $request->input('month', now()->format('Y-m'));
         
@@ -490,9 +549,13 @@ class DirectorController extends Controller
     /**
      * Generate Revenue and Financial Report
      * Requirements: 10.2, 10.6, 10.7, 10.8
+     * 
+     * SECURITY: Read-only operation - generates report without modifying data
      */
     public function generateRevenueFinancialReport(Request $request)
     {
+        $this->ensureViewOnlyAccess();
+        
         $format = $request->input('format', 'pdf');
         $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
         $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
@@ -506,9 +569,13 @@ class DirectorController extends Controller
     /**
      * Generate Compliance and Audit Report
      * Requirements: 10.3, 10.6, 10.7, 10.8
+     * 
+     * SECURITY: Read-only operation - generates report without modifying data
      */
     public function generateComplianceAuditReport(Request $request)
     {
+        $this->ensureViewOnlyAccess();
+        
         $format = $request->input('format', 'pdf');
         $month = $request->input('month', now()->format('Y-m'));
         
@@ -520,9 +587,13 @@ class DirectorController extends Controller
     /**
      * Generate Media House Status Report
      * Requirements: 10.4, 10.6, 10.7, 10.8
+     * 
+     * SECURITY: Read-only operation - generates report without modifying data
      */
     public function generateMediaHouseStatusReport(Request $request)
     {
+        $this->ensureViewOnlyAccess();
+        
         $format = $request->input('format', 'pdf');
         
         return $this->reportService->generateMediaHouseStatusReport($format, []);
@@ -531,9 +602,13 @@ class DirectorController extends Controller
     /**
      * Generate Operational Performance Report
      * Requirements: 10.5, 10.6, 10.7, 10.8
+     * 
+     * SECURITY: Read-only operation - generates report without modifying data
      */
     public function generateOperationalPerformanceReport(Request $request)
     {
+        $this->ensureViewOnlyAccess();
+        
         $format = $request->input('format', 'pdf');
         $month = $request->input('month', now()->format('Y-m'));
         
@@ -545,6 +620,8 @@ class DirectorController extends Controller
     /**
      * Geographic Distribution
      * Requirements: 9.1-9.5
+     * 
+     * SECURITY: Read-only operation - displays data without modification
      */
     public function geographicDistribution()
     {

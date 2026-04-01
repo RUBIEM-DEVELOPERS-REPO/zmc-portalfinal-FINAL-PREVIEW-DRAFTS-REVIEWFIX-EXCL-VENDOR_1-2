@@ -2,10 +2,10 @@
 @section('title', 'Manage Applicants')
 
 @section('content')
-<div class="zmc-dashboard-wrapper" style="font-family:'Roboto', sans-serif; color:#334155;">
+<div class="zmc-dashboard-wrapper" style="font-family: var(--font-primary); color: var(--zmc-text-dark);">
 
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="fw-bold m-0" style="font-size:22px; color:#1e293b;">Applicant Account Management</h4>
+    <h4 class="fw-bold m-0" style="font-size: var(--font-size-2xl); color:#1e293b;">Applicant Account Management</h4>
     <a href="{{ route('staff.it.dashboard') }}" class="btn btn-outline-dark btn-sm">
       <i class="ri-arrow-left-line me-1"></i> Back to Dashboard
     </a>
