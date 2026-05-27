@@ -73,12 +73,12 @@ class AccreditationOfficerController extends Controller
             Application::SUBMITTED,
             Application::OFFICER_REVIEW,
             Application::CORRECTION_REQUESTED,
-            Application::APPROVED_BY_ACCREDITATION_OFFICER_AWAITING_PAYMENT,
-            Application::APPROVED_BY_OFFICER_AWAITING_PAYMENT_AND_REGISTRAR_MASTER,
-            Application::VERIFIED_BY_OFFICER_PENDING_REGISTRAR,
+            Application::RETURNED_TO_APPLICANT,
+            Application::APPROVED_AWAITING_PAYMENT,
+            Application::VERIFIED_BY_OFFICER,
             Application::RETURNED_TO_OFFICER,
-            Application::REGISTRAR_RAISED_FIX_REQUEST,
-            'officer_approved_pending_registrar',
+            Application::REGISTRAR_FIX_REQUEST,
+            Application::SUBMITTED_WITH_APP_FEE,
         ];
 
         $applications = Application::query()
@@ -314,7 +314,15 @@ public function approve(Request $request, Application $application)
 
         $journalists = $query->paginate(20)->appends($request->query());
 
-        return view('staff.officer.accredited_journalists', compact('journalists'));
+        $allRecords = \App\Models\AccreditationRecord::query();
+        $stats = [
+            'total' => $allRecords->count(),
+            'collected' => (clone $allRecords)->whereNotNull('collected_at')->count(),
+            'uncollected' => (clone $allRecords)->whereNull('collected_at')->count(),
+            'expired' => (clone $allRecords)->whereNotNull('expires_at')->where('expires_at', '<', now())->count(),
+        ];
+
+        return view('staff.officer.accredited_journalists', compact('journalists', 'stats'));
     }
 
     /**
@@ -360,12 +368,317 @@ public function approve(Request $request, Application $application)
 
         $mediaHouses = $query->paginate(20)->appends($request->query());
 
-        return view('staff.officer.registered_mediahouses', compact('mediaHouses'));
+        $allMH = \App\Models\RegistrationRecord::query();
+        $mhStats = [
+            'total' => $allMH->count(),
+            'collected' => (clone $allMH)->whereNotNull('collected_at')->count(),
+            'uncollected' => (clone $allMH)->whereNull('collected_at')->count(),
+            'expired' => (clone $allMH)->whereNotNull('expires_at')->where('expires_at', '<', now())->count(),
+        ];
+
+        return view('staff.officer.registered_mediahouses', compact('mediaHouses', 'mhStats'));
     }
 
     /**
      * Send collection notification to journalists/media houses
      */
+    public function physicalIntakeForm()
+    {
+        return view('staff.officer.physical_intake');
+    }
+
+    public function physicalIntakeProcess(Request $request)
+    {
+        $baseRules = [
+            'application_type' => ['required', 'in:accreditation,registration'],
+            'request_type' => ['required', 'in:new,renewal,replacement'],
+        ];
+
+        $requestType = $request->input('request_type');
+        $appType = $request->input('application_type');
+
+        if ($requestType === 'new' && $appType === 'accreditation') {
+            $rules = array_merge($baseRules, [
+                'first_name' => ['required', 'string', 'max:100'],
+                'surname' => ['required', 'string', 'max:100'],
+                'id_number' => ['required', 'string', 'regex:/^\d{2}-\d{6,7}-[A-Z]-\d{2}$/i'],
+                'category' => ['required', 'string', 'max:10'],
+                'receipt_number' => ['required', 'string', 'max:100'],
+                'employer_name' => ['required', 'string', 'max:255'],
+                'designation' => ['nullable', 'string', 'max:100'],
+                'email' => ['required', 'email', 'max:255'],
+                'phone' => ['required', 'string', 'max:30'],
+                'physical_address' => ['required', 'string', 'max:500'],
+                'province' => ['required', 'string', 'max:50'],
+                'city' => ['required', 'string', 'max:100'],
+                'applicant_photo' => ['nullable', 'image', 'max:5120'],
+            ]);
+        } elseif ($requestType === 'new' && $appType === 'registration') {
+            $rules = array_merge($baseRules, [
+                'entity_name' => ['required', 'string', 'max:255'],
+                'trading_name' => ['required', 'string', 'max:255'],
+                'business_registration' => ['required', 'string', 'max:100'],
+                'tax_number' => ['required', 'string', 'max:100'],
+                'business_type' => ['required', 'string', 'max:50'],
+                'ownership_type' => ['required', 'string', 'max:50'],
+                'local_ownership' => ['required', 'numeric', 'min:0', 'max:100'],
+                'website' => ['nullable', 'url', 'max:255'],
+                'media_category' => ['required', 'string', 'max:10'],
+                'publication_name' => ['required', 'string', 'max:255'],
+                'publication_frequency' => ['nullable', 'string', 'max:30'],
+                'editor_name' => ['required', 'string', 'max:255'],
+                'editor_contact' => ['required', 'string', 'max:255'],
+                'mh_email' => ['required', 'email', 'max:255'],
+                'mh_phone' => ['required', 'string', 'max:30'],
+                'mh_physical_address' => ['required', 'string', 'max:500'],
+                'postal_address' => ['required', 'string', 'max:500'],
+                'mh_province' => ['required', 'string', 'max:50'],
+                'mh_city' => ['required', 'string', 'max:100'],
+                'mh_receipt_number' => ['required', 'string', 'max:100'],
+            ]);
+        } else {
+            $rules = array_merge($baseRules, [
+                'renewal_first_name' => ['required', 'string', 'max:100'],
+                'renewal_surname' => ['required', 'string', 'max:100'],
+                'renewal_id_number' => ['required', 'string', 'regex:/^\d{2}-\d{6,7}-[A-Z]-\d{2}$/i'],
+                'lookup_number' => ['required', 'string', 'max:50'],
+                'renewal_receipt_number' => ['required', 'string', 'max:100'],
+                'renewal_email' => ['required', 'email', 'max:255'],
+                'renewal_phone' => ['required', 'string', 'max:30'],
+                'renewal_physical_address' => ['required', 'string', 'max:500'],
+                'renewal_city' => ['required', 'string', 'max:100'],
+                'renewal_province' => ['required', 'string', 'max:50'],
+            ]);
+        }
+
+        $data = $request->validate($rules);
+
+        $year = now()->format('Y');
+
+        if ($requestType === 'new' && $appType === 'accreditation') {
+            $prefix = "ZMC-AP3-{$year}-";
+            $lastRef = Application::where('reference', 'like', $prefix . '%')
+                ->where('reference', 'not like', 'DRAFT%')
+                ->orderByRaw("reference DESC")
+                ->value('reference');
+            $nextNum = $lastRef ? ((int) substr($lastRef, -4)) + 1 : 1;
+            $reference = $prefix . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
+
+            $applicantName = trim($data['first_name'] . ' ' . $data['surname']);
+
+            $user = \App\Models\User::where('email', $data['email'])->first();
+            if (!$user) {
+                $user = \App\Models\User::create([
+                    'name' => $applicantName,
+                    'email' => $data['email'],
+                    'password' => bcrypt(Str::random(32)),
+                    'account_type' => 'journalist',
+                    'phone_number' => $data['phone'],
+                    'id_number' => $data['id_number'],
+                    'account_status' => 'active',
+                    'region' => $data['province'] ?? 'harare',
+                ]);
+            }
+
+            $photoPath = null;
+            $photoFile = null;
+            if ($request->hasFile('applicant_photo')) {
+                $photoFile = $request->file('applicant_photo');
+                $photoPath = $photoFile->store('intake-photos', 'public');
+            }
+
+            $formData = [
+                'first_name' => $data['first_name'],
+                'surname' => $data['surname'],
+                'national_id' => $data['id_number'],
+                'id_number' => $data['id_number'],
+                'category' => $data['category'],
+                'employer_name' => $data['employer_name'],
+                'designation' => $data['designation'] ?? '',
+                'email' => $data['email'],
+                'phone' => $data['phone'],
+                'physical_address' => $data['physical_address'],
+                'province' => $data['province'],
+                'city' => $data['city'],
+                'photo_path' => $photoPath,
+                'intake_method' => 'physical',
+                'intake_officer' => auth()->user()?->name,
+                'intake_date' => now()->toDateString(),
+            ];
+
+            $application = Application::create([
+                'reference' => $reference,
+                'applicant_user_id' => $user->id,
+                'application_type' => 'accreditation',
+                'request_type' => 'new',
+                'status' => Application::PRODUCTION_QUEUE,
+                'receipt_number' => $data['receipt_number'],
+                'accreditation_category_code' => $data['category'],
+                'collection_region' => $data['province'] ?? 'harare',
+                'form_data' => $formData,
+                'is_draft' => false,
+                'submitted_at' => now(),
+                'approved_at' => now(),
+                'assigned_officer_id' => null,
+                'last_action_by' => auth()->id(),
+                'payment_status' => 'verified',
+                'payment_stage' => 'complete',
+            ]);
+
+            if ($photoPath && $photoFile) {
+                \App\Models\ApplicationDocument::create([
+                    'application_id' => $application->id,
+                    'owner_id' => $user->id,
+                    'doc_type' => 'passport_photo',
+                    'file_path' => $photoPath,
+                    'original_name' => $photoFile->getClientOriginalName(),
+                    'mime' => $photoFile->getClientMimeType(),
+                    'size' => $photoFile->getSize(),
+                    'status' => 'uploaded',
+                ]);
+            }
+
+        } elseif ($requestType === 'new' && $appType === 'registration') {
+            $prefix = "ZMC-AP1-{$year}-";
+            $lastRef = Application::where('reference', 'like', $prefix . '%')
+                ->where('reference', 'not like', 'DRAFT%')
+                ->orderByRaw("reference DESC")
+                ->value('reference');
+            $nextNum = $lastRef ? ((int) substr($lastRef, -4)) + 1 : 1;
+            $reference = $prefix . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
+
+            $user = \App\Models\User::where('email', $data['mh_email'])->first();
+            if (!$user) {
+                $user = \App\Models\User::create([
+                    'name' => $data['entity_name'],
+                    'email' => $data['mh_email'],
+                    'password' => bcrypt(Str::random(32)),
+                    'account_type' => 'mediahouse',
+                    'phone_number' => $data['mh_phone'],
+                    'account_status' => 'active',
+                    'region' => $data['mh_province'] ?? 'harare',
+                ]);
+            }
+
+            $formData = [
+                'entity_name' => $data['entity_name'],
+                'trading_name' => $data['trading_name'],
+                'business_registration' => $data['business_registration'],
+                'tax_number' => $data['tax_number'],
+                'business_type' => $data['business_type'],
+                'ownership_type' => $data['ownership_type'],
+                'local_ownership' => $data['local_ownership'],
+                'website' => $data['website'] ?? null,
+                'media_category' => $data['media_category'],
+                'publication_name' => $data['publication_name'],
+                'publication_frequency' => $data['publication_frequency'] ?? null,
+                'editor_name' => $data['editor_name'],
+                'editor_contact' => $data['editor_contact'],
+                'email' => $data['mh_email'],
+                'phone' => $data['mh_phone'],
+                'physical_address' => $data['mh_physical_address'],
+                'postal_address' => $data['postal_address'],
+                'province' => $data['mh_province'],
+                'city' => $data['mh_city'],
+                'intake_method' => 'physical',
+                'intake_officer' => auth()->user()?->name,
+                'intake_date' => now()->toDateString(),
+            ];
+
+            $application = Application::create([
+                'reference' => $reference,
+                'applicant_user_id' => $user->id,
+                'application_type' => 'registration',
+                'request_type' => 'new',
+                'status' => Application::PRODUCTION_QUEUE,
+                'receipt_number' => $data['mh_receipt_number'],
+                'media_house_category_code' => $data['media_category'],
+                'collection_region' => $data['mh_province'] ?? 'harare',
+                'form_data' => $formData,
+                'is_draft' => false,
+                'submitted_at' => now(),
+                'approved_at' => now(),
+                'assigned_officer_id' => null,
+                'last_action_by' => auth()->id(),
+                'payment_status' => 'verified',
+                'payment_stage' => 'complete',
+            ]);
+
+        } else {
+            $applicantName = trim(($data['renewal_first_name'] ?? '') . ' ' . ($data['renewal_surname'] ?? ''));
+
+            $existingApp = Application::where('reference', $data['lookup_number'])->first();
+
+            $user = \App\Models\User::where('email', $data['renewal_email'])->first();
+            if (!$user) {
+                $user = \App\Models\User::create([
+                    'name' => $applicantName,
+                    'email' => $data['renewal_email'],
+                    'password' => bcrypt(Str::random(32)),
+                    'account_type' => $appType === 'registration' ? 'mediahouse' : 'journalist',
+                    'phone_number' => $data['renewal_phone'],
+                    'id_number' => $data['renewal_id_number'],
+                    'account_status' => 'active',
+                    'region' => $data['renewal_province'] ?? 'harare',
+                ]);
+            }
+
+            $refPrefix = $appType === 'registration' ? "ZMC-AP1-{$year}-" : "ZMC-AP3-{$year}-";
+            $lastRef = Application::where('reference', 'like', $refPrefix . '%')
+                ->where('reference', 'not like', 'DRAFT%')
+                ->orderByRaw("reference DESC")
+                ->value('reference');
+            $nextNum = $lastRef ? ((int) substr($lastRef, -4)) + 1 : 1;
+            $reference = $refPrefix . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
+
+            $formData = [
+                'first_name' => $data['renewal_first_name'] ?? '',
+                'surname' => $data['renewal_surname'] ?? '',
+                'id_number' => $data['renewal_id_number'] ?? '',
+                'email' => $data['renewal_email'],
+                'phone' => $data['renewal_phone'],
+                'physical_address' => $data['renewal_physical_address'] ?? '',
+                'city' => $data['renewal_city'] ?? '',
+                'province' => $data['renewal_province'] ?? '',
+                'lookup_number' => $data['lookup_number'],
+                'previous_reference' => $existingApp?->reference,
+                'intake_method' => 'physical',
+                'intake_officer' => auth()->user()?->name,
+                'intake_date' => now()->toDateString(),
+            ];
+
+            $application = Application::create([
+                'reference' => $reference,
+                'applicant_user_id' => $user->id,
+                'application_type' => $appType,
+                'request_type' => $requestType,
+                'status' => Application::PRODUCTION_QUEUE,
+                'receipt_number' => $data['renewal_receipt_number'],
+                'collection_region' => $data['renewal_province'] ?? 'harare',
+                'form_data' => $formData,
+                'is_draft' => false,
+                'submitted_at' => now(),
+                'approved_at' => now(),
+                'assigned_officer_id' => null,
+                'last_action_by' => auth()->id(),
+                'payment_status' => 'verified',
+                'payment_stage' => 'complete',
+            ]);
+        }
+
+        if (class_exists(\App\Services\ActivityLogger::class)) {
+            \App\Services\ActivityLogger::log('physical_intake_created', $application, null, Application::PRODUCTION_QUEUE, [
+                'receipt_number' => $application->receipt_number,
+                'application_type' => $appType,
+                'request_type' => $requestType,
+                'officer' => auth()->user()?->name,
+            ]);
+        }
+
+        return redirect()->route('staff.officer.physical-intake')
+            ->with('success', "Physical intake recorded successfully (Ref: {$application->reference}). Application added to production queue.");
+    }
+
     public function sendCollectionNotification(Request $request)
     {
         $data = $request->validate([
@@ -414,6 +727,64 @@ public function approve(Request $request, Application $application)
         }
 
         return back()->with('success', "Collection reminders sent to {$count} " . ($type === 'accreditation' ? 'media practitioners' : 'media houses') . ".");
+    }
+
+    public function recordsExport(Request $request, string $type)
+    {
+        $filename = $type . '_records_' . now()->format('Y-m-d') . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ];
+
+        if ($type === 'journalists') {
+            $records = \App\Models\AccreditationRecord::query()->with('holder')->orderBy('issued_at', 'desc')->get();
+            $callback = function () use ($records) {
+                $file = fopen('php://output', 'w');
+                fputcsv($file, ['Media Number', 'Name', 'Organisation', 'Category', 'Valid From', 'Valid To', 'ID Number', 'Sex', 'Nationality', 'Phone', 'Email', 'Collection Status']);
+                foreach ($records as $r) {
+                    fputcsv($file, [
+                        $r->certificate_no ?? '',
+                        $r->holder?->name ?? '',
+                        $r->organisation ?? '',
+                        $r->category ?? '',
+                        optional($r->issued_at)->format('d/m/Y') ?? '',
+                        optional($r->expires_at)->format('d/m/Y') ?? '',
+                        $r->holder?->national_id ?? '',
+                        $r->holder?->gender ?? '',
+                        $r->holder?->nationality ?? '',
+                        $r->holder?->phone ?? '',
+                        $r->holder?->email ?? '',
+                        $r->collected_at ? 'Collected' : 'Uncollected',
+                    ]);
+                }
+                fclose($file);
+            };
+        } else {
+            $records = \App\Models\Application::where('application_type', 'registration')
+                ->whereNotNull('submitted_at')
+                ->orderBy('submitted_at', 'desc')
+                ->get();
+            $callback = function () use ($records) {
+                $file = fopen('php://output', 'w');
+                fputcsv($file, ['Reg Number', 'Organisation', 'Type', 'Status', 'Submitted', 'Region', 'Email']);
+                foreach ($records as $a) {
+                    $fd = is_array($a->form_data) ? $a->form_data : json_decode($a->form_data ?? '{}', true);
+                    fputcsv($file, [
+                        $a->reference ?? '',
+                        $fd['organisation_name'] ?? $fd['company_name'] ?? '',
+                        $a->request_type ?? 'new',
+                        $a->status ?? '',
+                        optional($a->submitted_at)->format('d/m/Y') ?? '',
+                        $a->collection_region ?? '',
+                        $fd['email'] ?? '',
+                    ]);
+                }
+                fclose($file);
+            };
+        }
+
+        return response()->stream($callback, 200, $headers);
     }
 
     public function sendMessage(Request $request, Application $application)
@@ -729,14 +1100,14 @@ public function approve(Request $request, Application $application)
         if ($ageMin = $request->query('age_min')) {
             if ($this->hasColumn('applications','dob')) {
                 $q->whereNotNull('dob')
-                  ->whereRaw('TIMESTAMPDIFF(YEAR, dob, CURDATE()) >= ?', [(int)$ageMin]);
+                  ->whereDate('dob', '<=', now()->subYears((int)$ageMin));
             }
         }
 
         if ($ageMax = $request->query('age_max')) {
             if ($this->hasColumn('applications','dob')) {
                 $q->whereNotNull('dob')
-                  ->whereRaw('TIMESTAMPDIFF(YEAR, dob, CURDATE()) <= ?', [(int)$ageMax]);
+                  ->whereDate('dob', '>=', now()->subYears((int)$ageMax + 1)->addDay());
             }
         }
 

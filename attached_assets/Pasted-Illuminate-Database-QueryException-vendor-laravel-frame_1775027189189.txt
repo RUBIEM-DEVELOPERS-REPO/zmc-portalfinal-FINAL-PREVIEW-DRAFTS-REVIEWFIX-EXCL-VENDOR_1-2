@@ -1,0 +1,35 @@
+Illuminate\Database\QueryException
+vendor/laravel/framework/src/Illuminate/Database/Connection.php:838
+SQLSTATE[23514]: Check violation: 7 ERROR: new row for relation "users" violates check constraint "users_account_type_check" DETAIL: Failing row contains (26, Patience Mupikeni, dubefamily569@gmail.com, null, $2y$12$8fJzYflh67QwgMX6b33d6uDq874GzX/J7w4bOBlZ2uGlQTnmLnTSa, null, 2026-04-01 09:06:16, 2026-04-01 09:06:16, null, null, null, active, applicant, null, null, 0785018505, null, light, null, null, 08-2048701V47, null, null, null, null, harare, null, null, light, null, null, null, null, null, null). (Connection: pgsql, Host: helium, Port: 5432, Database: heliumdb, SQL: insert into "users" ("name", "email", "password", "account_type", "phone_number", "id_number", "account_status", "region", "updated_at", "created_at") values (Patience Mupikeni, dubefamily569@gmail.com, $2y$12$8fJzYflh67QwgMX6b33d6uDq874GzX/J7w4bOBlZ2uGlQTnmLnTSa, applicant, 0785018505, 08-2048701V47, active, harare, 2026-04-01 09:06:16, 2026-04-01 09:06:16) returning "id")
+
+LARAVEL
+12.48.1
+PHP
+8.4.16
+UNHANDLED
+CODE 23514
+500
+POST
+https://ec25d393-35c9-480e-9ff6-5cbaddfac38f-00-ou15qwfsjqgz.worf.replit.dev/staff/accreditation-officer/physical-intake
+Exception trace
+16 vendor frames
+App\Http\Controllers\Staff\AccreditationOfficerController->physicalIntakeProcess(object(Illuminate\Http\Request))
+app/Http/Controllers/Staff/AccreditationOfficerController.php:469
+464
+465            $applicantName = trim($data['first_name'] . ' ' . $data['surname']);
+466
+467            $user = \App\Models\User::where('email', $data['email'])->first();
+468            if (!$user) {
+469                $user = \App\Models\User::create([
+470                    'name' => $applicantName,
+471                    'email' => $data['email'],
+472                    'password' => bcrypt(Str::random(32)),
+473                    'account_type' => 'applicant',
+474                    'phone_number' => $data['phone'],
+475                    'id_number' => $data['id_number'],
+476                    'account_status' => 'active',
+477                    'region' => $data['province'] ?? 'harare',
+478                ]);
+479            }
+480
+481

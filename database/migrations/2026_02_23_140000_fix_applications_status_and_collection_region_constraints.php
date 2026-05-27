@@ -6,9 +6,7 @@ use Illuminate\Support\Facades\DB;
 return new class extends Migration {
     public function up(): void
     {
-        // SQLite doesn't support DROP CONSTRAINT IF EXISTS or complex CHECK constraints
-        // We'll skip constraint modifications for SQLite and just ensure the table works
-        if (DB::getDriverName() !== 'sqlite') {
+        if (DB::getDriverName() === 'pgsql') {
             DB::statement('ALTER TABLE applications DROP CONSTRAINT IF EXISTS applications_status_check');
             DB::statement("ALTER TABLE applications ADD CONSTRAINT applications_status_check CHECK (status::text = ANY(ARRAY[
                 'draft', 'submitted', 'withdrawn', 'needs_correction',
@@ -32,12 +30,11 @@ return new class extends Migration {
                 'pending', 'accepted', 'rejected', 'draft', 'uploaded'
             ]::text[]))");
         }
-        // For SQLite, we'll just ensure the tables exist and work without constraints
     }
 
     public function down(): void
     {
-        if (DB::getDriverName() !== 'sqlite') {
+        if (DB::getDriverName() === 'pgsql') {
             DB::statement('ALTER TABLE applications DROP CONSTRAINT IF EXISTS applications_status_check');
             DB::statement("ALTER TABLE applications ADD CONSTRAINT applications_status_check CHECK (status::text = ANY(ARRAY[
                 'submitted', 'needs_correction', 'rejected',

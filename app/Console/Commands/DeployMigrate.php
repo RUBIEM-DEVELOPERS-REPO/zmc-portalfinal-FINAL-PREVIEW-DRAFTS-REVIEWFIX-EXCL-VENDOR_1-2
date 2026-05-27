@@ -663,6 +663,220 @@ class DeployMigrate extends Command
             updated_at TIMESTAMP NULL
         )");
 
+        DB::statement("CREATE TABLE IF NOT EXISTS fix_requests (
+            id BIGSERIAL PRIMARY KEY,
+            application_id BIGINT NOT NULL REFERENCES applications(id) ON DELETE CASCADE,
+            requested_by BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            request_type VARCHAR(50) NOT NULL DEFAULT 'data_correction',
+            description TEXT NOT NULL,
+            status VARCHAR(20) NOT NULL DEFAULT 'pending',
+            resolved_by BIGINT NULL REFERENCES users(id) ON DELETE SET NULL,
+            resolved_at TIMESTAMP NULL,
+            resolution_notes TEXT NULL,
+            created_at TIMESTAMP NULL,
+            updated_at TIMESTAMP NULL
+        )");
+
+        DB::statement("CREATE TABLE IF NOT EXISTS payment_submissions (
+            id BIGSERIAL PRIMARY KEY,
+            application_id BIGINT NOT NULL REFERENCES applications(id) ON DELETE CASCADE,
+            payment_stage VARCHAR(50) NOT NULL,
+            method VARCHAR(50) NOT NULL,
+            reference VARCHAR(255) NULL,
+            amount DECIMAL(10,2) NULL,
+            currency VARCHAR(3) NOT NULL DEFAULT 'USD',
+            status VARCHAR(20) NOT NULL DEFAULT 'submitted',
+            submitted_at TIMESTAMP NULL,
+            verified_at TIMESTAMP NULL,
+            verified_by BIGINT NULL REFERENCES users(id) ON DELETE SET NULL,
+            rejection_reason TEXT NULL,
+            proof_path VARCHAR(255) NULL,
+            proof_metadata JSONB NULL,
+            waiver_path VARCHAR(255) NULL,
+            waiver_metadata JSONB NULL,
+            created_at TIMESTAMP NULL,
+            updated_at TIMESTAMP NULL
+        )");
+
+        DB::statement("CREATE TABLE IF NOT EXISTS official_letters (
+            id BIGSERIAL PRIMARY KEY,
+            application_id BIGINT NOT NULL REFERENCES applications(id) ON DELETE CASCADE,
+            uploaded_by BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            file_path VARCHAR(255) NOT NULL,
+            file_name VARCHAR(255) NOT NULL,
+            file_size BIGINT NOT NULL,
+            file_hash VARCHAR(64) NOT NULL,
+            uploaded_at TIMESTAMP NOT NULL,
+            created_at TIMESTAMP NULL,
+            updated_at TIMESTAMP NULL
+        )");
+
+        DB::statement("CREATE TABLE IF NOT EXISTS renewal_applications (
+            id BIGSERIAL PRIMARY KEY,
+            applicant_user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            renewal_type VARCHAR(255) NOT NULL,
+            original_application_id BIGINT NULL REFERENCES applications(id) ON DELETE SET NULL,
+            original_number VARCHAR(255) NULL,
+            lookup_status VARCHAR(20) NOT NULL DEFAULT 'pending',
+            looked_up_at TIMESTAMP NULL,
+            has_changes BOOLEAN NOT NULL DEFAULT false,
+            change_requests JSONB NULL,
+            confirmation_type VARCHAR(20) NULL,
+            confirmed_at TIMESTAMP NULL,
+            payment_method VARCHAR(50) NULL,
+            payment_reference VARCHAR(255) NULL,
+            payment_amount DECIMAL(10,2) NULL,
+            payment_date DATE NULL,
+            payment_proof_path VARCHAR(500) NULL,
+            payment_metadata JSONB NULL,
+            payment_submitted_at TIMESTAMP NULL,
+            payment_verified_at TIMESTAMP NULL,
+            payment_verified_by BIGINT NULL REFERENCES users(id) ON DELETE SET NULL,
+            payment_rejection_reason TEXT NULL,
+            status VARCHAR(50) NOT NULL,
+            current_stage VARCHAR(50) NULL,
+            last_action_at TIMESTAMP NULL,
+            last_action_by BIGINT NULL REFERENCES users(id) ON DELETE SET NULL,
+            produced_at TIMESTAMP NULL,
+            produced_by BIGINT NULL REFERENCES users(id) ON DELETE SET NULL,
+            print_count INTEGER NOT NULL DEFAULT 0,
+            collection_location VARCHAR(255) NULL,
+            collected_at TIMESTAMP NULL,
+            request_type VARCHAR(50) NULL,
+            created_at TIMESTAMP NULL,
+            updated_at TIMESTAMP NULL
+        )");
+
+        DB::statement("CREATE TABLE IF NOT EXISTS renewal_change_requests (
+            id BIGSERIAL PRIMARY KEY,
+            renewal_application_id BIGINT NOT NULL REFERENCES renewal_applications(id) ON DELETE CASCADE,
+            field_name VARCHAR(100) NOT NULL,
+            old_value TEXT NULL,
+            new_value TEXT NULL,
+            reason TEXT NULL,
+            status VARCHAR(20) NOT NULL DEFAULT 'pending',
+            reviewed_by BIGINT NULL REFERENCES users(id) ON DELETE SET NULL,
+            reviewed_at TIMESTAMP NULL,
+            created_at TIMESTAMP NULL,
+            updated_at TIMESTAMP NULL
+        )");
+
+        DB::statement("CREATE TABLE IF NOT EXISTS portal_requirements (
+            id BIGSERIAL PRIMARY KEY,
+            portal_type VARCHAR(50) NOT NULL,
+            category VARCHAR(100) NULL,
+            title VARCHAR(255) NOT NULL,
+            description TEXT NULL,
+            sort_order INTEGER NOT NULL DEFAULT 0,
+            is_active BOOLEAN NOT NULL DEFAULT true,
+            created_by BIGINT NULL,
+            created_at TIMESTAMP NULL,
+            updated_at TIMESTAMP NULL
+        )");
+
+        DB::statement("CREATE TABLE IF NOT EXISTS portal_requirement_items (
+            id BIGSERIAL PRIMARY KEY,
+            requirement_id BIGINT NOT NULL REFERENCES portal_requirements(id) ON DELETE CASCADE,
+            label VARCHAR(255) NOT NULL,
+            description TEXT NULL,
+            is_mandatory BOOLEAN NOT NULL DEFAULT true,
+            sort_order INTEGER NOT NULL DEFAULT 0,
+            created_at TIMESTAMP NULL,
+            updated_at TIMESTAMP NULL
+        )");
+
+        DB::statement("CREATE TABLE IF NOT EXISTS application_categories (
+            id BIGSERIAL PRIMARY KEY,
+            portal_type VARCHAR(50) NOT NULL,
+            code VARCHAR(10) NOT NULL,
+            name VARCHAR(255) NOT NULL,
+            description TEXT NULL,
+            fee_local DECIMAL(10,2) NULL,
+            fee_foreign DECIMAL(10,2) NULL,
+            fee_renewal_local DECIMAL(10,2) NULL,
+            fee_renewal_foreign DECIMAL(10,2) NULL,
+            is_active BOOLEAN NOT NULL DEFAULT true,
+            sort_order INTEGER NOT NULL DEFAULT 0,
+            created_at TIMESTAMP NULL,
+            updated_at TIMESTAMP NULL
+        )");
+
+        DB::statement("CREATE TABLE IF NOT EXISTS portal_requirements_audit (
+            id BIGSERIAL PRIMARY KEY,
+            requirement_id BIGINT NULL,
+            action VARCHAR(50) NOT NULL,
+            performed_by BIGINT NULL,
+            old_values JSONB NULL,
+            new_values JSONB NULL,
+            created_at TIMESTAMP NULL
+        )");
+
+        DB::statement("CREATE TABLE IF NOT EXISTS login_activities (
+            id BIGSERIAL PRIMARY KEY,
+            user_id BIGINT NULL REFERENCES users(id) ON DELETE SET NULL,
+            email VARCHAR(255) NOT NULL,
+            ip_address VARCHAR(45) NULL,
+            user_agent TEXT NULL,
+            status VARCHAR(20) NOT NULL DEFAULT 'success',
+            failure_reason TEXT NULL,
+            created_at TIMESTAMP NULL,
+            updated_at TIMESTAMP NULL
+        )");
+
+        DB::statement("CREATE TABLE IF NOT EXISTS cash_payments (
+            id BIGSERIAL PRIMARY KEY,
+            application_id BIGINT NOT NULL REFERENCES applications(id) ON DELETE CASCADE,
+            receipt_number VARCHAR(100) NOT NULL,
+            amount DECIMAL(12,2) NOT NULL,
+            currency VARCHAR(10) NOT NULL DEFAULT 'USD',
+            payment_date DATE NOT NULL,
+            payer_name VARCHAR(255) NULL,
+            recorded_by BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            notes TEXT NULL,
+            is_voided BOOLEAN NOT NULL DEFAULT false,
+            void_reason TEXT NULL,
+            voided_by BIGINT NULL REFERENCES users(id) ON DELETE SET NULL,
+            voided_at TIMESTAMP NULL,
+            created_at TIMESTAMP NULL,
+            updated_at TIMESTAMP NULL
+        )");
+
+        DB::statement("CREATE TABLE IF NOT EXISTS physical_intakes (
+            id BIGSERIAL PRIMARY KEY,
+            application_id BIGINT NOT NULL REFERENCES applications(id) ON DELETE CASCADE,
+            officer_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            receipt_number VARCHAR(100) NOT NULL,
+            intake_type VARCHAR(50) NOT NULL DEFAULT 'walk_in',
+            applicant_name VARCHAR(255) NULL,
+            applicant_id_number VARCHAR(50) NULL,
+            notes TEXT NULL,
+            created_at TIMESTAMP NULL,
+            updated_at TIMESTAMP NULL
+        )");
+
+        DB::statement("CREATE TABLE IF NOT EXISTS design_templates (
+            id BIGSERIAL PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            type VARCHAR(50) NOT NULL DEFAULT 'card',
+            year INTEGER NULL,
+            background_path VARCHAR(500) NULL,
+            layout_config JSONB NULL,
+            is_active BOOLEAN NOT NULL DEFAULT false,
+            created_by BIGINT NULL,
+            notes TEXT NULL,
+            created_at TIMESTAMP NULL,
+            updated_at TIMESTAMP NULL
+        )");
+
+        DB::statement("CREATE TABLE IF NOT EXISTS system_logs (
+            id BIGSERIAL PRIMARY KEY,
+            level VARCHAR(20) NOT NULL DEFAULT 'info',
+            channel VARCHAR(100) NULL,
+            message TEXT NOT NULL,
+            context JSONB NULL,
+            created_at TIMESTAMP NULL
+        )");
+
         $this->addColumnSafe('users', 'account_type', "VARCHAR(50) NULL DEFAULT 'public'");
         $this->addColumnSafe('users', 'account_status', "VARCHAR(50) NULL DEFAULT 'active'");
         $this->addColumnSafe('users', 'designation', 'VARCHAR(255) NULL');
@@ -683,6 +897,25 @@ class DeployMigrate extends Command
 
         $this->addColumnSafe('notices', 'image_path', 'VARCHAR(500) NULL');
         $this->addColumnSafe('events', 'image_path', 'VARCHAR(500) NULL');
+
+        $this->addColumnSafe('users', 'national_id_number', 'VARCHAR(50) NULL');
+        $this->addColumnSafe('users', 'passport_number', 'VARCHAR(50) NULL');
+        $this->addColumnSafe('users', 'phone_number', 'VARCHAR(20) NULL');
+        $this->addColumnSafe('users', 'phone_number_2', 'VARCHAR(20) NULL');
+
+        $this->addColumnSafe('applications', 'payment_submission_method', 'VARCHAR(50) NULL');
+        $this->addColumnSafe('applications', 'receipt_number', 'VARCHAR(100) NULL');
+        $this->addColumnSafe('applications', 'forward_no_approval_reason', 'TEXT NULL');
+        $this->addColumnSafe('applications', 'official_letter_id', 'BIGINT NULL');
+        $this->addColumnSafe('applications', 'verification_notes', 'TEXT NULL');
+        $this->addColumnSafe('applications', 'verified_by', 'BIGINT NULL');
+        $this->addColumnSafe('applications', 'verified_at', 'TIMESTAMP NULL');
+
+        $this->addColumnSafe('payments', 'cash_receipt_number', 'VARCHAR(100) NULL');
+        $this->addColumnSafe('payments', 'cash_amount', 'DECIMAL(12,2) NULL');
+        $this->addColumnSafe('payments', 'cash_date', 'DATE NULL');
+        $this->addColumnSafe('payments', 'cash_recorded_by', 'BIGINT NULL');
+        $this->addColumnSafe('payments', 'cash_notes', 'TEXT NULL');
 
         $this->fixConstraints();
 
@@ -705,8 +938,7 @@ class DeployMigrate extends Command
         $this->replaceCheckConstraint('applications', 'applications_payment_status_check',
             "payment_status IN ('none','requested','uploaded_waiver','paid','rejected','pending','verified')");
 
-        $this->replaceCheckConstraint('applications', 'applications_status_check',
-            "status IN ('draft','submitted','withdrawn','officer_review','officer_approved','officer_rejected','correction_requested','returned_to_applicant','approved_awaiting_payment','forwarded_to_registrar','registrar_fix_request','registrar_review','registrar_approved','registrar_rejected','returned_to_officer','pending_accounts_from_registrar','registrar_approved_pending_reg_fee','accounts_review','awaiting_accounts_verification','payment_verified','payment_rejected','paid_confirmed','returned_to_accounts','submitted_with_app_fee','verified_by_officer','approved_pending_payment','paid','returned_from_payments','returned_from_registrar','rejected','needs_correction','production_queue','produced_ready','card_generated','certificate_generated','printed','issued')");
+        DB::statement("ALTER TABLE applications DROP CONSTRAINT IF EXISTS applications_status_check");
     }
 
     private function replaceCheckConstraint(string $table, string $constraintName, string $check): void

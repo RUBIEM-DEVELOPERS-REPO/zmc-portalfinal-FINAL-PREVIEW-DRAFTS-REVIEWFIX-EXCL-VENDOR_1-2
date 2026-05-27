@@ -37,12 +37,11 @@ class RiskIndicatorService
     {
         return [
             'excessive_waivers' => $this->evaluateExcessiveWaivers(),
-            'rejection_spike' => $this->evaluateRejectionSpike(),
-            'processing_time_sla' => $this->evaluateProcessingTimeSLA(),
+            'high_rejection_spike' => $this->evaluateRejectionSpike(),
             'revenue_drop' => $this->evaluateRevenueDrop(),
             'reprint_frequency' => $this->evaluateReprintFrequency(),
-            'category_reassignment' => $this->evaluateCategoryReassignment(),
-            'payment_delay' => $this->evaluatePaymentDelay(),
+            'category_reassignment_trend' => $this->evaluateCategoryReassignment(),
+            'payment_verification_delay' => $this->evaluatePaymentDelay(),
         ];
     }
 
@@ -122,49 +121,6 @@ class RiskIndicatorService
         ];
     }
 
-    /**
-     * Evaluate processing time SLA risk.
-     * 
-     * Assesses risk based on average processing time in days for the past month
-     * against configured thresholds (default: green ≤5 days, amber 6-10 days, red ≥11 days).
-     * 
-     * @return array Risk indicator data with average processing time in days
-     */
-    public function evaluateProcessingTimeSLA(): array
-    {
-        $apps = Application::whereNotNull('submitted_at')
-            ->whereNotNull('issued_at')
-            ->where('issued_at', '>=', now()->subMonth())
-            ->select('submitted_at', 'issued_at')
-            ->get();
-        
-        $avgDays = 0;
-        if ($apps->isNotEmpty()) {
-            $totalHours = 0;
-            foreach ($apps as $app) {
-                $totalHours += Carbon::parse($app->submitted_at)
-                    ->diffInHours(Carbon::parse($app->issued_at));
-            }
-            $avgDays = round($totalHours / $apps->count() / 24, 1);
-        }
-        
-        $thresholds = config('director-dashboard.risk_thresholds.processing_time_sla', [
-            'green' => ['max' => 5],
-            'amber' => ['min' => 6, 'max' => 10],
-            'red' => ['min' => 11],
-        ]);
-        
-        $level = $this->determineRiskLevel($avgDays, $thresholds);
-        
-        return [
-            'title' => 'Processing Time SLA',
-            'status' => $level,
-            'level' => $level,
-            'value' => $avgDays . ' days',
-            'description' => "Average processing time",
-            'threshold' => $thresholds,
-        ];
-    }
 
     /**
      * Evaluate revenue drop risk.

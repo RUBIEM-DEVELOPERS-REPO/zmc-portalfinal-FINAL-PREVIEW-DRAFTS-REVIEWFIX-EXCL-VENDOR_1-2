@@ -25,13 +25,14 @@ class TokenAuth
             if ($data && is_array($data) && isset($data['user_id'])) {
                 Auth::loginUsingId($data['user_id']);
 
-                if (isset($data['role'])) {
-                    $request->session()->put('active_staff_role', $data['role']);
+                if ($request->hasSession() && $request->session()->isStarted()) {
+                    if (isset($data['role'])) {
+                        $request->session()->put('active_staff_role', $data['role']);
+                    }
+                    $request->session()->put('_current_auth_token', $token);
                 }
 
-                $request->session()->put('_current_auth_token', $token);
                 Cache::put('login_token:' . $token, $data, now()->addHours(8));
-
                 $request->attributes->set('_token_authenticated', true);
             }
         }

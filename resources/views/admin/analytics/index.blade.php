@@ -27,7 +27,7 @@
         <h4 class="fw-bold m-0" style="font-size:22px; color:#1e293b;">Analytics</h4>
         <div class="text-muted mt-1" style="font-size:13px;">Trends and breakdowns across applications and users.</div>
       </div>
-      <form action="{{ route('admin.analytics.index') }}" method="GET" id="yearFilterForm" class="ms-2">
+      <form action="{{ route('admin.analytics') }}" method="GET" id="yearFilterForm" class="ms-2">
           <select name="year" class="form-select border shadow-sm fw-bold bg-white btn-sm" style="height: 31px;" onchange="document.getElementById('yearFilterForm').submit()">
               @foreach($availableYears ?? [] as $y)
                   <option value="{{ $y }}" {{ (isset($year) && $year == $y) ? 'selected' : '' }}>

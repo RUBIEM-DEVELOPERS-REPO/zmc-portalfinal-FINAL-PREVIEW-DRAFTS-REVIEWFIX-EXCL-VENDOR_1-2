@@ -290,6 +290,7 @@
 
   <div class="row g-4 mb-4">
     <div class="col-12 col-lg-6">
+<<<<<<< HEAD
       <div class="req-card fade-in">
         <div class="req-card-header">
           <div class="req-icon-box local">
@@ -359,10 +360,47 @@
             <p class="req-desc">Harare, Bulawayo, Mutare, Masvingo, Gweru, or Chinhoyi</p>
           </div>
         </div>
+=======
+      <div class="zmc-card h-100">
+        <h6 class="fw-bold mb-3" style="color:#1a1a1a;">
+          <i class="ri-user-line me-2" style="color:var(--zmc-accent)"></i>Local Media Practitioner (AP3)
+        </h6>
+        <ul class="list-unstyled mb-0">
+          <li class="d-flex align-items-start gap-2 mb-3">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>Passport-size Photo</strong><br><span class="text-muted small">Recent colour photo with white background</span></div>
+          </li>
+          <li class="d-flex align-items-start gap-2 mb-3">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>National ID (Certified Copy)</strong><br><span class="text-muted small">Clear scan of both sides of your national identity document</span></div>
+          </li>
+          <li class="d-flex align-items-start gap-2 mb-3">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>Employment Letter</strong> <span class="badge bg-warning-subtle text-warning">Employed</span><br><span class="text-muted small">Official letter from your employer confirming your role</span></div>
+          </li>
+          <li class="d-flex align-items-start gap-2 mb-3">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>Reference / Testimonial / Affidavit</strong> <span class="badge bg-info-subtle text-info">Freelancer</span><br><span class="text-muted small">At least one professional reference or sworn affidavit</span></div>
+          </li>
+          <li class="d-flex align-items-start gap-2 mb-3">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>Educational Certificates</strong><br><span class="text-muted small">Journalism or media qualifications (optional but recommended)</span></div>
+          </li>
+          <li class="d-flex align-items-start gap-2 mb-3">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>3 Referees</strong><br><span class="text-muted small">Full names, addresses, and phone numbers of three referees</span></div>
+          </li>
+          <li class="d-flex align-items-start gap-2">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>Preferred Collection Office</strong><br><span class="text-muted small">Harare, Bulawayo, Mutare, Masvingo, Gweru, or Chinhoyi</span></div>
+          </li>
+        </ul>
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
       </div>
     </div>
 
     <div class="col-12 col-lg-6">
+<<<<<<< HEAD
       <div class="req-card fade-in" style="animation-delay: 0.1s;">
         <div class="req-card-header">
           <div class="req-icon-box foreign">
@@ -426,12 +464,49 @@
             <p class="req-desc">Full names, addresses, and phone numbers of three referees</p>
           </div>
         </div>
+=======
+      <div class="zmc-card h-100">
+        <h6 class="fw-bold mb-3" style="color:#1a1a1a;">
+          <i class="ri-global-line me-2" style="color:var(--zmc-accent)"></i>Foreign Media Practitioner (AP3)
+        </h6>
+        <ul class="list-unstyled mb-0">
+          <li class="d-flex align-items-start gap-2 mb-3">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>Passport-size Photo</strong><br><span class="text-muted small">Recent colour photo with white background</span></div>
+          </li>
+          <li class="d-flex align-items-start gap-2 mb-3">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>Passport Bio-Data Page</strong><br><span class="text-muted small">Clear scan of your passport information page</span></div>
+          </li>
+          <li class="d-flex align-items-start gap-2 mb-3">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>Clearance Letter</strong><br><span class="text-muted small">From your country's media regulatory authority or embassy</span></div>
+          </li>
+          <li class="d-flex align-items-start gap-2 mb-3">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>Employment / Assignment Letter</strong><br><span class="text-muted small">Letter from your media house or commissioning agency</span></div>
+          </li>
+          <li class="d-flex align-items-start gap-2 mb-3">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>Travel Details</strong><br><span class="text-muted small">Country of origin, arrival date, mode, port of entry, departure date</span></div>
+          </li>
+          <li class="d-flex align-items-start gap-2 mb-3">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>Zimbabwe Local Address</strong><br><span class="text-muted small">Where you will be staying while in Zimbabwe</span></div>
+          </li>
+          <li class="d-flex align-items-start gap-2">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>3 Referees</strong><br><span class="text-muted small">Full names, addresses, and phone numbers of three referees</span></div>
+          </li>
+        </ul>
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
       </div>
     </div>
   </div>
 
   <div class="row g-4 mb-4">
     <div class="col-12 col-lg-6">
+<<<<<<< HEAD
       <div class="req-card fade-in" style="animation-delay: 0.2s;">
         <div class="req-card-header">
           <div class="req-icon-box renewal">
@@ -463,10 +538,31 @@
             <p class="req-desc">Payment receipt or proof of transfer</p>
           </div>
         </div>
+=======
+      <div class="zmc-card h-100">
+        <h6 class="fw-bold mb-3" style="color:#1a1a1a;">
+          <i class="ri-refresh-line me-2" style="color:var(--zmc-accent)"></i>Renewal (AP5)
+        </h6>
+        <ul class="list-unstyled mb-0">
+          <li class="d-flex align-items-start gap-2 mb-3">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>Current Accreditation Card</strong><br><span class="text-muted small">Scan of your existing ZMC accreditation card</span></div>
+          </li>
+          <li class="d-flex align-items-start gap-2 mb-3">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>Previous Reference Number</strong><br><span class="text-muted small">Your existing accreditation reference</span></div>
+          </li>
+          <li class="d-flex align-items-start gap-2">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>Proof of Payment</strong><br><span class="text-muted small">Payment receipt or proof of transfer</span></div>
+          </li>
+        </ul>
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
       </div>
     </div>
 
     <div class="col-12 col-lg-6">
+<<<<<<< HEAD
       <div class="req-card fade-in" style="animation-delay: 0.3s;">
         <div class="req-card-header">
           <div class="req-icon-box replacement">
@@ -501,10 +597,31 @@
             <p class="req-desc">Payment receipt for replacement fee</p>
           </div>
         </div>
+=======
+      <div class="zmc-card h-100">
+        <h6 class="fw-bold mb-3" style="color:#1a1a1a;">
+          <i class="ri-exchange-line me-2" style="color:var(--zmc-accent)"></i>Replacement (AP5)
+        </h6>
+        <ul class="list-unstyled mb-0">
+          <li class="d-flex align-items-start gap-2 mb-3">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>Affidavit</strong><br><span class="text-muted small">Sworn statement explaining the loss/damage</span></div>
+          </li>
+          <li class="d-flex align-items-start gap-2 mb-3">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>Police Report</strong> <span class="badge bg-danger-subtle text-danger">If stolen</span><br><span class="text-muted small">Official police report if the card was stolen</span></div>
+          </li>
+          <li class="d-flex align-items-start gap-2">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>Proof of Payment</strong><br><span class="text-muted small">Payment receipt for replacement fee</span></div>
+          </li>
+        </ul>
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
       </div>
     </div>
   </div>
 
+<<<<<<< HEAD
   <div class="payment-info-card fade-in" style="animation-delay: 0.4s;">
     <div class="payment-info-header">
       <div class="payment-icon">
@@ -526,6 +643,14 @@
         Fees are also payable in local currency at the prevailing official bank rate on the day of payment.
       </p>
     </div>
+=======
+  <div class="zmc-card" style="background: linear-gradient(135deg, rgba(46, 125, 50,0.05), rgba(46, 125, 50,0.02));">
+    <h6 class="fw-bold mb-3" style="color:#1a1a1a;">
+      <i class="ri-money-dollar-circle-line me-2" style="color:var(--zmc-accent)"></i>Payment Information
+    </h6>
+    <p class="small text-muted mb-2">Fees are as per <strong>Statutory Instrument 65 of 2022</strong>.</p>
+    <p class="small mb-0"><i class="ri-error-warning-line me-1 text-warning"></i> Fees are also payable in local currency at the prevailing official bank rate on the day of payment.</p>
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
   </div>
 </div>
 @endsection

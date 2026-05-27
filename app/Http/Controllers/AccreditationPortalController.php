@@ -73,8 +73,14 @@ class AccreditationPortalController extends Controller
         ];
 
         $recentApplications = (clone $baseQuery)
+            ->where('is_draft', false)
             ->orderBy('created_at', 'desc')
             ->take(10)
+            ->get();
+
+        $drafts = (clone $baseQuery)
+            ->where('is_draft', true)
+            ->orderBy('updated_at', 'desc')
             ->get();
 
         $notices = \App\Models\Notice::where('is_published', true)
@@ -89,7 +95,19 @@ class AccreditationPortalController extends Controller
             ->limit(5)
             ->get();
 
-        return view('portal.accreditation.dashboard', compact('stats', 'recentApplications', 'notices', 'events'));
+        $reminders = collect();
+        if (Schema::hasTable('reminders')) {
+            $reminders = \App\Models\Reminder::active()
+                ->forUser($user->id)
+                ->whereDoesntHave('reads', function ($q) use ($user) {
+                    $q->where('user_id', $user->id)->whereNotNull('acknowledged_at');
+                })
+                ->latest()
+                ->limit(5)
+                ->get();
+        }
+
+        return view('portal.accreditation.dashboard', compact('stats', 'recentApplications', 'drafts', 'notices', 'events', 'reminders'));
     }
 
     public function new()
@@ -145,6 +163,17 @@ class AccreditationPortalController extends Controller
             $formData = [];
         }
 
+        // Validate National Reg. No from form_data (if local)
+        $scope = $request->input('journalist_scope', $formData['journalist_scope'] ?? $application->journalist_scope);
+        if ($scope === 'local' && !empty($formData['national_reg_no'])) {
+            if (!preg_match('/^\d{2}-\d{6,7}-[A-Z]-\d{2}$/i', $formData['national_reg_no'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid National Reg. No format. Please use the format: 63-1234567-X-89',
+                ], 422);
+            }
+        }
+
         $application->update([
             'journalist_scope'  => $request->input('journalist_scope', $formData['journalist_scope'] ?? $application->journalist_scope),
             'collection_region' => $request->input('collection_region', $formData['collection_region'] ?? $application->collection_region),
@@ -186,14 +215,41 @@ class AccreditationPortalController extends Controller
         $user = Auth::user();
         abort_unless($user, 403);
 
-        $payload = $request->validate([
-            'profile' => ['required', 'array'],
+        $data = $request->validate([
+            'id_number' => ['nullable', 'string', 'regex:/^\d{2}-\d{6,7}-[A-Z]-\d{2}$/i'],
+            'passport_number' => ['nullable', 'string', 'max:50'],
+            'phone_number' => ['nullable', 'string', 'max:30'],
+            'phone2' => ['nullable', 'string', 'max:30'],
+            'nationality' => ['nullable', 'string', 'max:100'],
+            'profile' => ['nullable', 'array'],
         ]);
 
-        $profile = $user->profile_data ?? [];
-        $profile = array_merge($profile, $payload['profile']);
+        $updates = [];
+        if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'id_number')) {
+            $updates['id_number'] = $data['id_number'] ?? $user->id_number;
+        }
+        if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'passport_number')) {
+            $updates['passport_number'] = $data['passport_number'] ?? $user->passport_number;
+        }
+        if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'phone2')) {
+            $updates['phone2'] = $data['phone2'] ?? $user->phone2;
+        }
+        if (isset($data['phone_number'])) {
+            $updates['phone_number'] = $data['phone_number'];
+        }
 
-        $user->update(['profile_data' => $profile]);
+        $profile = $user->profile_data ?? [];
+        if (!empty($data['profile'])) {
+            $profile = array_merge($profile, $data['profile']);
+        }
+        if (isset($data['nationality'])) {
+            $profile['nationality'] = $data['nationality'];
+        }
+        if ($profile !== ($user->profile_data ?? [])) {
+            $updates['profile_data'] = $profile;
+        }
+
+        $user->update($updates);
 
         return back()->with('success', 'Profile updated successfully.');
     }
@@ -272,7 +328,7 @@ class AccreditationPortalController extends Controller
         ]);
     }
 
-    private function saveDraftDocuments(Request $request, Application $application, array $fields): void
+    private function saveDraftDocuments(Request $request, Application $application, array $fields, string $status = 'draft'): void
     {
         foreach ($fields as $field) {
             if (!$request->hasFile($field)) continue;
@@ -296,14 +352,12 @@ class AccreditationPortalController extends Controller
             $docData = [
                 'file_path'      => $path,
                 'original_name'  => $file->getClientOriginalName(),
-                'status'         => 'draft',
+                'status'         => $status,
+                'owner_id'       => auth()->id(),
+                'mime'           => method_exists($file, 'getMimeType') ? $file->getMimeType() : null,
+                'size'           => method_exists($file, 'getSize')     ? $file->getSize()     : null,
+                'sha256'         => $sha256,
             ];
-
-            // Safely add columns only if they exist in DB
-            if (Schema::hasColumn('application_documents', 'owner_id')) $docData['owner_id'] = auth()->id();
-            if (Schema::hasColumn('application_documents', 'mime'))     $docData['mime']     = method_exists($file, 'getMimeType') ? $file->getMimeType() : null;
-            if (Schema::hasColumn('application_documents', 'size'))     $docData['size']     = method_exists($file, 'getSize')     ? $file->getSize()     : null;
-            if (Schema::hasColumn('application_documents', 'sha256'))   $docData['sha256']   = $sha256;
 
             ApplicationDocument::updateOrCreate(
                 [
@@ -312,11 +366,36 @@ class AccreditationPortalController extends Controller
                 ],
                 $docData
             );
+        }
 
-            // Optional mirror into files table
-            if (Schema::hasTable('files')) {
-                // If a FileRecord model existed we would use it here, 
-                // but since it's missing, we skip this to avoid 500 errors.
+        // Support multiple past work samples
+        if ($request->hasFile('past_work_samples')) {
+            $samples = $request->file('past_work_samples');
+            if (is_array($samples)) {
+                foreach ($samples as $idx => $file) {
+                    $docType = 'past_work_sample_' . ($idx + 1);
+                    $path = $file->store('documents/' . $application->id, 'public');
+                    $sha256 = null;
+                    try { $sha256 = hash_file('sha256', $file->getRealPath()); } catch (\Throwable $e) {}
+
+                    $docData = [
+                        'file_path'      => $path,
+                        'original_name'  => $file->getClientOriginalName(),
+                        'status'         => $status,
+                        'owner_id'       => auth()->id(),
+                        'mime'           => method_exists($file, 'getMimeType') ? $file->getMimeType() : null,
+                        'size'           => method_exists($file, 'getSize')     ? $file->getSize()     : null,
+                        'sha256'         => $sha256,
+                    ];
+
+                    ApplicationDocument::updateOrCreate(
+                        [
+                            'application_id' => $application->id,
+                            'doc_type'       => $docType,
+                        ],
+                        $docData
+                    );
+                }
             }
         }
     }
@@ -418,6 +497,14 @@ class AccreditationPortalController extends Controller
             if (!$collection) {
                 return response()->json(['success'=>false,'message'=>'Collection Office is required for local applications.'], 422);
             }
+
+            // Strict format validation for national_reg_no
+            if (!preg_match('/^\d{2}-\d{6,7}-[A-Z]-\d{2}$/i', $formData['national_reg_no'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid National Reg. No format. Please use the format: 63-1234567-X-89',
+                ], 422);
+            }
         }
 
         if ($scope === 'foreign') {
@@ -496,7 +583,7 @@ class AccreditationPortalController extends Controller
 
         $lastRef = Application::where('reference', 'like', $prefix . '%')
             ->where('reference', 'not like', 'DRAFT%')
-            ->orderByRaw("CAST(SUBSTR(reference, -4) AS INTEGER) DESC")
+            ->orderByRaw("reference DESC")
             ->value('reference');
 
         $nextNum = 1;
@@ -509,19 +596,52 @@ class AccreditationPortalController extends Controller
 
         $collectionRegion = $request->input('collection_region') ?: ($formData['collection_region'] ?? 'harare');
 
+        $paymentMethod = $request->input('payment_payment_method') ?: $request->input('payment_method');
+        $hasPayment = !empty($paymentMethod) || $request->hasFile('payment_proof_file') || $request->hasFile('payment_waiver_file');
+        $initialStatus = $hasPayment ? Application::AWAITING_ACCOUNTS_VERIFICATION : Application::SUBMITTED;
+
+        $paymentFields = [];
+        if ($hasPayment) {
+            $paymentFields = [
+                'payment_submission_method' => $paymentMethod ?? 'proof_upload',
+                'payment_submitted_at' => now(),
+                'proof_status' => 'submitted',
+                'payment_status' => 'pending',
+            ];
+            if ($request->input('payment_paynow_reference')) {
+                $paymentFields['paynow_ref_submitted'] = $request->input('payment_paynow_reference');
+                $paymentFields['payment_submission_method'] = 'paynow_reference';
+            }
+            if ($request->input('payment_proof_amount_paid')) {
+                $paymentFields['proof_amount_paid'] = $request->input('payment_proof_amount_paid');
+            }
+            if ($request->input('payment_proof_bank_name')) {
+                $paymentFields['proof_bank_name'] = $request->input('payment_proof_bank_name');
+            }
+            if ($request->input('payment_proof_payment_date')) {
+                $paymentFields['proof_payment_date'] = $request->input('payment_proof_payment_date');
+            }
+            if ($request->input('payment_proof_first_name')) {
+                $paymentFields['proof_payer_first_name'] = $request->input('payment_proof_first_name');
+            }
+            if ($request->input('payment_proof_last_name')) {
+                $paymentFields['proof_payer_last_name'] = $request->input('payment_proof_last_name');
+            }
+        }
+
         if ($existingDraft) {
-            $existingDraft->update([
+            $existingDraft->update(array_merge([
                 'reference'         => $reference,
                 'journalist_scope'  => $scope,
                 'collection_region' => $collectionRegion,
                 'form_data'         => $formData,
                 'is_draft'          => false,
-                'status'            => Application::SUBMITTED,
+                'status'            => $initialStatus,
                 'submitted_at'      => now(),
-            ]);
+            ], $paymentFields));
             $application = $existingDraft;
         } else {
-            $application = Application::create([
+            $application = Application::create(array_merge([
                 'reference'         => $reference,
                 'applicant_user_id' => $user->id,
                 'application_type'  => 'accreditation',
@@ -530,13 +650,38 @@ class AccreditationPortalController extends Controller
                 'collection_region' => $collectionRegion,
                 'form_data'         => $formData,
                 'is_draft'          => false,
-                'status'            => Application::SUBMITTED,
+                'status'            => $initialStatus,
                 'submitted_at'      => now(),
+            ], $paymentFields));
+        }
+
+        if ($hasPayment && $request->hasFile('payment_proof_file')) {
+            $request->validate(['payment_proof_file' => ['file', 'mimes:pdf,jpg,jpeg,png', 'max:10240']]);
+            $proofFile = $request->file('payment_proof_file');
+            $proofPath = $proofFile->store('payment_proofs', 'public');
+            $application->update([
+                'payment_proof_path' => $proofPath,
+                'payment_proof_uploaded_at' => now(),
+                'proof_original_name' => $proofFile->getClientOriginalName(),
+                'proof_mime' => $proofFile->getMimeType(),
+            ]);
+        }
+
+        if ($hasPayment && $request->hasFile('payment_waiver_file')) {
+            $request->validate(['payment_waiver_file' => ['file', 'mimes:pdf,jpg,jpeg,png', 'max:10240']]);
+            $waiverFile = $request->file('payment_waiver_file');
+            $waiverPath = $waiverFile->store('waivers', 'public');
+            $application->update([
+                'waiver_path' => $waiverPath,
+                'waiver_status' => 'submitted',
+                'waiver_original_name' => $waiverFile->getClientOriginalName(),
+                'waiver_mime' => $waiverFile->getMimeType(),
+                'payment_submission_method' => 'waiver',
             ]);
         }
 
         // Upload documents to ApplicationDocument
-        $fileFields = [
+        $this->saveDraftDocuments($request, $application, [
             'passport_photo',
             'id_scan',
             'employment_letter',
@@ -544,47 +689,53 @@ class AccreditationPortalController extends Controller
             'educational_certificate',
             'passport_biodata_page',
             'clearance_letter',
-        ];
-
-        foreach ($fileFields as $field) {
-            if (!$request->hasFile($field)) continue;
-
-            $file = $request->file($field);
-            $sha256 = null;
-            try { $sha256 = hash_file('sha256', $file->getRealPath()); } catch (\Throwable $e) {}
-
-            $path = $file->store('documents/' . $application->id, 'public');
-
-            $docData = [
-                'file_path'      => $path,
-                'original_name'  => $file->getClientOriginalName(),
-                'status'         => 'pending',
-            ];
-
-            // Safely add columns only if they exist in DB
-            if (Schema::hasColumn('application_documents', 'owner_id')) $docData['owner_id'] = $user->id;
-            if (Schema::hasColumn('application_documents', 'mime'))     $docData['mime']     = method_exists($file, 'getMimeType') ? $file->getMimeType() : null;
-            if (Schema::hasColumn('application_documents', 'size'))     $docData['size']     = method_exists($file, 'getSize')     ? $file->getSize()     : null;
-            if (Schema::hasColumn('application_documents', 'sha256'))   $docData['sha256']   = $sha256;
-
-            ApplicationDocument::updateOrCreate(
-                [
-                    'application_id' => $application->id,
-                    'doc_type'       => $field,
-                ],
-                $docData
-            );
-
-            if (Schema::hasTable('files')) {
-                // Skip FileRecord mirror if model is missing
-            }
-        }
+        ], 'pending');
 
         return response()->json([
             'success'   => true,
             'message'   => 'Application submitted successfully',
             'reference' => $application->reference,
         ]);
+    }
+
+    public function renewalForm(Request $request)
+    {
+        $user = Auth::user();
+        $ap5Type = 'renewal';
+
+        $drafts = Application::where('applicant_user_id', $user->id)
+            ->where('is_draft', true)
+            ->where('application_type', 'accreditation')
+            ->where('request_type', 'renewal')
+            ->orderByDesc('created_at')
+            ->get();
+
+        $draft = null;
+        if ($request->filled('draft')) {
+            $draft = $drafts->firstWhere('reference', $request->input('draft'));
+        }
+
+        return view('portal.accreditation.renewals', compact('drafts', 'draft', 'ap5Type'));
+    }
+
+    public function replacementForm(Request $request)
+    {
+        $user = Auth::user();
+        $ap5Type = 'replacement';
+
+        $drafts = Application::where('applicant_user_id', $user->id)
+            ->where('is_draft', true)
+            ->where('application_type', 'accreditation')
+            ->where('request_type', 'replacement')
+            ->orderByDesc('created_at')
+            ->get();
+
+        $draft = null;
+        if ($request->filled('draft')) {
+            $draft = $drafts->firstWhere('reference', $request->input('draft'));
+        }
+
+        return view('portal.accreditation.renewals', compact('drafts', 'draft', 'ap5Type'));
     }
 
     public function renewals(Request $request)
@@ -603,7 +754,8 @@ class AccreditationPortalController extends Controller
             $draft = $drafts->firstWhere('reference', $request->input('draft'));
         }
 
-        return view('portal.accreditation.renewals', compact('drafts', 'draft'));
+        $ap5Type = null;
+        return view('portal.accreditation.renewals', compact('drafts', 'draft', 'ap5Type'));
     }
 
     /**
@@ -620,9 +772,8 @@ class AccreditationPortalController extends Controller
             'practitioner_type' => 'nullable|in:employed,freelancer',
             'draft_reference' => 'nullable|string|max:64',
             'current_step' => 'nullable|integer|min:1|max:4',
-            'declaration_confirmed' => 'required|in:1',
+            'declaration_confirmed' => 'nullable|in:1',
  
-             // docs (optional for draft)
              'renewal_employer_letter'     => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
              'replacement_affidavit'       => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
              'replacement_employer_letter' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
@@ -683,7 +834,9 @@ class AccreditationPortalController extends Controller
             'gender' => 'required|in:male,female',
             'dob' => 'required|date',
             'nationality' => 'required|string|max:120',
-            'id_or_passport' => 'required|string|max:120',
+            'national_id' => 'nullable|string|max:120',
+            'passport_number' => 'nullable|string|max:120',
+            'id_or_passport' => 'nullable|string|max:120',
             'accreditation_number' => 'required|string|max:120',
 
             // docs required based on type
@@ -777,7 +930,14 @@ class AccreditationPortalController extends Controller
 
     public function payments()
     {
-        return view('portal.accreditation.payments');
+        $user = \Illuminate\Support\Facades\Auth::user();
+
+        $payments = \App\Models\Payment::where('payer_user_id', $user->id)
+            ->with('application')
+            ->orderByDesc('created_at')
+            ->get();
+
+        return view('portal.accreditation.payments', compact('payments'));
     }
 
     public function notices()
@@ -797,6 +957,67 @@ class AccreditationPortalController extends Controller
         return view('portal.accreditation.notices', compact('notices', 'events'));
     }
 
+    public function lookupAccreditation(string $accreditationNumber)
+    {
+        $user = Auth::user();
+        abort_unless($user, 403);
+
+        $record = null;
+        if (class_exists(\App\Models\AccreditationRecord::class) && \Illuminate\Support\Facades\Schema::hasTable('accreditation_records')) {
+            $record = \App\Models\AccreditationRecord::where('accreditation_no', $accreditationNumber)
+                ->orWhere('certificate_no', $accreditationNumber)
+                ->first();
+        }
+
+        if (!$record) {
+            return response()->json(['found' => false, 'message' => 'No record found for this accreditation number.']);
+        }
+
+        return response()->json([
+            'found' => true,
+            'record' => [
+                'accreditation_no' => $record->accreditation_no ?? $record->certificate_no,
+                'holder_name' => $record->holder?->name ?? $record->holder_name ?? '',
+                'category' => $record->category ?? '',
+                'issued_at' => optional($record->issued_at)->format('d M Y'),
+                'expires_at' => optional($record->expires_at)->format('d M Y'),
+                'status' => $record->status ?? '',
+                'media_house' => $record->media_house_name ?? '',
+            ],
+        ]);
+    }
+
+    public function acknowledgeReminder(Request $request, $reminderId)
+    {
+        $user = Auth::user();
+        abort_unless($user, 403);
+
+        $reminder = \App\Models\Reminder::where('id', $reminderId)
+            ->where(function ($q) use ($user) {
+                $q->where(function ($sub) use ($user) {
+                    $sub->where('target_type', 'media_practitioner')
+                        ->where('target_id', $user->id);
+                })->orWhere('target_type', 'bulk');
+            })
+            ->firstOrFail();
+
+        \App\Models\ReminderRead::updateOrCreate(
+            ['reminder_id' => $reminder->id, 'user_id' => $user->id],
+            ['read_at' => now(), 'acknowledged_at' => now()]
+        );
+
+        \App\Services\ActivityLogger::log('reminder_acknowledged', null, null, null, [
+            'reminder_id' => $reminder->id,
+            'actor_user_id' => $user->id,
+        ]);
+
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true]);
+        }
+
+        return back()->with('success', 'Reminder acknowledged.');
+    }
+
     public function howto()
     {
         return view('portal.accreditation.howto');
@@ -804,7 +1025,8 @@ class AccreditationPortalController extends Controller
 
     public function profile()
     {
-        return view('portal.accreditation.profile');
+        $user = Auth::user();
+        return view('portal.accreditation.profile', compact('user'));
     }
 
     public function communication()

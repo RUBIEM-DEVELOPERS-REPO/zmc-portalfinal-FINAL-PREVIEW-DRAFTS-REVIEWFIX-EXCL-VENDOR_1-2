@@ -99,7 +99,7 @@
         <div class="card-body p-4">
           <div class="d-flex justify-content-between align-items-start">
             <div class="flex-grow-1">
-              <div class="small mb-2 text-uppercase fw-bold" style="opacity: 0.9;">Rejected</div>
+              <div class="small mb-2 text-uppercase fw-bold" style="opacity: 0.9;">Returned</div>
               <div class="display-4 fw-black mb-2">{{ number_format($rejected) }}</div>
               <div class="small" style="opacity: 0.85;">
                 <i class="ri-percent-line me-1"></i>
@@ -247,7 +247,7 @@
             <td class="py-3 text-end pe-3">{{ $approvalRate }}%</td>
           </tr>
           <tr>
-            <td class="py-3 ps-3"><i class="ri-close-circle-line text-danger me-2"></i>Rejected</td>
+            <td class="py-3 ps-3"><i class="ri-close-circle-line text-danger me-2"></i>Returned for Correction</td>
             <td class="py-3 text-end" style="font-size: 15px;">{{ number_format($rejected) }}</td>
             <td class="py-3 text-end pe-3">{{ $rejectionRate }}%</td>
           </tr>
@@ -316,7 +316,7 @@ document.addEventListener('DOMContentLoaded', function() {
         height: 300,
         animations: { enabled: true, easing: 'easeinout', speed: 800 }
       },
-      labels: ['Approved', 'Rejected', 'In Progress'],
+      labels: ['Approved', 'Returned', 'In Progress'],
       colors: ['#facc15', '#ef4444', '#000000'],
       legend: { position: 'bottom', fontSize: '13px' },
       stroke: { width: 0 },
@@ -374,7 +374,7 @@ document.addEventListener('DOMContentLoaded', function() {
       },
       colors: ['#facc15', '#ef4444'],
       xaxis: {
-        categories: ['Approved', 'Rejected'],
+        categories: ['Approved', 'Returned'],
         labels: { style: { fontSize: '13px', fontWeight: 600 } }
       },
       yaxis: {

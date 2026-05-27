@@ -45,10 +45,21 @@ return Application::configure(basePath: dirname(__DIR__))
             'role.access' => \App\Http\Middleware\EnforceRoleBasedAccess::class,
         ]);
 
-        // Global portal guard (maintenance + availability toggles)
         $middleware->appendToGroup('web', [
+            \App\Http\Middleware\TokenAuth::class,
             \App\Http\Middleware\AddRequestId::class,
             \App\Http\Middleware\ZmcGatekeeper::class,
+        ]);
+
+        $middleware->priority([
+            \Illuminate\Cookie\Middleware\EncryptCookies::class,
+            \Illuminate\Session\Middleware\StartSession::class,
+            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+            \App\Http\Middleware\TokenAuth::class,
+            \Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests::class,
+            \Illuminate\Routing\Middleware\ThrottleRequests::class,
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \Illuminate\Auth\Middleware\Authorize::class,
         ]);
 
     })

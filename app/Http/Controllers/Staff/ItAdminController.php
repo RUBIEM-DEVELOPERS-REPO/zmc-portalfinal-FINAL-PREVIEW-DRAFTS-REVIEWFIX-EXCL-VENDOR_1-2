@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\AccreditationRecord;
 use Spatie\Permission\Models\Role;
 use App\Support\AuditTrail;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class ItAdminController extends Controller
 {
@@ -100,12 +102,9 @@ class ItAdminController extends Controller
         // Accreditation trends (monthly last 12 months) - use issued_at if available
         $accreditationTrend = [];
         if (Schema::hasColumn('applications', 'issued_at')) {
-            $driver = DB::getDriverName();
-            if ($driver === 'sqlite') {
-                $dateFormat = "strftime('%Y-%m', issued_at)";
-            } else {
-                $dateFormat = "TO_CHAR(issued_at, 'YYYY-MM')";
-            }
+            $dateFormat = DB::getDriverName() === 'sqlite' 
+                ? "strftime('%Y-%m', issued_at)" 
+                : "TO_CHAR(issued_at, 'YYYY-MM')";
 
             $rows = Application::selectRaw("$dateFormat as ym, COUNT(*) as c")
                 ->whereNotNull('issued_at')
@@ -124,12 +123,12 @@ class ItAdminController extends Controller
         $avgProcessingHours = 0;
         if (Schema::hasColumn('applications', 'submitted_at')) {
             try {
-                $driver = DB::getDriverName();
-                if ($driver === 'sqlite') {
-                    $diffExpression = "(julianday(COALESCE(decided_at, approved_at, rejected_at)) - julianday(submitted_at)) * 24";
-                } else {
-                    $diffExpression = "EXTRACT(EPOCH FROM (COALESCE(decided_at, approved_at, rejected_at) - submitted_at)) / 3600";
-                }
+                $isSqlite = DB::getDriverName() === 'sqlite';
+                $endTimeExpr = "COALESCE(decided_at, approved_at, rejected_at)";
+                
+                $diffExpression = $isSqlite 
+                    ? "(julianday($endTimeExpr) - julianday(submitted_at)) * 24" 
+                    : "EXTRACT(EPOCH FROM ($endTimeExpr - submitted_at)) / 3600";
 
                 $avgProcessingHours = (float) Application::whereNotNull('submitted_at')
                     ->where(function ($q) {
@@ -178,7 +177,7 @@ class ItAdminController extends Controller
                 ->get();
         }
 
-        return view('staff.it.dashboard.index', compact(
+        return view('staff.it.dashboard', compact(
             'pending',
             'regions',
             'totalUsers',
@@ -210,21 +209,23 @@ class ItAdminController extends Controller
         $data = $request->validate([
             'name' => ['required','string','max:255'],
             'email' => ['required','email','max:255','unique:users,email'],
-            'password' => ['required','string','min:6'],
             'roles' => ['nullable','array'],
             'roles.*' => ['string'],
             'assigned_regions' => ['nullable','array'],
             'assigned_regions.*' => ['exists:regions,id'],
         ]);
 
+        $activationToken = Str::random(64);
+
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-            'account_status' => 'active',
+            'password' => Hash::make(Str::random(32)),
+            'account_status' => 'pending',
             'account_type' => 'staff',
-            'approved_at' => null,
-            'approved_by' => null,
+            'activation_token' => $activationToken,
+            'approved_at' => now(),
+            'approved_by' => auth()->id(),
         ]);
 
         $user->syncRoles($data['roles'] ?? []);
@@ -233,9 +234,29 @@ class ItAdminController extends Controller
             $user->assignedRegions()->sync($data['assigned_regions']);
         }
 
+        $roleNames = implode(', ', $data['roles'] ?? []);
+        $activationUrl = route('staff.activate', $activationToken);
+
+        try {
+            Mail::raw(
+                "Hello {$user->name},\n\n"
+                . "Your ZMC Staff account has been created with the role(s): {$roleNames}.\n\n"
+                . "Please activate your account by clicking the link below and setting your password:\n\n"
+                . "{$activationUrl}\n\n"
+                . "This link is valid for one-time use.\n\n"
+                . "Regards,\nZimbabwe Media Commission",
+                function ($message) use ($user) {
+                    $message->to($user->email)
+                        ->subject('ZMC Staff Account - Activate Your Account');
+                }
+            );
+        } catch (\Throwable $e) {
+            \Log::warning('Activation email failed: ' . $e->getMessage());
+        }
+
         AuditTrail::log('account_created_by_it_admin', $user, ['roles' => $data['roles'] ?? []]);
 
-        return redirect()->route('staff.it.dashboard')->with('success', 'User created and assigned to regions.');
+        return redirect()->route('staff.it.dashboard')->with('success', "Staff account created. Activation link sent to {$user->email}.");
     }
 
     /** Region Management */

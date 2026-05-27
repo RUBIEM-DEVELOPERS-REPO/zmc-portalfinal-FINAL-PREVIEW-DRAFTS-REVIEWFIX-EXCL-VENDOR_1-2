@@ -42,8 +42,9 @@ if ($path === '/' && $method === 'GET') {
     }
 }
 
-$filePath = __DIR__ . $path;
-if ($path !== '/' && is_file($filePath)) {
+$filePath = realpath(__DIR__ . $path);
+$publicDir = realpath(__DIR__);
+if ($filePath && $path !== '/' && strpos($filePath, $publicDir . DIRECTORY_SEPARATOR) === 0 && is_file($filePath)) {
     $mimeTypes = [
         'css' => 'text/css',
         'js' => 'application/javascript',

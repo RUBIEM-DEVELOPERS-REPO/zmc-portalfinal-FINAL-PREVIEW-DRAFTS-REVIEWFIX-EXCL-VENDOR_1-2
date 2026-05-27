@@ -38,6 +38,8 @@ class VerifyCsrfWithTokenBypass extends ValidateCsrfToken
         'staff/*/reminders',
         'staff/*/templates',
         'staff/*/templates/*/activate',
+        'staff/*/applications/*/mark-reviewed',
+        'staff/*/applications/batch-mark-reviewed',
     ];
 
     protected function tokensMatch($request): bool

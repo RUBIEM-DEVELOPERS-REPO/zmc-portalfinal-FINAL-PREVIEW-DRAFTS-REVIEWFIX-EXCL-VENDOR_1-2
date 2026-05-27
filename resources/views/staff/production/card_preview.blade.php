@@ -266,7 +266,7 @@
                   <div style="text-align: right;">
                     <div class="org-name">
                       <div style="color:#000;">ZIMBABWE</div>
-                      <div style="color:#2e7d32;">MEDIA</div>
+                      <div style="color:#228B22;">MEDIA</div>
                       <div style="color:#000;">COMMISSION</div>
                     </div>
                     <div class="org-sub">Accreditation Card (Back)</div>
@@ -274,9 +274,9 @@
                 </div>
                 <div class="back-content">
                   <div class="back-info">
-                    <div class="info-line"><b>Address:</b> 109 Rotten Row, Harare</div>
-                    <div class="info-line"><b>Phone:</b> +263 242 702 661</div>
-                    <div class="info-line"><b>Email:</b> info@zmc.org.zw</div>
+                    <div class="info-line"><b>Address:</b> 108 Swan Drive, Alexandra Park, Harare</div>
+                    <div class="info-line"><b>Tel:</b> 253509/10 or 253572/5/6</div>
+                    <div class="info-line"><b>Email:</b> zmcaccreditation@gmail.com</div>
                     <div class="info-line"><b>Designation:</b> <span contenteditable="true" data-edit="designation">{{ $payload['designation'] }}</span></div>
                     <div class="notice-box" style="font-size: 6px;">This card remains the property of ZMC. If found, please return to ZMC.</div>
                   </div>
@@ -287,7 +287,7 @@
                 </div>
                 <div class="back-footer">
                   <span>www.zmc.org.zw</span>
-                  <span>+263 242 702 661</span>
+                  <span>Tel: 253509/10</span>
                 </div>
               </div>
             </div>
@@ -379,7 +379,7 @@
 
   /* Template Variations */
   .template-modern_dark { --accent: #212121; --accentLite: rgba(33,33,33,0.15); }
-  .template-eco_green { --accent: #1b5e20; --accentLite: rgba(27,94,32,0.15); }
+  .template-eco_green { --accent: #1a1a1a; --accentLite: rgba(245,197,24,0.12); }
   .template-royal_gold { --accent: #4a148c; --accentLite: rgba(74,20,140,0.15); }
   .template-ocean_blue { --accent: #01579b; --accentLite: rgba(1,87,155,0.15); }
   .template-crimson_pro { --accent: #b71c1c; --accentLite: rgba(183,28,28,0.15); }
@@ -440,7 +440,7 @@
     text-align: center;
   }
 
-  .header-title .highlight { color: #2e7d32; }
+  .header-title .highlight { color: #228B22; }
 
   .header-title .sub{
     font-size: 10px; /* Increased from 7.5px */

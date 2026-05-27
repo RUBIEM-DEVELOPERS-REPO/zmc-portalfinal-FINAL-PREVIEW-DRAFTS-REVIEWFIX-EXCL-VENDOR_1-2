@@ -3,15 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>@yield('title') | ZMC Media Portal</title>
+  <title>@yield('title') | ZMC Applicant</title>
 
   {{-- Bootstrap 5 (required for dropdowns/modals in dashboards) --}}
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-  {{-- Chart Libraries for Director Dashboard --}}
+  {{-- Chart Libraries for Director Media Development and Governance Dashboard --}}
   <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="{{ asset('js/director-dashboard-charts.js') }}"></script>
 
   {{-- Fonts & Icons --}}
@@ -58,8 +58,8 @@
     .fw-black { font-weight: var(--font-weight-black) !important; }
 
     /* Sidebar */
-    .vertical-menu{ width: 270px; background: url('{{ asset("zmc_building.png") }}') center center / cover no-repeat; color:var(--sidebar-text); position: fixed; top:0; left: 0; bottom: 0; height: 100%; display:flex; flex-direction:column; overflow:hidden; z-index: 1000; }
-    .vertical-menu::before{ content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(180deg, rgba(45, 80, 22, 0.85), rgba(31, 58, 15, 0.88)); z-index: 0; pointer-events: none; }
+    .vertical-menu{ width: 270px; background: url('/zmc_building.png') center center / cover no-repeat; color:var(--sidebar-text); position: fixed; top:0; left: 0; bottom: 0; height: 100%; display:flex; flex-direction:column; overflow:hidden; z-index: 1000; }
+    .vertical-menu::before{ content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(180deg, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.78)); z-index: 0; pointer-events: none; }
     .vertical-menu > *{ position: relative; z-index: 1; }
     .main{ margin-left: 270px; }
     .navbar-brand-box{ padding: 24px 16px; display:flex; flex-direction:column; gap:12px; align-items:center; border-bottom: 1px solid rgba(255,255,255,.08); justify-content: center; }
@@ -79,15 +79,15 @@
 
     .logo-text{ 
       display:block; 
-      font-family: var(--font-primary);
+      font-family: var(--font-heading, 'Montserrat', 'Inter', sans-serif);
       font-weight: var(--font-weight-black); 
-      font-size: 13px; 
-      letter-spacing:.4px; 
+      font-size: 12px; 
+      letter-spacing:.3px; 
       text-align: right; 
       line-height: var(--line-height-tight);
     }
     .logo-text span.zimbabwe { color: #fff; }
-    .logo-text span.media { color: #4caf50; }
+    .logo-text span.media { color: #f5c518; }
     .logo-text span.commission { color: #facc15; }
     .logo-sub{ 
       display:block; 
@@ -254,21 +254,21 @@
 
     /* ====== Applicant Forms ====== */
     .form-container{background:#fff;border:1px solid var(--border);box-shadow:var(--shadow);border-radius:16px;overflow:hidden;}
-    .form-header{padding:18px 18px;background:linear-gradient(180deg, rgba(76,175,80,.12), rgba(255,255,255,0));border-bottom:1px solid rgba(76,175,80,.2);}
+    .form-header{padding:18px 18px;background:linear-gradient(180deg, rgba(245,197,24,.1), rgba(255,255,255,0));border-bottom:1px solid rgba(0,0,0,.12);}
     .form-header h1{font-size:16px;font-weight:900;margin:0 0 6px;color:#000;}
     .form-header p{margin:0;font-size:12px;color:#666;font-weight:700;}
     .form-steps-container{padding:16px 18px 18px;}
     .step-progress{margin-bottom:14px;}
     .step-progress-bar{display:flex;gap:10px;flex-wrap:wrap;}
     .step{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #e0e0e0;border-radius:14px;background:#fff;cursor:pointer;user-select:none;transition:all 0.2s ease;}
-    .step .step-number{width:28px;height:28px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;background:rgba(76,175,80,.15);color:#2e7d32;}
+    .step .step-number{width:28px;height:28px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;background:rgba(245,197,24,.15);color:#1a1a1a;}
     .step .step-label{font-size:12px;font-weight:900;color:#424242;}
-    .step.active{border-color:rgba(76,175,80,.5);box-shadow:0 10px 25px rgba(76,175,80,.15);background:rgba(76,175,80,.05);}
-    .step.active .step-number{background:rgba(76,175,80,.75);color:#fff;}
+    .step.active{border-color:rgba(245,197,24,.5);box-shadow:0 10px 25px rgba(245,197,24,.15);background:rgba(245,197,24,.05);}
+    .step.active .step-number{background:rgba(245,197,24,.85);color:#1a1a1a;}
     .step-content{display:none;}
     .step-content.active{display:block;}
     .step-title{font-size:14px;font-weight:900;color:#000;margin:6px 0 10px;}
-    .current-step-info{font-size:12px;font-weight:700;color:#666;padding:10px 12px;border:1px dashed rgba(76,175,80,.3);background:rgba(76,175,80,.08);border-radius:14px;margin-bottom:12px;}
+    .current-step-info{font-size:12px;font-weight:700;color:#666;padding:10px 12px;border:1px dashed rgba(0,0,0,.2);background:rgba(245,197,24,.08);border-radius:14px;margin-bottom:12px;}
     .form-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:12px;}
     .form-row .form-field{min-width:0;}
     @media (max-width:768px){.form-row{grid-template-columns:1fr;}.step{flex:1 1 auto;}.app-type-cards{grid-template-columns:1fr;}}
@@ -278,8 +278,8 @@
     .checkbox-item{border:1px solid var(--border);border-radius:12px;padding:10px 12px;background:#fff;display:flex;gap:8px;align-items:center;}
     .app-type-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
     .app-type-card{border:1px solid #e0e0e0;border-radius:16px;padding:14px;background:#fff;cursor:pointer;transition:.15s;}
-    .app-type-card:hover{transform:translateY(-1px);box-shadow:0 10px 25px rgba(76,175,80,.12);border-color:rgba(76,175,80,.3);}
-    .app-type-card.selected{border-color:rgba(76,175,80,.6);box-shadow:0 10px 25px rgba(76,175,80,.2);background:rgba(76,175,80,.05);}
+    .app-type-card:hover{transform:translateY(-1px);box-shadow:0 10px 25px rgba(245,197,24,.1);border-color:rgba(245,197,24,.3);}
+    .app-type-card.selected{border-color:rgba(245,197,24,.6);box-shadow:0 10px 25px rgba(0,0,0,.12);background:rgba(245,197,24,.05);}
     .app-type-card i{font-size:22px;color:#000;}
     .app-type-card h4{font-size:13px;font-weight:900;margin:8px 0 6px;color:#000;}
     .app-type-card p{font-size:12px;color:#666;font-weight:700;margin:0;}
@@ -295,8 +295,8 @@
 
   <style>
     :root{
-      --zmc-primary:#2d5016;
-      --zmc-primary-dark:#1f3a0f;
+      --zmc-primary:#1a1a1a;
+      --zmc-primary-dark:#111111;
       --zmc-accent:#facc15;
       --zmc-accent-dark:#eab308;
     }
@@ -339,7 +339,7 @@
     }
     
     body{
-      background: url('{{ asset("zmc_building.png") }}') no-repeat center center fixed !important;
+      background: url('/zmc_building.png') no-repeat center center fixed !important;
       background-size: cover !important;
     }
     body::before{
@@ -350,8 +350,8 @@
       z-index: -1;
     }
 
-    .topbar{ background: url('{{ asset("zmc_building.png") }}') center center / cover no-repeat !important; border-bottom: none !important; position: relative; }
-    .topbar::before{ content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(90deg, rgba(45, 80, 22, 0.85), rgba(31, 58, 15, 0.88)); z-index: 0; }
+    .topbar{ background: url('/zmc_building.png') center center / cover no-repeat !important; border-bottom: none !important; position: relative; }
+    .topbar::before{ content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(90deg, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.78)); z-index: 0; }
     .topbar > *{ position: relative; z-index: 1; }
     .topbar .icon-btn{ background: rgba(255,255,255,.1) !important; border-color: rgba(255,255,255,.2) !important; }
     .topbar .icon-btn i{ color: #fff !important; }
@@ -535,9 +535,6 @@
       <section class="content">
         @yield('content')
       </section>
-
-      {{-- Floating Chatbot (bottom-right) --}}
-      @include('layouts.chatbot')
     </main>
   </div>
 
@@ -559,10 +556,11 @@
        const isDark = body.classList.contains('theme-dark');
        const newTheme = isDark ? 'light' : 'dark';
  
-       // Optimistic UI update
        body.classList.remove('theme-light', 'theme-dark');
        body.classList.add('theme-' + newTheme);
        updateThemeIcon(newTheme);
+
+       try { localStorage.setItem('zmc_theme', newTheme); } catch(e) {}
  
        try {
          const res = await fetch("{{ route('settings.theme') }}", {
@@ -576,14 +574,23 @@
          });
          
          if (!res.ok) {
-           // If backend fails, fallback is handled on next reload, 
-           // but we could revert here if needed.
            console.error('Failed to sync theme with server');
          }
        } catch (e) {
          console.error('Error toggling theme:', e);
        }
      }
+
+     (function() {
+       try {
+         var saved = localStorage.getItem('zmc_theme');
+         if (saved && !document.body.classList.contains('theme-' + saved)) {
+           document.body.classList.remove('theme-light', 'theme-dark');
+           document.body.classList.add('theme-' + saved);
+           updateThemeIcon(saved);
+         }
+       } catch(e) {}
+     })();
  
      document.addEventListener('DOMContentLoaded', function(){
        // Init Theme Icon

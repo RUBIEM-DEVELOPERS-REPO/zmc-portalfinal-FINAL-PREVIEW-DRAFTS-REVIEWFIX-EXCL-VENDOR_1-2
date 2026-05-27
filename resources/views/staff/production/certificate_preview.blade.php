@@ -155,7 +155,7 @@
           <div class="cert-header">
             <img src="{{ asset('zmc_logo.png') }}" class="cert-header-logo" alt="ZMC Logo">
             <div class="cert-header-text" id="view_top_heading">
-              <span style="color:#000;">ZIMBABWE</span> <span style="color:#2e7d32;">MEDIA</span> <span style="color:#000;">COMMISSION</span>
+              <span style="color:#000;">ZIMBABWE</span> <span style="color:#f5c518;">MEDIA</span> <span style="color:#000;">COMMISSION</span>
             </div>
           </div>
 

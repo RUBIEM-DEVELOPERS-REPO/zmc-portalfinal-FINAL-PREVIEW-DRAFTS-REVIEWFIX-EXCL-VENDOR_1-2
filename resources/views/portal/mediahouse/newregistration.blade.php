@@ -139,7 +139,7 @@
                 <label class="form-label required">Collection Office</label>
                 <select class="form-control" name="collection_region" required>
                   <option value="">Select collection office</option>
-                  <option value="harare">Harare Regional Office - 3rd Floor, ZMC House, 109 Rotten Row, Harare</option>
+                  <option value="harare">Harare Regional Office - 108 Swan Drive, Alexandra Park, Harare</option>
                   <option value="bulawayo">Bulawayo Regional Office - Room 12, CABS Centre, 74 Jason Moyo St, Bulawayo</option>
                   <option value="mutare">Mutare Regional Office - 2nd Floor, Old Mutual Building, Main St, Mutare</option>
                   <option value="masvingo">Masvingo Regional Office - Suite 5, TelOne Complex, Robert Mugabe Way, Masvingo</option>

@@ -245,6 +245,20 @@
       `;
       html += zmcBlock('Media Practitioner Information', applicantHtml);
 
+      // Past Work Links (New)
+      const links = Array.isArray(app.past_work_links) ? app.past_work_links : [];
+      if (links.length > 0) {
+        let linkRows = links.map(l => `
+          <tr>
+            <td class="small fw-bold"><a href="${zmcFmt(l.url)}" target="_blank" class="text-primary text-decoration-none"><i class="ri-links-line me-1"></i>${zmcFmt(l.url)}</a></td>
+            <td class="small text-muted">${zmcFmt(l.description)}</td>
+          </tr>
+        `).join('');
+        html += zmcBlock('Online Work Links', `
+          <div class="table-responsive"><table class="table table-sm align-middle mb-0"><thead><tr><th>URL</th><th>Description</th></tr></thead><tbody>${linkRows}</tbody></table></div>
+        `);
+      }
+
       // Previous Applications history
       const prevApps = Array.isArray(data.previous_applications) ? data.previous_applications : [];
       if (prevApps.length > 0) {

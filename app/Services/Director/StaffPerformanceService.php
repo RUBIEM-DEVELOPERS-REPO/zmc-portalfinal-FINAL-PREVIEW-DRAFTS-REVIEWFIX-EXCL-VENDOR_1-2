@@ -50,58 +50,16 @@ class StaffPerformanceService
         ->get(['id', 'name', 'email']);
     }
 
-    /**
-     * Get average review time per registrar.
-     * 
-     * Calculates average hours spent in registrar review stage for each
-     * registrar, based on applications processed in the current month.
-     * 
-     * @return Collection Collection of User models with avg_review_hours field,
-     *                    sorted by review time descending
-     */
-    public function getAverageReviewTimePerRegistrar(): Collection
-    {
-        $registrars = User::whereHas('roles', function($query) {
-            $query->where('name', 'registrar');
-        })
-        ->with(['assignedApplications' => function($q) {
-            $q->whereNotNull('assigned_at')
-              ->whereNotNull('registrar_approved_at')
-              ->where('registrar_approved_at', '>=', now()->startOfMonth())
-              ->select('id', 'assigned_officer_id', 'assigned_at', 'registrar_approved_at');
-        }])
-        ->get(['id', 'name', 'email']);
-        
-        return $registrars->map(function($registrar) {
-            $apps = $registrar->assignedApplications;
-            
-            if ($apps->isEmpty()) {
-                $registrar->avg_review_hours = 0;
-                return $registrar;
-            }
-            
-            $totalHours = 0;
-            foreach ($apps as $app) {
-                $totalHours += Carbon::parse($app->assigned_at)
-                    ->diffInHours(Carbon::parse($app->registrar_approved_at));
-            }
-            
-            $registrar->avg_review_hours = round($totalHours / $apps->count(), 1);
-            unset($registrar->assignedApplications);
-            
-            return $registrar;
-        })->sortByDesc('avg_review_hours');
-    }
 
     /**
-     * Get payment verification turnaround per staff.
+     * Get payment verification volume per staff.
      * 
      * Returns accounts staff with counts of payments they verified (applications
      * issued) in the current month, sorted by count descending.
      * 
      * @return Collection Collection of User models with verified_count field
      */
-    public function getPaymentVerificationTurnaround(): Collection
+    public function getPaymentVerificationVolume(): Collection
     {
         return User::whereHas('roles', function($query) {
             $query->where('name', 'accounts');

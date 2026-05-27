@@ -1,48 +1,55 @@
-/* ZMC Theme - Green and Yellow with Improved Text Sizes */
-/* Green primary color with opacity to show background image */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Montserrat:wght@400;500;600;700;800;900&family=Open+Sans:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap');
+
+/* ZMC Theme - Black, Yellow & White */
 
 :root {
-  /* Primary Colors - Green */
-  --zmc-primary: #2d5016;
-  --zmc-primary-dark: #1f3a0f;
-  --zmc-primary-darker: #152808;
+  /* Primary Colors - Black */
+  --zmc-primary: #1a1a1a;
+  --zmc-primary-dark: #111111;
+  --zmc-primary-darker: #000000;
 
   /* Yellow for Accents */
-  --zmc-yellow: #facc15;
-  --zmc-yellow-dark: #eab308;
-  --zmc-yellow-darker: #ca8a04;
+  --zmc-yellow: #f5c518;
+  --zmc-yellow-dark: #d4a910;
+  --zmc-yellow-darker: #b8920a;
 
   /* Supporting Colors */
   --zmc-black: #000000;
   --zmc-white: #ffffff;
-  --zmc-gray-bg: #f3f4f6;
-  --zmc-gray-light: #f9fafb;
-  --zmc-gray: #e5e7eb;
+  --zmc-gray-bg: #f5f5f5;
+  --zmc-gray-light: #fafafa;
+  --zmc-gray: #e0e0e0;
   --zmc-gray-dark: #6b7280;
   --zmc-gray-darker: #374151;
-  --zmc-text-dark: #1f2937;
+  --zmc-text-dark: #1a1a1a;
 
-  /* Opacity Variations for Green */
-  --zmc-green-90: rgba(45, 80, 22, 0.9);
-  --zmc-green-75: rgba(45, 80, 22, 0.75);
-  --zmc-green-50: rgba(45, 80, 22, 0.5);
-  --zmc-green-30: rgba(45, 80, 22, 0.3);
-  --zmc-green-15: rgba(45, 80, 22, 0.15);
-  --zmc-green-08: rgba(45, 80, 22, 0.08);
-  --zmc-green-05: rgba(45, 80, 22, 0.05);
+  /* Opacity Variations for Black */
+  --zmc-dark-90: rgba(0, 0, 0, 0.72);
+  --zmc-dark-75: rgba(0, 0, 0, 0.6);
+  --zmc-dark-50: rgba(0, 0, 0, 0.5);
+  --zmc-dark-30: rgba(0, 0, 0, 0.3);
+  --zmc-dark-15: rgba(0, 0, 0, 0.15);
+  --zmc-dark-08: rgba(0, 0, 0, 0.08);
+  --zmc-dark-05: rgba(0, 0, 0, 0.05);
+
+  /* Yellow opacity variations */
+  --zmc-yellow-15: rgba(245, 197, 24, 0.15);
+  --zmc-yellow-08: rgba(245, 197, 24, 0.08);
 
   /* Typography System */
-  --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-size-xs: 11px;
-  --font-size-sm: 12px;
-  --font-size-base: 14px;
-  --font-size-lg: 16px;
-  --font-size-xl: 20px;
-  --font-size-2xl: 28px;
-  --font-size-3xl: 34px;
+  --font-primary: 'Inter', 'Montserrat', 'Source Sans Pro', 'Open Sans', Helvetica, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-heading: 'Montserrat', 'Inter', Helvetica, sans-serif;
+  --font-body: 'Source Sans Pro', 'Open Sans', 'Inter', Helvetica, sans-serif;
+  --font-size-xs: 10px;
+  --font-size-sm: 11px;
+  --font-size-base: 13px;
+  --font-size-lg: 14.5px;
+  --font-size-xl: 17px;
+  --font-size-2xl: 22px;
+  --font-size-3xl: 28px;
 
-  --font-size-dense: 0.75rem;
-  --font-size-dense-sm: 0.7rem;
+  --font-size-dense: 0.7rem;
+  --font-size-dense-sm: 0.65rem;
 
   --font-weight-normal: 400;
   --font-weight-medium: 500;
@@ -62,25 +69,42 @@
 }
 
 /* Global Body */
-body {
+body:not(.landing-page) {
   background: var(--zmc-gray-bg) !important;
   color: var(--zmc-text-dark) !important;
-  font-family: var(--font-primary) !important;
+  font-family: var(--font-body) !important;
   font-size: var(--font-size-base) !important;
   line-height: var(--line-height-normal) !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Base font sizes - slightly increased for readability */
-p,
-div,
-span,
-td,
-th,
-li {
-  font-size: var(--font-size-base) !important;
+/* Headings use Montserrat */
+h1, h2, h3, h4, h5, h6,
+.card-title, .content-header h1 {
+  font-family: var(--font-heading) !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
 }
 
-/* Buttons - Green Primary with Yellow Accents */
+/* Base font sizes */
+p, div, span, td, th, li {
+  font-size: var(--font-size-base);
+}
+
+/* Dashboard text normalization — remove all-caps from dashboard labels */
+.content-wrapper h1, .content-wrapper h2, .content-wrapper h3,
+.card-header .card-title,
+.info-box-text,
+.small-box h3, .small-box p,
+.content-header .breadcrumb-item,
+.nav-tabs .nav-link,
+.table th {
+  text-transform: none !important;
+  letter-spacing: normal !important;
+}
+
+/* Buttons - Black Primary with Yellow Accents */
 .btn-primary,
 a.btn-primary {
   background: var(--zmc-primary) !important;
@@ -95,7 +119,7 @@ a.btn-primary {
   background: var(--zmc-yellow) !important;
   border-color: var(--zmc-primary) !important;
   color: var(--zmc-primary) !important;
-  box-shadow: 0 4px 12px rgba(250, 204, 21, 0.3) !important;
+  box-shadow: 0 4px 12px rgba(245, 197, 24, 0.35) !important;
 }
 
 .btn-success,
@@ -114,8 +138,8 @@ a.btn-success {
 }
 
 .btn-outline-primary {
-  border-color: var(--zmc-yellow) !important;
-  color: var(--zmc-yellow) !important;
+  border-color: var(--zmc-primary) !important;
+  color: var(--zmc-primary) !important;
   background: var(--zmc-white) !important;
   font-size: var(--font-size-base) !important;
 }
@@ -159,7 +183,7 @@ a.btn-dark {
 
 .btn-dark:hover {
   background: var(--zmc-primary-darker) !important;
-  border-color: var(--zmc-primary-darker) !important;
+  border-color: var(--zmc-yellow) !important;
 }
 
 .btn-outline-dark,
@@ -171,7 +195,7 @@ a.btn-outline-dark {
 .btn-outline-dark:hover,
 a.btn-outline-dark:hover {
   background: #000000 !important;
-  color: #ffffff !important;
+  color: var(--zmc-yellow) !important;
 }
 
 .btn-sm {
@@ -192,20 +216,20 @@ a.btn-outline-dark:hover {
 }
 
 .badge.bg-success-subtle {
-  background: var(--zmc-green-15) !important;
-  color: #1f3a0f !important;
-  border: 1px solid var(--zmc-green-30) !important;
+  background: var(--zmc-yellow-15) !important;
+  color: #78350f !important;
+  border: 1px solid rgba(245, 197, 24, 0.3) !important;
 }
 
 .badge.bg-primary {
-  background: var(--zmc-yellow) !important;
-  color: var(--zmc-primary) !important;
+  background: var(--zmc-primary) !important;
+  color: var(--zmc-yellow) !important;
 }
 
 .badge.bg-light {
-  background: var(--zmc-green-05) !important;
-  color: #1f3a0f !important;
-  border: 1px solid var(--zmc-green-15) !important;
+  background: var(--zmc-dark-05) !important;
+  color: var(--zmc-text-dark) !important;
+  border: 1px solid var(--zmc-dark-15) !important;
 }
 
 .badge.bg-warning {
@@ -215,11 +239,11 @@ a.btn-outline-dark:hover {
 
 /* Text Colors */
 .text-success {
-  color: #ffffff !important;
+  color: var(--zmc-yellow-dark) !important;
 }
 
 .text-primary {
-  color: #ffffff !important;
+  color: var(--zmc-primary) !important;
 }
 
 .text-muted {
@@ -238,13 +262,13 @@ a.btn-outline-dark:hover {
 }
 
 .bg-success-subtle {
-  background-color: var(--zmc-green-15) !important;
-  color: #1f3a0f !important;
+  background-color: var(--zmc-yellow-15) !important;
+  color: #78350f !important;
 }
 
 .bg-primary {
-  background-color: var(--zmc-yellow) !important;
-  color: var(--zmc-primary) !important;
+  background-color: var(--zmc-primary) !important;
+  color: var(--zmc-yellow) !important;
 }
 
 .bg-light {
@@ -257,11 +281,11 @@ a.btn-outline-dark:hover {
 }
 
 .border-success-subtle {
-  border-color: var(--zmc-yellow-30) !important;
+  border-color: rgba(245, 197, 24, 0.3) !important;
 }
 
 .border-primary {
-  border-color: var(--zmc-yellow) !important;
+  border-color: var(--zmc-primary) !important;
 }
 
 /* Alerts */
@@ -270,22 +294,22 @@ a.btn-outline-dark:hover {
 }
 
 .alert-success {
-  background-color: var(--zmc-green-15) !important;
-  border-color: var(--zmc-green-50) !important;
-  color: #1f3a0f !important;
-  border-left: 4px solid var(--zmc-primary) !important;
+  background-color: var(--zmc-yellow-08) !important;
+  border-color: rgba(245, 197, 24, 0.4) !important;
+  color: #78350f !important;
+  border-left: 4px solid var(--zmc-yellow-dark) !important;
 }
 
 .alert-info {
-  background-color: var(--zmc-green-08) !important;
-  border-color: var(--zmc-green-30) !important;
-  color: #1f3a0f !important;
+  background-color: var(--zmc-dark-05) !important;
+  border-color: var(--zmc-dark-15) !important;
+  color: var(--zmc-text-dark) !important;
 }
 
 .alert-warning {
-  background-color: rgba(250, 204, 21, 0.1) !important;
-  border-color: rgba(250, 204, 21, 0.3) !important;
-  color: #ca8a04 !important;
+  background-color: rgba(245, 197, 24, 0.12) !important;
+  border-color: rgba(245, 197, 24, 0.35) !important;
+  color: #92400e !important;
 }
 
 /* Links */
@@ -296,9 +320,8 @@ a {
 }
 
 a:hover {
-  color: var(--zmc-yellow) !important;
+  color: var(--zmc-yellow-dark) !important;
 }
-
 
 /* Forms */
 .form-control,
@@ -311,8 +334,8 @@ a:hover {
 
 .form-control:focus,
 .form-select:focus {
-  border-color: var(--zmc-primary) !important;
-  box-shadow: 0 0 0 0.2rem var(--zmc-green-15) !important;
+  border-color: var(--zmc-yellow) !important;
+  box-shadow: 0 0 0 0.2rem rgba(245, 197, 24, 0.2) !important;
 }
 
 .form-check-input:checked {
@@ -335,16 +358,16 @@ a:hover {
 .nav-tabs .nav-link.active {
   border-bottom: 3px solid var(--zmc-yellow) !important;
   color: var(--zmc-text-dark) !important;
-  background: rgba(250, 204, 21, 0.08) !important;
+  background: var(--zmc-yellow-08) !important;
 }
 
 .nav-tabs .nav-link:hover:not(.active) {
-  border-bottom: 3px solid rgba(250, 204, 21, 0.5) !important;
+  border-bottom: 3px solid rgba(245, 197, 24, 0.5) !important;
   color: var(--zmc-text-dark) !important;
 }
 
 .nav-tabs {
-  border-bottom: 2px solid var(--zmc-green-15) !important;
+  border-bottom: 2px solid var(--zmc-dark-08) !important;
 }
 
 /* Pagination - Yellow Active */
@@ -355,9 +378,9 @@ a:hover {
 }
 
 .pagination .page-link:hover {
-  background-color: var(--zmc-green-15) !important;
-  border-color: var(--zmc-primary) !important;
-  color: var(--zmc-primary-dark) !important;
+  background-color: var(--zmc-yellow-15) !important;
+  border-color: var(--zmc-yellow) !important;
+  color: var(--zmc-primary) !important;
 }
 
 .pagination .page-item.active .page-link {
@@ -368,16 +391,16 @@ a:hover {
 
 /* Progress Bars */
 .progress-bar {
-  background-color: var(--zmc-primary) !important;
+  background-color: var(--zmc-yellow) !important;
 }
 
 .progress {
-  background-color: var(--zmc-green-15) !important;
+  background-color: var(--zmc-dark-08) !important;
 }
 
 /* Spinners */
 .spinner-border {
-  color: var(--zmc-primary) !important;
+  color: var(--zmc-yellow) !important;
 }
 
 /* Cards */
@@ -386,9 +409,24 @@ a:hover {
   background: var(--zmc-white) !important;
 }
 
+.card.zmc-stat-card {
+  border-color: transparent !important;
+}
+.card.zmc-stat-card.zmc-bg-dark { background: #1a1a1a !important; color: #f5c518 !important; }
+.card.zmc-stat-card.zmc-bg-yellow { background: #f5c518 !important; color: #1a1a1a !important; }
+.card.zmc-stat-card.zmc-bg-sky { background: #0ea5e9 !important; color: #fff !important; }
+.card.zmc-stat-card.zmc-bg-blue { background: #2563eb !important; color: #fff !important; }
+.card.zmc-stat-card.zmc-bg-amber { background: #d97706 !important; color: #fff !important; }
+.card.zmc-stat-card.zmc-bg-gray { background: #6b7280 !important; color: #fff !important; }
+.card.zmc-stat-card.zmc-bg-slate { background: #374151 !important; color: #f5c518 !important; }
+.card.zmc-stat-card.zmc-bg-red { background: #dc2626 !important; color: #fff !important; }
+.card.zmc-stat-card .card-body {
+  color: inherit !important;
+}
+
 .card-header {
-  background: var(--zmc-green-08) !important;
-  border-bottom: 2px solid var(--zmc-green-30) !important;
+  background: var(--zmc-dark-05) !important;
+  border-bottom: 2px solid var(--zmc-dark-15) !important;
   color: var(--zmc-text-dark) !important;
   font-size: var(--font-size-base) !important;
   font-weight: 600 !important;
@@ -402,12 +440,11 @@ a:hover {
 .sidebar-menu li a {
   font-size: var(--font-size-sm) !important;
   color: rgba(255, 255, 255, 0.86) !important;
-  /* Ensure sidebar links stay white/light */
 }
 
 .sidebar-menu li.active a,
 .sidebar-menu li a:hover {
-  background: rgba(250, 204, 21, 0.15) !important;
+  background: rgba(245, 197, 24, 0.18) !important;
   color: var(--zmc-yellow) !important;
   border-left: 3px solid var(--zmc-yellow) !important;
 }
@@ -417,11 +454,11 @@ a:hover {
 .ri-check-line,
 .fa-check,
 i.text-success {
-  color: #ffffff !important;
+  color: var(--zmc-yellow-dark) !important;
 }
 
 i.text-primary {
-  color: #ffffff !important;
+  color: var(--zmc-primary) !important;
 }
 
 /* Step Progress - Yellow Active */
@@ -432,8 +469,8 @@ i.text-primary {
 
 .step.active {
   border-color: var(--zmc-yellow) !important;
-  box-shadow: 0 10px 25px rgba(250, 204, 21, 0.2) !important;
-  background: rgba(250, 204, 21, 0.08) !important;
+  box-shadow: 0 10px 25px rgba(245, 197, 24, 0.2) !important;
+  background: var(--zmc-yellow-08) !important;
 }
 
 .step.active .step-number {
@@ -444,15 +481,15 @@ i.text-primary {
 }
 
 .step .step-number {
-  background: var(--zmc-green-15) !important;
-  color: #1f3a0f !important;
+  background: var(--zmc-dark-08) !important;
+  color: var(--zmc-text-dark) !important;
   font-size: var(--font-size-base) !important;
   font-weight: 900 !important;
 }
 
 .step:hover {
-  border-color: var(--zmc-green-50) !important;
-  background: var(--zmc-green-05) !important;
+  border-color: var(--zmc-yellow-dark) !important;
+  background: var(--zmc-yellow-08) !important;
 }
 
 .step .step-label {
@@ -468,14 +505,14 @@ i.text-primary {
 
 .app-type-card:hover {
   border-color: var(--zmc-yellow) !important;
-  box-shadow: 0 10px 25px rgba(250, 204, 21, 0.2) !important;
-  background: rgba(250, 204, 21, 0.05) !important;
+  box-shadow: 0 10px 25px rgba(245, 197, 24, 0.2) !important;
+  background: var(--zmc-yellow-08) !important;
 }
 
 .app-type-card.selected {
   border-color: var(--zmc-yellow) !important;
-  box-shadow: 0 10px 25px rgba(250, 204, 21, 0.25) !important;
-  background: rgba(250, 204, 21, 0.08) !important;
+  box-shadow: 0 10px 25px rgba(245, 197, 24, 0.25) !important;
+  background: var(--zmc-yellow-08) !important;
 }
 
 .app-type-card h4 {
@@ -488,12 +525,12 @@ i.text-primary {
 }
 
 .app-type-card i {
-  color: var(--zmc-primary-dark) !important;
+  color: var(--zmc-primary) !important;
 }
 
-/* Form Headers - Enhanced prominence */
+/* Form Headers */
 .form-header {
-  background: linear-gradient(180deg, var(--zmc-primary), var(--zmc-primary-dark)) !important;
+  background: linear-gradient(180deg, var(--zmc-primary), var(--zmc-primary-darker)) !important;
   border-bottom: 3px solid var(--zmc-yellow) !important;
   padding: 24px 20px !important;
 }
@@ -513,20 +550,20 @@ i.text-primary {
 
 /* Current Step Info */
 .current-step-info {
-  border: 1px dashed var(--zmc-green-50) !important;
-  background: var(--zmc-green-08) !important;
-  color: #1f3a0f !important;
+  border: 1px dashed var(--zmc-dark-30) !important;
+  background: var(--zmc-yellow-08) !important;
+  color: var(--zmc-text-dark) !important;
   font-size: var(--font-size-sm) !important;
 }
 
 /* Modal Headers */
 .zmc-modal-header::before {
-  background: var(--zmc-primary) !important;
+  background: var(--zmc-yellow) !important;
 }
 
 .modal-header {
-  background: var(--zmc-green-05) !important;
-  border-bottom: 2px solid var(--zmc-green-30) !important;
+  background: var(--zmc-dark-05) !important;
+  border-bottom: 2px solid var(--zmc-dark-15) !important;
 }
 
 .zmc-modal-title {
@@ -540,9 +577,9 @@ i.text-primary {
 
 /* Icon Buttons */
 .zmc-icon-btn:hover {
-  border-color: var(--zmc-primary) !important;
-  color: var(--zmc-primary-dark) !important;
-  background: var(--zmc-green-05) !important;
+  border-color: var(--zmc-yellow-dark) !important;
+  color: var(--zmc-primary) !important;
+  background: var(--zmc-yellow-08) !important;
 }
 
 /* Dropdown Items */
@@ -558,7 +595,7 @@ i.text-primary {
 }
 
 .dropdown-item:hover {
-  background-color: var(--zmc-green-08) !important;
+  background-color: var(--zmc-yellow-08) !important;
   color: var(--zmc-text-dark) !important;
 }
 
@@ -575,7 +612,7 @@ i.text-primary {
 }
 
 .list-group-item:hover {
-  background-color: var(--zmc-green-05) !important;
+  background-color: var(--zmc-yellow-08) !important;
 }
 
 /* Tables */
@@ -584,12 +621,12 @@ i.text-primary {
 }
 
 .table-hover tbody tr:hover {
-  background-color: var(--zmc-green-08) !important;
+  background-color: var(--zmc-yellow-08) !important;
 }
 
 .table thead th {
-  background: var(--zmc-green-08) !important;
-  border-bottom: 2px solid var(--zmc-green-30) !important;
+  background: var(--zmc-dark-05) !important;
+  border-bottom: 2px solid var(--zmc-dark-15) !important;
   color: var(--zmc-text-dark) !important;
   font-size: var(--font-size-sm) !important;
   font-weight: 700 !important;
@@ -614,22 +651,23 @@ i.text-primary {
 .zmc-card h5,
 .zmc-card h6,
 .zmc-card .text-muted.fw-bold {
-  font-size: 18px !important;
-  font-weight: 800 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.5px !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
   color: var(--zmc-text-dark) !important;
-  margin-bottom: 8px !important;
+  margin-bottom: 6px !important;
+  font-family: var(--font-heading) !important;
 }
 
 .zmc-card:hover {
-  border-color: var(--zmc-green-30) !important;
-  box-shadow: 0 4px 12px var(--zmc-green-15) !important;
+  border-color: var(--zmc-yellow) !important;
+  box-shadow: 0 4px 12px rgba(245, 197, 24, 0.15) !important;
 }
 
 .icon-box {
-  background: var(--zmc-green-08) !important;
-  color: var(--zmc-primary-dark) !important;
+  background: var(--zmc-yellow-15) !important;
+  color: var(--zmc-primary) !important;
   width: 52px !important;
   height: 52px !important;
   display: flex !important;
@@ -640,7 +678,7 @@ i.text-primary {
 }
 
 .icon-box i {
-  color: #ffffff !important;
+  color: var(--zmc-primary) !important;
 }
 
 /* Logo Text */
@@ -665,20 +703,20 @@ i.text-primary {
 }
 
 .zmc-pill:hover {
-  background: var(--zmc-green-05) !important;
-  border-color: var(--zmc-primary) !important;
+  background: var(--zmc-yellow-08) !important;
+  border-color: var(--zmc-yellow) !important;
 }
 
 .zmc-pill-dark {
-  background: var(--zmc-primary-dark) !important;
-  color: var(--zmc-white) !important;
-  border-color: var(--zmc-primary-dark) !important;
+  background: var(--zmc-primary) !important;
+  color: var(--zmc-yellow) !important;
+  border-color: var(--zmc-primary) !important;
 }
 
 /* Status badges */
 .badge-pending {
-  background: rgba(250, 204, 21, 0.15) !important;
-  color: #ca8a04 !important;
+  background: rgba(245, 197, 24, 0.15) !important;
+  color: #92400e !important;
 }
 
 .badge-approved {
@@ -692,48 +730,23 @@ i.text-primary {
 }
 
 /* Headings */
-h1 {
-  font-size: var(--font-size-2xl) !important;
-}
-
-h2 {
-  font-size: var(--font-size-xl) !important;
-}
-
-h3 {
-  font-size: var(--font-size-lg) !important;
-}
-
-h4 {
-  font-size: var(--font-size-base) !important;
-}
-
-h5 {
-  font-size: var(--font-size-base) !important;
-  font-weight: 600 !important;
-}
-
-h6 {
-  font-size: var(--font-size-sm) !important;
-}
+h1 { font-size: var(--font-size-2xl) !important; }
+h2 { font-size: var(--font-size-xl) !important; }
+h3 { font-size: var(--font-size-lg) !important; }
+h4 { font-size: var(--font-size-base) !important; }
+h5 { font-size: var(--font-size-base) !important; font-weight: 600 !important; }
+h6 { font-size: var(--font-size-sm) !important; }
 
 /* Small text adjustments */
-.small,
-small {
-  font-size: var(--font-size-sm) !important;
-}
+.small, small { font-size: var(--font-size-sm) !important; }
 
 /* ZMC Label */
-.zmc-lbl {
-  font-size: var(--font-size-sm) !important;
-}
+.zmc-lbl { font-size: var(--font-size-sm) !important; }
 
 /* Step title */
-.step-title {
-  font-size: var(--font-size-base) !important;
-}
+.step-title { font-size: var(--font-size-base) !important; }
 
-/* Dashboard specific overrides - ensure text is high contrast on light backgrounds */
+/* Dashboard specific overrides */
 .dashboard-card .h3,
 .dashboard-card .h4,
 .dashboard-card .h5,
@@ -745,10 +758,9 @@ small {
 .zmc-card .fw-black,
 .zmc-card .fw-bold {
   color: #1e293b !important;
-  /* Dark slate for visibility */
 }
 
-/* Dashboard icons should use primary color or accent-dark, not white if they are on white cards */
+/* Dashboard icons */
 .dashboard-card i,
 .zmc-card i,
 .icon-box i {

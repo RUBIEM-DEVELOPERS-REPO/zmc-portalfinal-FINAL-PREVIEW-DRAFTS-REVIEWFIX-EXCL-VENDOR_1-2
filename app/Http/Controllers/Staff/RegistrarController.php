@@ -30,47 +30,33 @@ class RegistrarController extends Controller
         $kpis = [
             'awaiting_registrar' => Application::whereIn('status', [
                     Application::REGISTRAR_REVIEW,
-                    Application::APPROVED_BY_OFFICER_AWAITING_PAYMENT_AND_REGISTRAR_MASTER,
-                    Application::VERIFIED_BY_OFFICER_PENDING_REGISTRAR
-                ])
-                ->where(function($q) use ($user) {
-                    $q->whereNull('assigned_officer_id')
-                      ->orWhere('assigned_officer_id', $user->id);
-                })->count(),
-            'approved_today' => Application::whereIn('status', [Application::ACCOUNTS_REVIEW, Application::REGISTRAR_APPROVED, Application::REGISTRAR_APPROVED_PENDING_REGISTRATION_FEE_PAYMENT])->where('last_action_at', '>=', $today)->count(),
-            'approved_this_week' => Application::whereIn('status', [Application::ACCOUNTS_REVIEW, Application::REGISTRAR_APPROVED, Application::REGISTRAR_APPROVED_PENDING_REGISTRATION_FEE_PAYMENT])->where('last_action_at', '>=', $thisWeek)->count(),
-            'returned_to_officer' => Application::whereIn('status', [Application::RETURNED_TO_OFFICER, Application::REGISTRAR_RAISED_FIX_REQUEST])->count(),
-
-            // Category mismatches: items where registrar changed the category
+                    Application::FORWARDED_TO_REGISTRAR,
+                    Application::VERIFIED_BY_OFFICER,
+                ])->count(),
+            'approved_today' => Application::whereIn('status', [
+                    Application::REGISTRAR_APPROVED,
+                    Application::REGISTRAR_APPROVED_PENDING_REG_FEE,
+                ])->where('last_action_at', '>=', $today)->count(),
+            'approved_this_week' => Application::whereIn('status', [
+                    Application::REGISTRAR_APPROVED,
+                    Application::REGISTRAR_APPROVED_PENDING_REG_FEE,
+                ])->where('last_action_at', '>=', $thisWeek)->count(),
+            'returned_to_officer' => Application::whereIn('status', [
+                    Application::RETURNED_TO_OFFICER,
+                    Application::REGISTRAR_FIX_REQUEST,
+                ])->count(),
             'category_mismatches' => ActivityLog::where('action', 'registrar_reassign_category')->where('created_at', '>=', $thisWeek)->count(),
-
             'certificates_generated_today' => DocumentVersion::where('document_type', 'certificate')->where('created_at', '>=', $today)->count(),
             'prints_today' => PrintLog::where('created_at', '>=', $today)->count(),
-
-            // Reprints flagged: prints > 1
             'flagged_reprints' => Application::where('print_count', '>', 1)->count(),
-
-            // New: Applications awaiting Registrar to approve for payment
-            'awaiting_payment_approval' => Application::whereIn('status', [
-                    Application::REGISTRAR_REVIEW,
-                    Application::APPROVED_BY_OFFICER_AWAITING_PAYMENT_AND_REGISTRAR_MASTER,
-                    Application::VERIFIED_BY_OFFICER_PENDING_REGISTRAR
-                ])
-                ->whereNull('registrar_reviewed_at')
-                ->where('payment_status', '!=', 'paid')
-                ->where(function($q) use ($user) {
-                    $q->whereNull('assigned_officer_id')
-                      ->orWhere('assigned_officer_id', $user->id);
-                })
-                ->count(),
         ];
 
-        // Global Filters logic for the main dashboard list
         $query = Application::query()
             ->with(['applicant', 'lastActionBy'])
             ->withCount('printLogs');
-            
-        // Apply year filter if it's not the current year
+
+        $year = $request->input('year', now()->year);
+        $isCurrentYear = (int)$year === now()->year;
         if (!$isCurrentYear) {
             $query->whereYear('created_at', $year);
         }
@@ -118,15 +104,14 @@ class RegistrarController extends Controller
         // By default show items needing attention or recently approved
         if (!$request->filled('status')) {
             $query->whereIn('status', [
-                Application::PAID_CONFIRMED,
+                Application::FORWARDED_TO_REGISTRAR,
                 Application::REGISTRAR_REVIEW,
-                Application::APPROVED_BY_OFFICER_AWAITING_PAYMENT_AND_REGISTRAR_MASTER,
-                Application::VERIFIED_BY_OFFICER_PENDING_REGISTRAR,
+                Application::VERIFIED_BY_OFFICER,
                 Application::REGISTRAR_APPROVED,
-                Application::REGISTRAR_APPROVED_PENDING_REGISTRATION_FEE_PAYMENT,
+                Application::REGISTRAR_APPROVED_PENDING_REG_FEE,
                 Application::RETURNED_TO_OFFICER,
-                Application::REGISTRAR_RAISED_FIX_REQUEST,
-                Application::ACCOUNTS_REVIEW,
+                Application::REGISTRAR_FIX_REQUEST,
+                Application::REGISTRAR_REJECTED,
             ]);
         }
 
@@ -149,7 +134,7 @@ class RegistrarController extends Controller
             ->limit(15)
             ->get();
 
-        return view('staff.registrar.dashboard', compact('applications', 'kpis', 'activity'));
+        return view('staff.registrar.dashboard', compact('applications', 'kpis', 'activity', 'year', 'isCurrentYear'));
     }
 
     /**
@@ -162,8 +147,8 @@ class RegistrarController extends Controller
             ->with(['applicant', 'assignedOfficer', 'payments'])
             ->whereIn('status', [
                 Application::REGISTRAR_REVIEW,
-                Application::APPROVED_BY_OFFICER_AWAITING_PAYMENT_AND_REGISTRAR_MASTER,
-                Application::VERIFIED_BY_OFFICER_PENDING_REGISTRAR
+                Application::FORWARDED_TO_REGISTRAR,
+                Application::VERIFIED_BY_OFFICER,
             ]);
 
         // Apply filters
@@ -353,6 +338,48 @@ class RegistrarController extends Controller
     }
 
 
+    public function markReviewed(Request $request, Application $application)
+    {
+        $application->registrar_reviewed_at = now();
+        $application->registrar_reviewed_by = auth()->id();
+        $application->save();
+
+        if (class_exists(\App\Support\AuditTrail::class)) {
+            \App\Support\AuditTrail::log('registrar_reviewed', $application, [
+                'application_id' => $application->id,
+                'reviewed_by' => auth()->user()?->name,
+            ]);
+        }
+
+        return back()->with('success', 'Application marked as reviewed.');
+    }
+
+    public function batchMarkReviewed(Request $request)
+    {
+        $data = $request->validate([
+            'application_ids' => ['required', 'array'],
+            'application_ids.*' => ['integer'],
+        ]);
+
+        $registrarStatuses = [
+            Application::REGISTRAR_REVIEW,
+            Application::FORWARDED_TO_REGISTRAR,
+            Application::PENDING_ACCOUNTS_FROM_REGISTRAR,
+            Application::REGISTRAR_APPROVED,
+            Application::REGISTRAR_APPROVED_PENDING_REG_FEE,
+        ];
+
+        $count = Application::whereIn('id', $data['application_ids'])
+            ->whereNull('registrar_reviewed_at')
+            ->whereIn('status', $registrarStatuses)
+            ->update([
+                'registrar_reviewed_at' => now(),
+                'registrar_reviewed_by' => auth()->id(),
+            ]);
+
+        return back()->with('success', "{$count} application(s) marked as reviewed.");
+    }
+
     public function reject(Request $request, Application $application)
     {
         $data = $request->validate([
@@ -459,6 +486,45 @@ class RegistrarController extends Controller
         }
 
         return back()->with('success', "Renewal reminders sent to {$count} " . ($type === 'accreditation' ? 'media practitioners' : 'media houses') . ".");
+    }
+
+    public function remindersIndex(Request $request)
+    {
+        $reminders = \App\Models\Reminder::query()
+            ->with('creator')
+            ->latest()
+            ->paginate(20);
+
+        return view('staff.registrar.reminders', compact('reminders'));
+    }
+
+    public function storeReminder(Request $request)
+    {
+        $data = $request->validate([
+            'target_type' => ['required', 'in:media_practitioner,media_house,bulk'],
+            'target_id' => ['required', 'integer', 'min:1'],
+            'reminder_type' => ['required', 'string', 'max:50'],
+            'title' => ['nullable', 'string', 'max:255'],
+            'message' => ['required', 'string', 'max:2000'],
+        ]);
+
+        \App\Models\Reminder::create([
+            'target_type' => $data['target_type'],
+            'target_id' => $data['target_id'],
+            'reminder_type' => $data['reminder_type'],
+            'title' => $data['title'] ?? ucfirst(str_replace('_', ' ', $data['reminder_type'])),
+            'message' => $data['message'],
+            'created_by' => Auth::id(),
+        ]);
+
+        ActivityLogger::log('reminder_created', null, null, null, [
+            'target_type' => $data['target_type'],
+            'target_id' => $data['target_id'],
+            'reminder_type' => $data['reminder_type'],
+            'actor_user_id' => Auth::id(),
+        ]);
+
+        return back()->with('success', 'Reminder created successfully.');
     }
 
     /* helpers */

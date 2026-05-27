@@ -1,5 +1,5 @@
 @extends('layouts.portal')
-@section('title', 'Director Strategy Dashboard')
+@section('title', 'Director MDG Strategic Oversight')
 
 @section('content')
 <div class="zmc-dashboard-wrapper" style="font-family: var(--font-primary); color: var(--zmc-text-dark);">
@@ -7,16 +7,16 @@
     {{-- Header Section --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h4 class="fw-bold m-0" style="font-size: var(--font-size-2xl); color:#1e293b;">Executive Intelligence Dashboard</h4>
+            <h4 class="fw-bold m-0" style="font-size: var(--font-size-2xl); color:#1e293b;">Director MDG Strategic Oversight</h4>
             <div class="text-muted mt-1" style="font-size: var(--font-size-base);">
                 <i class="ri-shield-user-line me-1"></i> 
-                Director/CEO Strategic Control Panel &bull; Strictly Read-Only Oversight &bull; Last Updated: {{ now()->format('d M Y, H:i') }}
+                Director Media Development &amp; Governance &bull; Read-Only Oversight &bull; Last Updated: {{ now()->format('d M Y, H:i') }}
             </div>
         </div>
         <div class="d-flex gap-2">
             <div class="bg-white border p-2 rounded-4 px-3 d-flex align-items-center shadow-sm">
                 <div class="text-end me-3">
-                    <div class="text-muted fw-bold" style="font-size: var(--font-size-sm); text-transform: uppercase;">System Status</div>
+                    <div class="text-muted fw-bold" style="font-size: var(--font-size-sm);">System Status</div>
                     <div class="text-success fw-bold small">
                         <i class="ri-checkbox-circle-fill me-1"></i>Operational
                     </div>
@@ -28,6 +28,9 @@
             </a>
         </div>
     </div>
+
+    {{-- Analytics Overview Section --}}
+    @include('staff.partials.analytics-overview')
 
     {{-- Section 1: Executive KPIs (11 Cards) --}}
     <div class="row g-3 mb-4">
@@ -97,14 +100,6 @@
             'subtitle' => 'Awaiting final decision'
         ])
 
-        {{-- KPI 8: Avg Processing Time --}}
-        @include('staff.director.partials.kpi-card', [
-            'title' => 'Avg. Processing Time',
-            'value' => $kpis['avg_processing_time'] . ' days',
-            'icon' => 'ri-timer-line',
-            'color' => 'primary',
-            'subtitle' => 'Submission to issuance'
-        ])
     </div>
 
     <div class="row g-3 mb-4">
@@ -168,14 +163,6 @@
                 'threshold' => 30
             ])
 
-            {{-- Risk 3: Processing Time SLA --}}
-            @include('staff.director.partials.risk-indicator', [
-                'title' => 'Processing Time SLA',
-                'value' => $riskIndicators['processing_time_sla']['value'],
-                'level' => $riskIndicators['processing_time_sla']['level'],
-                'icon' => 'ri-timer-flash-line',
-                'threshold' => 15
-            ])
 
             {{-- Risk 4: Revenue Drop --}}
             @include('staff.director.partials.risk-indicator', [
@@ -300,8 +287,6 @@
             {{-- Performance Tab --}}
             <div class="tab-pane fade {{ $activeTab === 'perf' ? 'show active' : '' }} p-4" id="perf" role="tabpanel">
                 @include('staff.director.partials.performance')
-                <hr class="my-5 opacity-5">
-                @include('staff.director.partials.staff_performance')
             </div>
             {{-- Financial Tab --}}
             <div class="tab-pane fade {{ $activeTab === 'fin' ? 'show active' : '' }} p-4" id="fin" role="tabpanel">
@@ -336,7 +321,14 @@
             </div>
         </div>
         <div class="fw-bold text-dark opacity-50 smaller">
-            <i class="ri-lock-2-line me-1"></i> CEO AUTHENTICATED ACCESS ONLY
+            <i class="ri-lock-2-line me-1"></i> DIRECTOR MDG AUTHENTICATED ACCESS ONLY
+        </div>
+    </div>
+
+    {{-- Reports Section --}}
+    <div class="row g-3 mt-4 mb-4">
+        <div class="col-md-4">
+            @include('staff.partials.accreditation-summary-report')
         </div>
     </div>
 
@@ -414,7 +406,6 @@ function updateKPIValues(kpis) {
         'revenue_ytd': 'Revenue (YTD)',
         'outstanding_revenue': 'Outstanding Revenue',
         'applications_in_pipeline': 'Applications in Pipeline',
-        'avg_processing_time': 'Avg. Processing Time',
         'approval_rate': 'Approval Rate',
         'active_compliance_flags': 'Active Compliance Flags',
         'total_media_houses': 'Media Houses Registered'
@@ -433,8 +424,6 @@ function updateKPIValues(kpis) {
                         // Format based on KPI type
                         if (key.includes('revenue')) {
                             newValue = '$' + Number(newValue).toLocaleString();
-                        } else if (key === 'avg_processing_time') {
-                            newValue = newValue + ' days';
                         } else if (key === 'approval_rate') {
                             newValue = newValue + '%';
                             // Update progress bar if exists

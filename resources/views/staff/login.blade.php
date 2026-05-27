@@ -17,8 +17,8 @@
             --border: #e2e8f0;
             --muted: #64748b;
             --text: #0f172a;
-            --primary: #2d5016;
-            --primary-hover: #1f3a0f;
+            --primary: #1a1a1a;
+            --primary-hover: #111111;
             --accent: #facc15;
             --accent-dark: #eab308;
             --shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
@@ -32,7 +32,7 @@
             line-height: 1.5;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
-            background: #000 url('{{ asset("zmc_building.png") }}') no-repeat center center fixed;
+            background: #000 url('/zmc_building.png') no-repeat center center;
             background-size: cover;
             color: var(--text);
             display:flex;
@@ -46,7 +46,7 @@
             content: "";
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(45, 80, 22, 0.45);
+            background: rgba(0, 0, 0, 0.55);
             pointer-events: none;
         }
         .wrap{ width:100%; max-width:480px; position: relative; z-index: 1; }
@@ -54,6 +54,7 @@
             display:flex; justify-content:center; align-items:center; gap:12px;
             margin-bottom:25px; text-decoration:none;
         }
+<<<<<<< HEAD
         .brand img{ width: 100%; height: 100%; object-fit: contain; display: block; margin: 0; mix-blend-mode: multiply; }
         .logo-circle {
             width: 110px;
@@ -70,6 +71,12 @@
         }
         .brand span{
             font-weight:900; font-size:28px; color:var(--text);
+=======
+        .brand img{ height:70px; width:70px; background:white; padding:6px; border-radius:50%; object-fit:contain; box-shadow:0 2px 12px rgba(0,0,0,0.2); }
+        .brand span{
+            font-family:'Montserrat','Inter',sans-serif;
+            font-weight:800; font-size:17px; color:var(--text);
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
             letter-spacing:-0.5px; text-transform:uppercase;
         }
         .card{
@@ -82,7 +89,7 @@
         .header{text-align:center; margin-bottom:28px;}
         .eyebrow{
             display:inline-flex; align-items:center; gap:6px;
-            background: rgba(45, 80, 22, 0.08);
+            background: rgba(245, 197, 24, 0.08);
             color: var(--primary);
             padding:6px 14px;
             border-radius:99px;
@@ -183,7 +190,7 @@
     </style>
 </head>
 
-<body>
+<body class="landing-page">
 <div class="wrap">
     <a href="{{ url('/') }}" class="brand">
         <div class="logo-circle">
@@ -202,6 +209,10 @@
 
             @if ($errors->any())
                 <div class="error-box">{{ $errors->first() }}</div>
+            @endif
+
+            @if (session('success'))
+                <div class="error-box" style="border-color:#bbf7d0;background:#f0fdf4;color:#166534;">{{ session('success') }}</div>
             @endif
         </div>
 

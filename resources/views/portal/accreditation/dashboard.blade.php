@@ -30,14 +30,38 @@
       <button type="button" class="btn btn-outline-success border shadow-sm btn-sm px-3" onclick="showRequirementsModal()">
         <i class="ri-file-list-3-line me-1"></i> View Requirements
       </button>
-      <a href="{{ route('accreditation.renewals.index') }}" class="btn btn-white border shadow-sm btn-sm px-3">
-        <i class="ri-refresh-line me-1"></i> Renew / Replace
+      <a href="{{ route('accreditation.renewal') }}" class="btn btn-white border shadow-sm btn-sm px-3">
+        <i class="ri-refresh-line me-1"></i> Renew
+      </a>
+      <a href="{{ route('accreditation.replacement') }}" class="btn btn-outline-warning border shadow-sm btn-sm px-3">
+        <i class="ri-exchange-line me-1"></i> Replace
       </a>
       <a href="{{ route('accreditation.new') }}" class="btn btn-dark btn-sm px-3">
         <i class="ri-file-add-line me-1"></i> New Accreditation (AP3)
       </a>
     </div>
   </div>
+
+  @if(isset($reminders) && $reminders->count())
+    <div class="mb-4">
+      @foreach($reminders as $reminder)
+        <div class="alert alert-warning alert-dismissible fade show d-flex align-items-start gap-2 shadow-sm" role="alert" id="reminder-{{ $reminder->id }}">
+          <i class="ri-alarm-warning-line" style="font-size:20px; color:#b45309;"></i>
+          <div class="flex-grow-1">
+            <strong>{{ ucfirst(str_replace('_', ' ', $reminder->reminder_type)) }}</strong>
+            <div class="small mt-1">{{ $reminder->message }}</div>
+            <div class="text-muted smaller mt-1">From: {{ $reminder->creator?->name ?? 'ZMC' }} &bull; {{ $reminder->created_at?->diffForHumans() }}</div>
+          </div>
+          <form method="POST" action="{{ route('accreditation.reminders.acknowledge', $reminder->id) }}" class="d-inline">
+            @csrf
+            <button type="submit" class="btn btn-sm btn-outline-warning">
+              <i class="ri-check-line"></i> Acknowledge
+            </button>
+          </form>
+        </div>
+      @endforeach
+    </div>
+  @endif
 
   <div class="row g-3 mb-4">
     <div class="col-12 col-md-3">
@@ -46,6 +70,7 @@
           <div>
             <div class="text-muted small fw-bold">Drafts</div>
             <div class="h3 fw-black mb-0">{{ $stats['drafts'] ?? 0 }}</div>
+            <div class="text-muted smaller mt-1" style="font-size:11px;">Drafts expire after 14 days</div>
           </div>
           <div class="icon-box text-secondary"><i class="ri-draft-line"></i></div>
         </div>
@@ -142,23 +167,111 @@
   </div>
 
   <div class="zmc-card p-0 shadow-sm border-0">
-    <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
-      <h6 class="fw-bold m-0"><i class="ri-list-check-2 me-2" style="color:var(--zmc-accent)"></i>Recent applications</h6>
+    <div class="p-3 border-bottom">
+      <ul class="nav nav-tabs mb-0" id="appTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active fw-bold" id="drafts-tab" data-bs-toggle="tab" data-bs-target="#drafts-pane" type="button" role="tab">
+            <i class="ri-draft-line me-1"></i>Drafts
+            @if(isset($drafts) && $drafts->count())
+              <span class="badge bg-warning text-dark ms-1">{{ $drafts->count() }}</span>
+            @endif
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link fw-bold" id="all-apps-tab" data-bs-toggle="tab" data-bs-target="#all-apps-pane" type="button" role="tab">
+            <i class="ri-list-check-2 me-1"></i>All Applications
+          </button>
+        </li>
+      </ul>
     </div>
 
-    <div class="table-responsive">
-      <table class="table table-hover align-middle mb-0 zmc-mini-table">
-        <thead>
-          <tr>
-            <th><i class="ri-hashtag me-1"></i> Ref</th>
-            <th><i class="ri-file-text-line me-1"></i> Type</th>
-            <th><i class="ri-calendar-line me-1"></i> Date</th>
-            <th><i class="ri-flag-line me-1"></i> Status</th>
-            <th class="text-end" style="min-width:140px;">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          @forelse($apps as $app)
+    <div class="tab-content">
+      <div class="tab-pane fade show active" id="drafts-pane" role="tabpanel">
+        @if(isset($drafts) && $drafts->count())
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 zmc-mini-table">
+              <thead>
+                <tr>
+                  <th><i class="ri-hashtag me-1"></i> Ref</th>
+                  <th><i class="ri-file-text-line me-1"></i> Type</th>
+                  <th><i class="ri-time-line me-1"></i> Last Updated</th>
+                  <th><i class="ri-percent-line me-1"></i> Progress</th>
+                  <th class="text-end" style="min-width:140px;">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                @foreach($drafts as $draft)
+                  @php
+                    $draftType = $draft->request_type === 'new'
+                      ? 'New Accreditation (AP3)'
+                      : ($draft->request_type === 'renewal' ? 'Renewal (AP5)' : 'Replacement (AP5)');
+
+                    $formData = $draft->form_data ?? [];
+                    $filledFields = collect($formData)->filter(fn($v) => !empty($v) && $v !== 'N/A')->count();
+                    $totalExpected = $draft->request_type === 'new' ? 25 : 15;
+                    $progress = min(100, round(($filledFields / max(1, $totalExpected)) * 100));
+
+                    $continueRoute = $draft->request_type === 'new'
+                      ? route('accreditation.new')
+                      : ($draft->request_type === 'replacement'
+                        ? route('accreditation.replacement', ['draft' => $draft->reference])
+                        : route('accreditation.renewal', ['draft' => $draft->reference]));
+                  @endphp
+                  <tr>
+                    <td class="fw-bold text-dark">{{ $draft->reference }}</td>
+                    <td>
+                      <span class="badge bg-light text-dark border">{{ $draftType }}</span>
+                    </td>
+                    <td class="small text-muted">{{ $draft->updated_at?->diffForHumans() ?? '—' }}</td>
+                    <td style="min-width:120px;">
+                      <div class="d-flex align-items-center gap-2">
+                        <div class="progress flex-grow-1" style="height:6px;">
+                          <div class="progress-bar bg-{{ $progress >= 75 ? 'success' : ($progress >= 40 ? 'warning' : 'secondary') }}" style="width:{{ $progress }}%"></div>
+                        </div>
+                        <span class="small text-muted">{{ $progress }}%</span>
+                      </div>
+                    </td>
+                    <td class="text-end">
+                      <div class="d-flex justify-content-end gap-1">
+                        <a class="btn btn-sm btn-outline-primary" href="{{ $continueRoute }}" title="Continue Editing">
+                          <i class="ri-edit-line me-1"></i>Continue
+                        </a>
+                        <button type="button" class="btn btn-sm btn-outline-danger js-delete-draft" data-app-id="{{ $draft->id }}" title="Delete Draft">
+                          <i class="ri-delete-bin-line"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                @endforeach
+              </tbody>
+            </table>
+          </div>
+        @else
+          <div class="text-center py-5">
+            <i class="ri-draft-line" style="font-size:48px; color:#cbd5e1;"></i>
+            <h6 class="mt-3 text-muted">No drafts in progress</h6>
+            <p class="text-muted small">Start a new application and save as draft to see it here.</p>
+            <a href="{{ route('accreditation.new') }}" class="btn btn-dark btn-sm mt-2">
+              <i class="ri-file-add-line me-1"></i>New Accreditation (AP3)
+            </a>
+          </div>
+        @endif
+      </div>
+
+      <div class="tab-pane fade" id="all-apps-pane" role="tabpanel">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0 zmc-mini-table">
+            <thead>
+              <tr>
+                <th><i class="ri-hashtag me-1"></i> Ref</th>
+                <th><i class="ri-file-text-line me-1"></i> Type</th>
+                <th><i class="ri-calendar-line me-1"></i> Date</th>
+                <th><i class="ri-flag-line me-1"></i> Status</th>
+                <th class="text-end" style="min-width:140px;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              @forelse($apps as $app)
             @php
               $status = strtolower((string)($app->status ?? ''));
               $badge = match(true) {
@@ -243,13 +356,15 @@
                 </div>
               </td>
             </tr>
-          @empty
-            <tr>
-              <td colspan="5" class="text-center py-5 text-muted">No applications found.</td>
-            </tr>
-          @endforelse
-        </tbody>
-      </table>
+              @empty
+                <tr>
+                  <td colspan="5" class="text-center py-5 text-muted">No submitted applications yet.</td>
+                </tr>
+              @endforelse
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -519,8 +634,8 @@
     <div class="modal-content overflow-hidden border-0 shadow-lg" style="border-radius: 24px;">
       <div class="modal-body p-0">
         <div class="row g-0">
-          <div class="col-md-4 d-none d-md-block position-relative" style="background: url('{{ asset('zmc_building.png') }}') center center / cover no-repeat;">
-            <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, rgba(45, 80, 22, 0.75), rgba(31, 58, 15, 0.80)); z-index: 1;"></div>
+          <div class="col-md-4 d-none d-md-block position-relative" style="background: url('/zmc_building.png') center center / cover no-repeat;">
+            <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, rgba(0, 0, 0, 0.82), rgba(0, 0, 0, 0.88)); z-index: 1;"></div>
             <div class="h-100 d-flex flex-column justify-content-center p-5 text-white position-relative" style="z-index: 2;">
               <i class="ri-user-star-line mb-4" style="font-size: 80px; color: #ffffff;"></i>
               <h2 class="fw-black mb-3" style="color: #ffffff;">Welcome, Practitioner!</h2>
@@ -536,36 +651,36 @@
 
               <div class="row g-4 mb-4">
                 <div class="col-md-6">
-                  <div class="fw-bold mb-3" style="color: #2d5016;"><i class="ri-user-line me-2"></i>Local Applicants</div>
+                  <div class="fw-bold mb-3" style="color: #1a1a1a;"><i class="ri-user-line me-2"></i>Local Applicants</div>
                   <ul class="list-unstyled small mb-0">
-                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #2d5016;"></i>National ID</li>
-                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #2d5016;"></i>Education Certificate</li>
-                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #2d5016;"></i>Letter of Employment (if employed)</li>
-                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #2d5016;"></i>Passport Sized Photo</li>
+                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #1a1a1a;"></i>National ID</li>
+                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #1a1a1a;"></i>Education Certificate</li>
+                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #1a1a1a;"></i>Letter of Employment (if employed)</li>
+                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #1a1a1a;"></i>Passport Sized Photo</li>
                   </ul>
                 </div>
                 <div class="col-md-6">
-                  <div class="fw-bold mb-3" style="color: #2d5016;"><i class="ri-global-line me-2"></i>Foreign Applicants</div>
+                  <div class="fw-bold mb-3" style="color: #1a1a1a;"><i class="ri-global-line me-2"></i>Foreign Applicants</div>
                   <ul class="list-unstyled small mb-0">
-                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #2d5016;"></i>Passport</li>
-                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #2d5016;"></i>Education Certificate</li>
-                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #2d5016;"></i>Passport Sized Photo</li>
-                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #2d5016;"></i>Clearance Letter</li>
+                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #1a1a1a;"></i>Passport</li>
+                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #1a1a1a;"></i>Education Certificate</li>
+                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #1a1a1a;"></i>Passport Sized Photo</li>
+                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #1a1a1a;"></i>Clearance Letter</li>
                   </ul>
                 </div>
               </div>
 
-              <div class="alert mb-4" style="background: rgba(45, 80, 22, 0.1); border-left: 4px solid #2d5016;">
+              <div class="alert mb-4" style="background: rgba(245, 197, 24, 0.1); border-left: 4px solid #1a1a1a;">
                 <div class="d-flex align-items-start gap-2">
-                  <i class="ri-information-line" style="color: #2d5016; font-size: 1.2rem; margin-top: 2px;"></i>
+                  <i class="ri-information-line" style="color: #1a1a1a; font-size: 1.2rem; margin-top: 2px;"></i>
                   <div class="small" style="color: #334155;">
-                    <strong style="color: #2d5016;">Important:</strong> All documents must be clear, legible, and in acceptable formats (PDF, JPG, PNG). Ensure your education certificates are certified copies where required.
+                    <strong style="color: #1a1a1a;">Important:</strong> All documents must be clear, legible, and in acceptable formats (PDF, JPG, PNG). Ensure your education certificates are certified copies where required.
                   </div>
                 </div>
               </div>
 
               <div class="d-grid">
-                <button type="button" class="btn btn-lg py-3 rounded-pill fw-bold shadow-sm" data-bs-dismiss="modal" style="background: #2d5016; border-color: #2d5016; color: #ffffff;">
+                <button type="button" class="btn btn-lg py-3 rounded-pill fw-bold shadow-sm" data-bs-dismiss="modal" style="background: #1a1a1a; border-color: #1a1a1a; color: #ffffff;">
                   I Understand, Let's Begin <i class="ri-arrow-right-line ms-2"></i>
                 </button>
               </div>

@@ -7,7 +7,7 @@
   <style>
     @php
         $primaryColor = $template_data['primary_color'] ?? '#1a237e';
-        $secondaryColor = $template_data['secondary_color'] ?? '#2e7d32';
+        $secondaryColor = $template_data['secondary_color'] ?? '#f5c518';
         $bgStyle = $template_data['bg_style'] ?? 'gradient';
     @endphp
 
@@ -102,7 +102,7 @@
     }
 
     .header-text .org span.media {
-      color: #2e7d32;
+      color: #228B22;
     }
 
     .header-text .sub {
@@ -199,7 +199,7 @@
         <div class="header-text">
           <div class="org">
             <div style="color:#000;">ZIMBABWE</div>
-            <div class="media" style="color: #2e7d32;">MEDIA</div>
+            <div class="media" style="color: #228B22;">MEDIA</div>
             <div style="color:#000;">COMMISSION</div>
           </div>
           <div class="sub">Accreditation Card (Back)</div>
@@ -208,9 +208,9 @@
 
       <div class="body-content">
         <div class="left-info">
-          <div class="info-line"><b>Address:</b> 109 Rotten Row, Harare, Zimbabwe</div>
-          <div class="info-line"><b>Phone:</b> +263 242 702 661</div>
-          <div class="info-line"><b>Email:</b> info@zmc.org.zw</div>
+          <div class="info-line"><b>Address:</b> 108 Swan Drive, Alexandra Park, Harare</div>
+          <div class="info-line"><b>Tel:</b> 253509/10 or 253572/5/6</div>
+          <div class="info-line"><b>Email:</b> zmcaccreditation@gmail.com</div>
           <div class="info-line"><b>Designation:</b> {{ $payload['designation'] ?? 'Media Practitioner' }}</div>
           <div class="info-line"><b>Accreditation No:</b> {{ $payload['accreditation_number'] ?? ($payload['reg_no'] ?? ($payload['ref'] ?? '—')) }}</div>
           <div class="info-line"><b>Valid:</b> {{ $payload['valid_from'] ?? '—' }} to {{ $payload['valid_to'] ?? '—' }}</div>
@@ -233,7 +233,7 @@
 
       <div class="footer">
         <div>www.zmc.org.zw</div>
-        <div>+263 242 702 661</div>
+        <div>Tel: 253509/10</div>
         <div>{{ $payload['ref'] ?? $application->reference }}</div>
       </div>
     </div>

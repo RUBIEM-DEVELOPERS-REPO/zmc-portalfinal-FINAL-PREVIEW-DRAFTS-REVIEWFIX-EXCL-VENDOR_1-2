@@ -17,8 +17,8 @@
 
     <style>
         :root{
-            --zmc-primary:#2d5016;
-            --zmc-primary-dark:#1f3a0f;
+            --zmc-primary:#1a1a1a;
+            --zmc-primary-dark:#111111;
             --zmc-accent:#facc15;
             --zmc-accent-dark:#eab308;
             
@@ -69,14 +69,14 @@
         .border-success-subtle{ border-color: rgba(250,204,21,.3) !important; }
         
         .zmc-topbar{
-            background: url('{{ asset("zmc_building.png") }}') center center / cover no-repeat;
+            background: url('/zmc_building.png') center center / cover no-repeat;
             position: relative;
         }
         .zmc-topbar::before{
             content: "";
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(90deg, rgba(45, 80, 22, 0.85), rgba(31, 58, 15, 0.88));
+            background: linear-gradient(90deg, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.78));
             z-index: 0;
         }
         .zmc-topbar > *{

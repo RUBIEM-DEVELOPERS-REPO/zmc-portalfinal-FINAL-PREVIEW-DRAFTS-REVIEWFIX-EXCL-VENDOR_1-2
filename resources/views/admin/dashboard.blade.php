@@ -33,8 +33,8 @@
                     <div class="card shadow-sm border-0">
                         <div class="card-body">
                             <div class="text-muted" style="font-size:12px;">Total Applications</div>
-                            <div class="fw-bold" style="font-size:24px;">{{ number_format($stats['total_applications'] ?? 0) }}</div>
-                            <div class="text-muted" style="font-size:12px;">Today: {{ number_format($stats['applications_today'] ?? 0) }}</div>
+                            <div class="fw-bold" style="font-size:24px;" id="stat-total-apps">{{ number_format($stats['total_applications'] ?? 0) }}</div>
+                            <div class="text-muted" style="font-size:12px;">Today: <span id="stat-apps-today">{{ number_format($stats['applications_today'] ?? 0) }}</span></div>
                         </div>
                     </div>
                 </div>
@@ -43,20 +43,11 @@
                         <div class="card-body">
                             <div class="text-muted" style="font-size:12px;">Applications by Stage</div>
                             <div class="d-flex flex-wrap gap-2 mt-2" style="font-size:12px;">
-                                <span class="badge bg-light text-dark">Officer: {{ $applicationsByStage['Officer'] ?? 0 }}</span>
-                                <span class="badge bg-light text-dark">Accounts: {{ $applicationsByStage['Accounts'] ?? 0 }}</span>
-                                <span class="badge bg-light text-dark">Registrar: {{ $applicationsByStage['Registrar'] ?? 0 }}</span>
-                                <span class="badge bg-light text-dark">Production: {{ $applicationsByStage['Production'] ?? 0 }}</span>
+                                <span class="badge bg-light text-dark">Officer: <span id="stat-stage-officer">{{ $applicationsByStage['Officer'] ?? 0 }}</span></span>
+                                <span class="badge bg-light text-dark">Accounts: <span id="stat-stage-accounts">{{ $applicationsByStage['Accounts'] ?? 0 }}</span></span>
+                                <span class="badge bg-light text-dark">Registrar: <span id="stat-stage-registrar">{{ $applicationsByStage['Registrar'] ?? 0 }}</span></span>
+                                <span class="badge bg-light text-dark">Production: <span id="stat-stage-production">{{ $applicationsByStage['Production'] ?? 0 }}</span></span>
                             </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card shadow-sm border-0">
-                        <div class="card-body">
-                            <div class="text-muted" style="font-size:12px;">Average Turnaround</div>
-                            <div class="fw-bold" style="font-size:24px;">{{ number_format($avgTurnaroundHours ?? 0, 1) }}h</div>
-                            <div class="text-muted" style="font-size:12px;">Issued (last 30 days)</div>
                         </div>
                     </div>
                 </div>
@@ -103,68 +94,70 @@
       </div>
     @endif
 
+    {{-- Analytics Overview Section --}}
+    @include('staff.partials.analytics-overview')
+
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-3 col-xl-2">
-            <div class="card border-0 shadow-sm h-100 bg-primary text-white">
+            <div class="card zmc-stat-card zmc-bg-dark border-0 shadow-sm h-100">
                 <div class="card-body text-center py-3">
-                    <i class="ri-user-line fs-2 mb-2"></i>
+                    <i class="ri-user-line fs-2 mb-2 d-block"></i>
                     <h3 class="mb-0 fw-bold" id="stat-total-users">{{ $stats['total_users'] }}</h3>
-                    <small>Total Users</small>
+                    <small class="opacity-75">Total Users</small>
                 </div>
             </div>
         </div>
         <div class="col-6 col-md-3 col-xl-2">
-            <div class="card border-0 shadow-sm h-100 bg-success text-white">
+            <div class="card zmc-stat-card zmc-bg-yellow border-0 shadow-sm h-100">
                 <div class="card-body text-center py-3">
-                    <i class="ri-shield-user-line fs-2 mb-2"></i>
+                    <i class="ri-shield-user-line fs-2 mb-2 d-block"></i>
                     <h3 class="mb-0 fw-bold" id="stat-staff-users">{{ $stats['staff_users'] }}</h3>
-                    <small>Staff Users</small>
+                    <small class="opacity-75">Staff Users</small>
                 </div>
             </div>
         </div>
-
         <div class="col-6 col-md-3 col-xl-2">
-            <div class="card border-0 shadow-sm h-100" style="background:#0ea5e9;color:#fff;">
+            <div class="card zmc-stat-card zmc-bg-sky border-0 shadow-sm h-100">
                 <div class="card-body text-center py-3">
-                    <i class="ri-user-smile-line fs-2 mb-2"></i>
+                    <i class="ri-user-smile-line fs-2 mb-2 d-block"></i>
                     <h3 class="mb-0 fw-bold" id="stat-public-users">{{ $stats['public_users'] ?? 0 }}</h3>
-                    <small>Public Users</small>
+                    <small class="opacity-75">Public Users</small>
                 </div>
             </div>
         </div>
         <div class="col-6 col-md-3 col-xl-2">
-            <div class="card border-0 shadow-sm h-100 bg-info text-white">
+            <div class="card zmc-stat-card zmc-bg-blue border-0 shadow-sm h-100">
                 <div class="card-body text-center py-3">
-                    <i class="ri-file-list-3-line fs-2 mb-2"></i>
+                    <i class="ri-file-list-3-line fs-2 mb-2 d-block"></i>
                     <h3 class="mb-0 fw-bold" id="stat-total-applications">{{ $stats['total_applications'] }}</h3>
-                    <small>Applications</small>
+                    <small class="opacity-75">Applications</small>
                 </div>
             </div>
         </div>
         <div class="col-6 col-md-3 col-xl-2">
-            <div class="card border-0 shadow-sm h-100 bg-warning text-dark">
+            <div class="card zmc-stat-card zmc-bg-amber border-0 shadow-sm h-100">
                 <div class="card-body text-center py-3">
-                    <i class="ri-time-line fs-2 mb-2"></i>
+                    <i class="ri-time-line fs-2 mb-2 d-block"></i>
                     <h3 class="mb-0 fw-bold" id="stat-pending-applications">{{ $stats['pending_applications'] }}</h3>
-                    <small>Pending</small>
+                    <small class="opacity-75">Pending</small>
                 </div>
             </div>
         </div>
         <div class="col-6 col-md-3 col-xl-2">
-            <div class="card border-0 shadow-sm h-100 bg-secondary text-white">
+            <div class="card zmc-stat-card zmc-bg-gray border-0 shadow-sm h-100">
                 <div class="card-body text-center py-3">
-                    <i class="ri-key-2-line fs-2 mb-2"></i>
+                    <i class="ri-key-2-line fs-2 mb-2 d-block"></i>
                     <h3 class="mb-0 fw-bold">{{ $stats['roles'] }}</h3>
-                    <small>Roles</small>
+                    <small class="opacity-75">Roles</small>
                 </div>
             </div>
         </div>
         <div class="col-6 col-md-3 col-xl-2">
-            <div class="card border-0 shadow-sm h-100 bg-dark text-white">
+            <div class="card zmc-stat-card zmc-bg-slate border-0 shadow-sm h-100">
                 <div class="card-body text-center py-3">
-                    <i class="ri-history-line fs-2 mb-2"></i>
+                    <i class="ri-history-line fs-2 mb-2 d-block"></i>
                     <h3 class="mb-0 fw-bold">{{ $stats['audit_entries'] }}</h3>
-                    <small>Audit Logs</small>
+                    <small class="opacity-75">Audit Logs</small>
                 </div>
             </div>
         </div>
@@ -239,8 +232,11 @@
                         <a href="{{ route('admin.accreditation.index') }}" class="btn btn-outline-secondary btn-sm">
                             <i class="ri-user-search-line me-1"></i> Media Practitioner Accreditation
                         </a>
-                        <a href="{{ route('admin.users.staff') }}" class="btn btn-outline-success btn-sm">
+                        <a href="{{ route('admin.users.index') }}" class="btn btn-outline-success btn-sm">
                             <i class="ri-user-settings-line me-1"></i> User & Account Management
+                        </a>
+                        <a href="{{ route('admin.audit.role-assignments') }}" class="btn btn-outline-warning btn-sm">
+                            <i class="ri-shield-user-line me-1"></i> Role Assignments Audit
                         </a>
                     </div>
                 </div>
@@ -488,6 +484,13 @@
     </div>
 
     {{-- System module tiles removed from Super Admin/Director dashboard (processing is done by staff roles). --}}
+
+    {{-- Reports Section --}}
+    <div class="row g-3 mt-4 mb-4">
+        <div class="col-md-4">
+            @include('staff.partials.accreditation-summary-report')
+        </div>
+    </div>
 </div>
 
 <style>
@@ -505,35 +508,45 @@
   (function () {
     async function refreshAdminStats() {
       try {
-        const url = new URL("{{ route('admin.dashboard.stats') }}", window.location.origin);
-        url.searchParams.append('year', "{{ $year }}");
-        const res = await fetch(url, {
-          headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        });
-        if (!res.ok) return;
-        const data = await res.json();
+        const refreshUrl = new URL("{{ route('admin.dashboard.refresh') }}", window.location.origin);
+        refreshUrl.searchParams.append('year', "{{ $year }}");
+        
+        const res = await fetch(refreshUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+        if (res.ok) {
+          const data = await res.json();
+          
+          // 1) Update Stats (Counters)
+          const stats = data.stats;
+          const map = {
+            'stat-total-users': stats.total_users,
+            'stat-staff-users': stats.staff_users,
+            'stat-public-users': stats.public_users,
+            'stat-total-apps': (stats.mediahouse_registrations ?? 0) + (stats.journalist_accreditations ?? 0),
+            'stat-apps-today': stats.applications_today ?? 0,
+            'stat-pending-applications': stats.pending_applications,
+            'stat-stage-officer': stats.stages?.Officer ?? 0,
+            'stat-stage-accounts': stats.stages?.Accounts ?? 0,
+            'stat-stage-registrar': stats.stages?.Registrar ?? 0,
+            'stat-stage-production': stats.stages?.Production ?? 0,
+          };
+          Object.keys(map).forEach(id => {
+            const el = document.getElementById(id);
+            if (el && typeof map[id] !== 'undefined' && map[id] !== null) {
+              el.textContent = typeof map[id] === 'number' ? map[id].toLocaleString() : map[id];
+            }
+          });
 
-        const map = {
-          'stat-total-users': data.total_users,
-          'stat-staff-users': data.staff_users,
-          'stat-public-users': data.public_users,
-          'stat-total-applications': (data.mediahouse_registrations ?? 0) + (data.journalist_accreditations ?? 0),
-          'stat-pending-applications': data.pending_applications,
-        };
-
-        Object.keys(map).forEach(id => {
-          const el = document.getElementById(id);
-          if (el && typeof map[id] !== 'undefined' && map[id] !== null) {
-            el.textContent = map[id];
-          }
-        });
+          // 2) Update Graphs (Trends)
+          window.dispatchEvent(new CustomEvent('zmc:dashboard-data-updated', { detail: data.trend }));
+        }
       } catch (e) {
-        // ignore
+        console.error('Refresh failed', e);
       }
     }
 
+    // initial call after a short delay to let charts initialize
+    setTimeout(refreshAdminStats, 1000);
     // refresh every 20 seconds
-    refreshAdminStats();
     setInterval(refreshAdminStats, 20000);
   })();
 </script>

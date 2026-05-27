@@ -898,4 +898,22 @@ class AuditorController extends Controller
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ]);
     }
+
+    /**
+     * View complaints and appeals (Auditor oversight access)
+     */
+    public function complaints()
+    {
+        $complaints = \App\Models\Complaint::orderByDesc('created_at')->paginate(15);
+        
+        $stats = [
+            'total' => \App\Models\Complaint::count(),
+            'pending' => \App\Models\Complaint::where('status', 'pending')->count(),
+            'resolved' => \App\Models\Complaint::where('status', 'resolved')->count(),
+            'complaints' => \App\Models\Complaint::where('type', 'complaint')->count(),
+            'appeals' => \App\Models\Complaint::where('type', 'appeal')->count(),
+        ];
+        
+        return view('staff.auditor.complaints', compact('complaints', 'stats'));
+    }
 }

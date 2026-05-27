@@ -14,11 +14,10 @@
   <div class="form-container">
     <div class="form-header">
       <h1>AP5 — Renewal / Replacement</h1>
-      <p>Manage your accreditation and registration renewals under the Zimbabwe Media Commission Act (2020)</p>
+      <p>Manage your accreditation and registration renewals under the Statutory Instrument 169C (Registration, Accreditation and Levy) Regulations (2002)</p>
     </div>
 
     <div class="form-steps-container">
-      {{-- Step Progress Indicator (showing the 4-step process) --}}
       <div class="step-progress">
         <div class="step-progress-bar">
           <div class="step" data-step="1">
@@ -40,7 +39,6 @@
         </div>
       </div>
 
-      {{-- My Existing Renewals --}}
       @if($renewals->count() > 0)
         <div class="card shadow-sm mb-4">
           <div class="card-body">
@@ -87,11 +85,13 @@
           </div>
         </div>
 
-        {{-- Pagination --}}
         @if($renewals->hasPages())
           <div class="mt-3">
             {{ $renewals->links() }}
-      {{-- Select Type Section (Embedded) --}}
+          </div>
+        @endif
+      @endif
+
       <div class="step-content active">
         <h3 class="step-title">Select Application Type</h3>
         <div class="current-step-info">
@@ -139,7 +139,9 @@
             </button>
           </div>
         </form>
-      </div>enewals->count() === 0)
+      </div>
+
+      @if($renewals->count() === 0)
         <div class="text-center py-5">
           <i class="ri-file-list-3-line" style="font-size: 64px; color: #cbd5e1;"></i>
           <h5 class="mt-3">No Renewals Yet</h5>
@@ -154,7 +156,6 @@
 
 @push('scripts')
 <script>
-// Add selected state to cards when clicked
 document.querySelectorAll('.app-type-card').forEach(card => {
   card.addEventListener('click', function() {
     document.querySelectorAll('.app-type-card').forEach(c => c.classList.remove('selected'));

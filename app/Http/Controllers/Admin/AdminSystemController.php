@@ -121,6 +121,132 @@ class AdminSystemController extends Controller
     }
 
     /**
+     * Role Assignments Audit Trail - Visible to Auditor and Super Admin.
+     * Tracks all IT role assignments with timestamps and temporary credentials.
+     */
+    public function roleAssignmentsAudit(Request $request)
+    {
+        // Only allow Auditor and Super Admin
+        if (!auth()->user()->hasRole(['auditor', 'super_admin'])) {
+            abort(403, 'Unauthorized. Only Auditor and Super Admin can view role assignment audit trail.');
+        }
+
+        $query = AuditTrail::query()
+            ->whereIn('action', [
+                'it_admin.change_user_role',
+                'assign_roles',
+                'remove_roles',
+                'user_access_updated',
+                'account_created_by_superadmin',
+            ])
+            ->with('user')
+            ->latest();
+
+        // Filter by action type
+        if ($action = $request->get('action')) {
+            $query->where('action', $action);
+        }
+
+        // Filter by IT admin
+        if ($adminId = $request->get('admin')) {
+            $query->where('user_id', $adminId);
+        }
+
+        // Filter by date range
+        if ($range = $request->get('range')) {
+            match($range) {
+                'today' => $query->whereDate('created_at', today()),
+                'week' => $query->where('created_at', '>=', now()->subDays(7)),
+                'month' => $query->where('created_at', '>=', now()->subDays(30)),
+                default => null
+            };
+        }
+
+        $logs = $query->paginate(25);
+
+        // Statistics
+        $totalAssignments = AuditTrail::whereIn('action', ['it_admin.change_user_role', 'assign_roles'])->count();
+        $thisWeekCount = AuditTrail::whereIn('action', ['it_admin.change_user_role', 'assign_roles'])
+            ->where('created_at', '>=', now()->subDays(7))
+            ->count();
+        $activeItAdmins = User::role('it_admin')->where('account_status', 'active')->count();
+        $withTempCredentials = AuditTrail::where('action', 'it_admin.change_user_role')
+            ->where('new_values', 'like', '%temp_credentials%')
+            ->orWhere('new_values', 'like', '%temporary_password%')
+            ->count();
+
+        // Get IT admins for filter dropdown
+        $itAdmins = User::role('it_admin')->select('id', 'name')->orderBy('name')->get();
+
+        return view('admin/audit/role-assignments', compact(
+            'logs',
+            'totalAssignments',
+            'thisWeekCount',
+            'activeItAdmins',
+            'withTempCredentials',
+            'itAdmins'
+        ));
+    }
+
+    /**
+     * Export role assignments audit trail to CSV.
+     */
+    public function exportRoleAssignments(Request $request)
+    {
+        if (!auth()->user()->hasRole(['auditor', 'super_admin'])) {
+            abort(403);
+        }
+
+        $logs = AuditTrail::query()
+            ->whereIn('action', [
+                'it_admin.change_user_role',
+                'assign_roles',
+                'remove_roles',
+                'user_access_updated',
+            ])
+            ->latest()
+            ->get();
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="role-assignments-audit-' . now()->format('Y-m-d') . '.csv"',
+        ];
+
+        $callback = function() use ($logs) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['Timestamp', 'IT Admin', 'Admin Role', 'Action', 'Target User', 'Role Changes', 'IP Address', 'Description']);
+
+            foreach ($logs as $log) {
+                $meta = is_array($log->new_values) ? $log->new_values : json_decode($log->new_values, true);
+                $roleChanges = '';
+                if (!empty($meta['new_role'])) {
+                    $roleChanges .= 'Added: ' . $meta['new_role'];
+                }
+                if (!empty($meta['previous_role'])) {
+                    $roleChanges .= ($roleChanges ? '; ' : '') . 'Removed: ' . $meta['previous_role'];
+                }
+                if (!empty($meta['roles'])) {
+                    $roleChanges = 'Roles: ' . implode(', ', $meta['roles']);
+                }
+
+                fputcsv($file, [
+                    $log->created_at->format('Y-m-d H:i:s'),
+                    $log->user_name ?? 'System',
+                    $log->user_role ?? 'N/A',
+                    $log->action,
+                    $meta['user_name'] ?? $log->entity_reference ?? 'N/A',
+                    $roleChanges,
+                    $log->ip_address,
+                    $log->description,
+                ]);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
      * Regions & Offices (simple catalogue view; can be wired to a model later).
      */
     public function regions()

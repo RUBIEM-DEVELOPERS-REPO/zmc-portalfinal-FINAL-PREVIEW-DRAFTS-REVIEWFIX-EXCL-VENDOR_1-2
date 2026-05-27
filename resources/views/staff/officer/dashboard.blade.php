@@ -32,6 +32,9 @@
     </div>
   @endif
 
+  {{-- Analytics Overview Section --}}
+  @include('staff.partials.analytics-overview')
+
   @php
     $items = collect(method_exists($applications, 'items') ? $applications->items() : $applications);
     $summaryTotal = $kpis['total_applications'] ?? (method_exists($applications, 'total') ? $applications->total() : $items->count());
@@ -467,6 +470,13 @@
   <div class="mt-3">{{ $applications->links() }}</div>
 
   @stack('zmc_modals')
+
+  {{-- Reports Section --}}
+  <div class="row g-3 mt-4 mb-4">
+    <div class="col-md-4">
+      @include('staff.partials.accreditation-summary-report')
+    </div>
+  </div>
 </div>
 
 {{-- Global Details Modal --}}
@@ -582,6 +592,24 @@
           </div>
         `;
         html += zmcBlock(`<i class="fa-regular fa-id-card"></i> Media practitioner details`, body);
+<<<<<<< HEAD
+=======
+
+        // Past Work Links (New)
+        const links = Array.isArray(app.past_work_links) ? app.past_work_links : [];
+        if (links.length > 0) {
+          let linkRows = links.map(l => `
+            <tr>
+              <td><a href="${zmcFmt(l.url)}" target="_blank" class="text-primary text-decoration-none"><i class="fa-solid fa-link me-1"></i>${zmcFmt(l.url)}</a></td>
+              <td>${zmcFmt(l.description)}</td>
+            </tr>
+          `).join('');
+          html += zmcBlock(
+            `<i class="fa-solid fa-globe"></i> Online Work Links`,
+            `<div class="table-responsive"><table class="table table-sm align-middle zmc-table-lite"><thead><tr><th>URL</th><th>Description</th></tr></thead><tbody>${linkRows}</tbody></table></div>`
+          );
+        }
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
       }
 
       if (formCode === 'AP1') {

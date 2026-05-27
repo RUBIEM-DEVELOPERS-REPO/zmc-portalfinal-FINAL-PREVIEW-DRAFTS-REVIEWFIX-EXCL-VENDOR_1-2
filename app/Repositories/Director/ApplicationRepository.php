@@ -89,8 +89,12 @@ class ApplicationRepository
      */
     public function getMonthlyApplicationCounts(int $months = 12, ?int $year = null): Collection
     {
+        $dateExpr = DB::getDriverName() === 'sqlite' 
+            ? "strftime('%Y-%m', created_at)" 
+            : "TO_CHAR(created_at, 'YYYY-MM')";
+
         $query = Application::select(
-            DB::raw("strftime('%Y-%m', created_at) as month"),
+            DB::raw("$dateExpr as month"),
             DB::raw("COUNT(*) as total_submitted"),
             DB::raw("SUM(CASE WHEN status = 'issued' THEN 1 ELSE 0 END) as total_approved"),
             DB::raw("SUM(CASE WHEN status LIKE '%rejected%' THEN 1 ELSE 0 END) as total_rejected")

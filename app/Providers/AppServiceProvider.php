@@ -58,7 +58,7 @@ class AppServiceProvider extends ServiceProvider
             try {
                 $user = Auth::user();
 
-                if (!$user || !$user->hasAnyRole(['super_admin', 'it_admin'])) {
+                if (!$user || !$user->hasAnyRole(['super_admin', 'it_admin', 'director'])) {
                     return;
                 }
 

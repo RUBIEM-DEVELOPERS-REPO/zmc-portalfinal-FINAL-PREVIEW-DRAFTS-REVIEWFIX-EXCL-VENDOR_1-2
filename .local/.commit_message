@@ -1,0 +1,5 @@
+Fix undefined $isCurrentYear in ItDashboardController
+
+Added $isCurrentYear, $yearStart, $yearEnd variables before the
+$stats array that references them. Supports optional ?year= query
+parameter, defaults to current year.

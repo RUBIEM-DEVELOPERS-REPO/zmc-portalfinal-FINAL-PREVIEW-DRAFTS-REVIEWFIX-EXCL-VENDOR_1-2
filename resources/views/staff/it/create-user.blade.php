@@ -13,7 +13,7 @@
       <h4 class="fw-bold m-0" style="font-size: var(--font-size-2xl); color:#1e293b;">Create User</h4>
       <div class="text-muted mt-1" style="font-size: var(--font-size-base);">
         <i class="ri-information-line me-1"></i>
-        Users created here require approval by Super Admin or Director.
+        An activation link will be emailed to the new staff member to set their password.
       </div>
     </div>
     <div class="d-flex align-items-center gap-2">
@@ -45,9 +45,11 @@
           <label class="form-label zmc-lbl">Email</label>
           <input class="form-control zmc-input" name="email" type="email" value="{{ old('email') }}" required>
         </div>
-        <div class="col-12 col-md-4">
-          <label class="form-label zmc-lbl">Temp Password</label>
-          <input class="form-control zmc-input" name="password" type="text" value="{{ old('password') }}" required>
+        <div class="col-12 col-md-4 d-flex align-items-end">
+          <div class="text-muted small">
+            <i class="ri-mail-send-line me-1"></i>
+            Password will be set by staff member via activation link.
+          </div>
         </div>
 
         <div class="col-12">

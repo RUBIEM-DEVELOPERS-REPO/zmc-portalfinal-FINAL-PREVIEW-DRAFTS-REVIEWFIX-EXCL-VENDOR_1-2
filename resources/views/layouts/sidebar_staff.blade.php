@@ -5,15 +5,19 @@
   $isAdminPanel = $user?->hasRole('super_admin') || $user?->hasRole('director');
 
   $portalTitle = match($role) {
-    'accreditation_officer' => 'Accreditation Officer Portal',
-    'accounts_payments'      => 'Accounts & Payments Portal',
-    'registrar'             => 'Registrar Portal',
-    'it_admin'              => 'IT Administration Portal',
-    'super_admin'           => 'Super Admin Portal',
-    'auditor'               => 'System Auditor Portal',
-    'production'            => 'Production Portal',
-    'director'              => 'CEO Strategic Intelligence',
-    default                 => 'Staff Portal',
+    'accreditation_officer' => 'Accreditation Officer',
+    'accounts_payments'      => 'Accounts & Payments',
+    'registrar'             => 'Registrar',
+    'it_admin'              => 'IT Administration',
+    'super_admin'           => 'Super Admin',
+    'auditor'               => 'System Auditor',
+    'production'            => 'Production',
+    'director'              => 'Director MDG Strategic Oversight',
+    'pr_officer'            => 'Public Relations',
+    'public_info_compliance'=> 'Public Info & Compliance',
+    'research_training'     => 'Research & Training',
+    'chief_accountant'      => 'Chief Accountant',
+    default                 => 'Staff',
   };
 @endphp
 
@@ -48,7 +52,7 @@
         </a>
       </li>
       <li class="{{ request()->routeIs('staff.officer.applications.new') ? 'active' : '' }}">
-        <a href="{{ route('staff.officer.applications.new') }}"><i class="ri-sparkling-2-line"></i> <span>New Applications</span></a>
+        <a href="{{ route('staff.officer.applications.new') }}"><i class="ri-sparkling-2-line"></i> <span>Recent Applications</span></a>
       </li>
       <li class="{{ request()->routeIs('staff.officer.applications.pending') ? 'active' : '' }}">
         <a href="{{ route('staff.officer.applications.pending') }}"><i class="ri-time-line"></i> <span>Pending Accounts Review</span></a>
@@ -65,8 +69,17 @@
         <a href="{{ route('staff.officer.applications.approved') }}"><i class="ri-checkbox-circle-line"></i> <span>Approved</span></a>
       </li>
       <li class="{{ request()->routeIs('staff.officer.applications.rejected') ? 'active' : '' }}">
-        <a href="{{ route('staff.officer.applications.rejected') }}"><i class="ri-close-circle-line"></i> <span>Rejected / Returned</span></a>
+        <a href="{{ route('staff.officer.applications.rejected') }}"><i class="ri-arrow-go-back-line"></i> <span>Returned for Correction</span></a>
       </li>
+
+      <li class="menu-title" style="padding:10px 18px; font-size:var(--font-size-xs); letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.55);">
+        Intake
+      </li>
+      @if(Route::has('staff.officer.physical-intake'))
+      <li class="{{ request()->routeIs('staff.officer.physical-intake*') ? 'active' : '' }}">
+        <a href="{{ route('staff.officer.physical-intake') }}"><i class="ri-walk-line"></i> <span>Physical Intake</span></a>
+      </li>
+      @endif
 
       <li class="menu-title" style="padding:10px 18px; font-size:var(--font-size-xs); letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.55);">
         Records
@@ -90,19 +103,20 @@
       <li class="{{ request()->routeIs('staff.officer.documents.verified') ? 'active' : '' }}">
         <a href="{{ route('staff.officer.documents.verified') }}"><i class="ri-verified-badge-line"></i> <span>Verified</span></a>
       </li>
-      <li class="{{ request()->routeIs('staff.officer.documents.rejected') ? 'active' : '' }}">
-        <a href="{{ route('staff.officer.documents.rejected') }}"><i class="ri-file-warning-line"></i> <span>Rejected</span></a>
-      </li>
 
       <li class="menu-title" style="padding:10px 18px; font-size:var(--font-size-xs); letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.55);">
-        Production
+        Notices & Events
       </li>
-      <li class="{{ request()->routeIs('staff.production.*') ? 'active' : '' }}">
-        <a href="{{ route('staff.production.dashboard') }}"><i class="ri-printer-line"></i> <span>Production Dashboard</span></a>
+      @if(Route::has('admin.content.index'))
+      <li class="{{ request()->routeIs('admin.content.index') ? 'active' : '' }}">
+        <a href="{{ route('admin.content.index') }}"><i class="ri-notification-3-line"></i> <span>Notices & Events</span></a>
       </li>
-      <li class="{{ request()->routeIs('staff.officer.renewals.production*') ? 'active' : '' }}">
-        <a href="{{ route('staff.officer.renewals.production') }}"><i class="ri-refresh-line"></i> <span>Renewals Production</span></a>
+      @endif
+      @if(Route::has('admin.news.index'))
+      <li class="{{ request()->routeIs('admin.news.index') ? 'active' : '' }}">
+        <a href="{{ route('admin.news.index') }}"><i class="ri-megaphone-line"></i> <span>News / Press Statements</span></a>
       </li>
+      @endif
     @endif
 
     @if(!$isAdminPanel && ($role === 'accounts_payments' || $user?->hasRole('accounts_payments')))
@@ -121,7 +135,7 @@
       </li>
       <li class="{{ request()->routeIs('staff.accounts.paynow.transactions') ? 'active' : '' }}">
         <a href="{{ route('staff.accounts.paynow.transactions') }}">
-          <i class="ri-bank-card-line"></i> <span>PayNow Transactions</span>
+          <i class="ri-bank-card-line"></i> <span>Paid via PayNow</span>
         </a>
       </li>
       <li class="{{ request()->routeIs('staff.accounts.reconciliation') ? 'active' : '' }}">
@@ -131,7 +145,7 @@
       </li>
 
       <li class="menu-title" style="padding:10px 18px; font-size:var(--font-size-xs); letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.55);">
-        Payment Proofs
+        Paid via Uploads
       </li>
       <li class="{{ request()->routeIs('staff.accounts.proofs.pending') ? 'active' : '' }}">
         <a href="{{ route('staff.accounts.proofs.pending') }}">
@@ -157,18 +171,13 @@
           <i class="ri-check-double-line"></i> <span>Approved Waivers</span>
         </a>
       </li>
-      <li class="{{ request()->routeIs('staff.accounts.waivers.rejected') ? 'active' : '' }}">
-        <a href="{{ route('staff.accounts.waivers.rejected') }}">
-          <i class="ri-close-circle-line"></i> <span>Rejected Waivers</span>
-        </a>
-      </li>
 
       <li class="menu-title" style="padding:10px 18px; font-size:var(--font-size-xs); letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.55);">
         Applications
       </li>
       <li class="{{ request()->routeIs('staff.accounts.apps.paid') ? 'active' : '' }}">
         <a href="{{ route('staff.accounts.apps.paid') }}">
-          <i class="ri-shield-check-line"></i> <span>Paid Applications</span>
+          <i class="ri-shield-check-line"></i> <span>Approved (Paid)</span>
         </a>
       </li>
       <li class="{{ request()->routeIs('staff.accounts.apps.pending') ? 'active' : '' }}">
@@ -204,14 +213,9 @@
           <i class="ri-error-warning-line"></i> <span>Payment Exceptions</span>
         </a>
       </li>
-      <li class="{{ request()->routeIs('staff.accounts.reports.audit') ? 'active' : '' }}">
-        <a href="{{ route('staff.accounts.reports.audit') }}">
-          <i class="ri-file-search-line"></i> <span>Audit Reports</span>
-        </a>
-      </li>
 
       <li class="menu-title" style="padding:10px 18px; font-size:var(--font-size-xs); letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.55);">
-        Alerts & Tools
+        Tools
       </li>
       <li class="{{ request()->routeIs('staff.accounts.alerts') ? 'active' : '' }}">
         <a href="{{ route('staff.accounts.alerts') }}">
@@ -223,16 +227,25 @@
           <i class="ri-settings-3-line"></i> <span>PayNow Settings</span>
         </a>
       </li>
-      <li class="{{ request()->routeIs('staff.accounts.tools.logs') ? 'active' : '' }}">
-        <a href="{{ route('staff.accounts.tools.logs') }}">
-          <i class="ri-history-line"></i> <span>User Action Logs</span>
-        </a>
-      </li>
       <li class="{{ request()->routeIs('staff.accounts.help') ? 'active' : '' }}">
         <a href="{{ route('staff.accounts.help') }}">
           <i class="ri-question-line"></i> <span>Help & Support</span>
         </a>
       </li>
+
+      <li class="menu-title" style="padding:10px 18px; font-size:var(--font-size-xs); letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.55);">
+        Notices & Events
+      </li>
+      @if(Route::has('admin.content.index'))
+      <li>
+        <a href="{{ route('admin.content.index') }}"><i class="ri-notification-3-line"></i> <span>Notices & Events</span></a>
+      </li>
+      @endif
+      @if(Route::has('admin.news.index'))
+      <li>
+        <a href="{{ route('admin.news.index') }}"><i class="ri-megaphone-line"></i> <span>News / Press Statements</span></a>
+      </li>
+      @endif
     @endif
 
     @if(!$isAdminPanel && ($role === 'registrar' || $user?->hasRole('registrar')))
@@ -252,15 +265,9 @@
         </a>
       </li>
 
-      <li class="{{ request()->routeIs('staff.registrar.fix-requests') ? 'active' : '' }}">
-        <a href="{{ route('staff.registrar.fix-requests') }}">
-          <i class="ri-tools-line"></i> <span>Fix Requests</span>
-        </a>
-      </li>
-
       <li class="{{ request()->routeIs('staff.registrar.payment-oversight') || request()->routeIs('staff.registrar.payment-detail') ? 'active' : '' }}">
         <a href="{{ route('staff.registrar.payment-oversight') }}">
-          <i class="ri-eye-line"></i> <span>Payment Oversight</span>
+          <i class="ri-eye-line"></i> <span>Payment Statuses</span>
         </a>
       </li>
 
@@ -268,7 +275,7 @@
         Accreditation
       </li>
       <li class="{{ request()->fullUrlIs(route('staff.registrar.apps.list',['type'=>'accreditation','bucket'=>'new'])) ? 'active' : '' }}">
-        <a href="{{ route('staff.registrar.apps.list',['type'=>'accreditation','bucket'=>'new']) }}"><i class="ri-sparkling-2-line"></i> <span>New Submissions</span></a>
+        <a href="{{ route('staff.registrar.apps.list',['type'=>'accreditation','bucket'=>'new']) }}"><i class="ri-file-list-3-line"></i> <span>All Applications</span></a>
       </li>
       <li class="{{ request()->fullUrlIs(route('staff.registrar.apps.list',['type'=>'accreditation','bucket'=>'under-review'])) ? 'active' : '' }}">
         <a href="{{ route('staff.registrar.apps.list',['type'=>'accreditation','bucket'=>'under-review']) }}"><i class="ri-time-line"></i> <span>Under Review</span></a>
@@ -276,11 +283,8 @@
       <li class="{{ request()->fullUrlIs(route('staff.registrar.apps.list',['type'=>'accreditation','bucket'=>'approved'])) ? 'active' : '' }}">
         <a href="{{ route('staff.registrar.apps.list',['type'=>'accreditation','bucket'=>'approved']) }}"><i class="ri-checkbox-circle-line"></i> <span>Approved</span></a>
       </li>
-      <li class="{{ request()->fullUrlIs(route('staff.registrar.apps.list',['type'=>'accreditation','bucket'=>'rejected'])) ? 'active' : '' }}">
-        <a href="{{ route('staff.registrar.apps.list',['type'=>'accreditation','bucket'=>'rejected']) }}"><i class="ri-close-circle-line"></i> <span>Rejected</span></a>
-      </li>
       <li class="{{ request()->fullUrlIs(route('staff.registrar.apps.list',['type'=>'accreditation','bucket'=>'corrections'])) ? 'active' : '' }}">
-        <a href="{{ route('staff.registrar.apps.list',['type'=>'accreditation','bucket'=>'corrections']) }}"><i class="ri-error-warning-line"></i> <span>Returned for Correction</span></a>
+        <a href="{{ route('staff.registrar.apps.list',['type'=>'accreditation','bucket'=>'corrections']) }}"><i class="ri-arrow-go-back-line"></i> <span>Returned for Correction</span></a>
       </li>
       <li class="{{ request()->routeIs('staff.registrar.renewals.*') ? 'active' : '' }}">
         <a href="{{ route('staff.registrar.renewals.list','due-soon') }}"><i class="ri-calendar-todo-line"></i> <span>Renewals (AP5)</span></a>
@@ -290,7 +294,7 @@
         Registration
       </li>
       <li class="{{ request()->fullUrlIs(route('staff.registrar.apps.list',['type'=>'registration','bucket'=>'new'])) ? 'active' : '' }}">
-        <a href="{{ route('staff.registrar.apps.list',['type'=>'registration','bucket'=>'new']) }}"><i class="ri-sparkling-2-line"></i> <span>New Applications</span></a>
+        <a href="{{ route('staff.registrar.apps.list',['type'=>'registration','bucket'=>'new']) }}"><i class="ri-file-list-3-line"></i> <span>All Applications</span></a>
       </li>
       <li class="{{ request()->fullUrlIs(route('staff.registrar.apps.list',['type'=>'registration','bucket'=>'under-review'])) ? 'active' : '' }}">
         <a href="{{ route('staff.registrar.apps.list',['type'=>'registration','bucket'=>'under-review']) }}"><i class="ri-time-line"></i> <span>Under Review</span></a>
@@ -298,65 +302,51 @@
       <li class="{{ request()->fullUrlIs(route('staff.registrar.apps.list',['type'=>'registration','bucket'=>'approved'])) ? 'active' : '' }}">
         <a href="{{ route('staff.registrar.apps.list',['type'=>'registration','bucket'=>'approved']) }}"><i class="ri-checkbox-circle-line"></i> <span>Approved</span></a>
       </li>
-      <li class="{{ request()->fullUrlIs(route('staff.registrar.apps.list',['type'=>'registration','bucket'=>'rejected'])) ? 'active' : '' }}">
-        <a href="{{ route('staff.registrar.apps.list',['type'=>'registration','bucket'=>'rejected']) }}"><i class="ri-close-circle-line"></i> <span>Rejected</span></a>
+      <li class="{{ request()->fullUrlIs(route('staff.registrar.apps.list',['type'=>'registration','bucket'=>'corrections'])) ? 'active' : '' }}">
+        <a href="{{ route('staff.registrar.apps.list',['type'=>'registration','bucket'=>'corrections']) }}"><i class="ri-arrow-go-back-line"></i> <span>Returned for Correction</span></a>
       </li>
 
       <li class="menu-title" style="padding:10px 18px; font-size:var(--font-size-xs); letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.55);">
-        Reports & Audit
+        Reports
       </li>
       <li class="{{ request()->routeIs('staff.registrar.reports') ? 'active' : '' }}">
         <a href="{{ route('staff.registrar.reports') }}">
           <i class="ri-bar-chart-line"></i> <span>Operational Reports</span>
         </a>
       </li>
-      <li class="{{ request()->routeIs('staff.registrar.audit-trail') ? 'active' : '' }}">
-        <a href="{{ route('staff.registrar.audit-trail') }}">
-          <i class="ri-file-search-line"></i> <span>Audit Trail Search</span>
+      <li class="{{ request()->routeIs('staff.director.reports.accreditation') ? 'active' : '' }}">
+        <a href="{{ route('staff.director.reports.accreditation') }}">
+          <i class="ri-line-chart-line"></i> <span>Accreditation Performance</span>
         </a>
       </li>
 
       <li class="menu-title" style="padding:10px 18px; font-size:var(--font-size-xs); letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.55);">
         Communications
       </li>
+      @if(Route::has('admin.content.index'))
       <li class="{{ request()->routeIs('admin.content.index') ? 'active' : '' }}">
         <a href="{{ route('admin.content.index') }}"><i class="ri-notification-3-line"></i> <span>Notices & Events</span></a>
       </li>
+      @endif
+      @if(Route::has('admin.news.index'))
       <li class="{{ request()->routeIs('admin.news.index') ? 'active' : '' }}">
         <a href="{{ route('admin.news.index') }}"><i class="ri-megaphone-line"></i> <span>Press Statements (News)</span></a>
       </li>
+      @endif
+      @if(Route::has('admin.downloads.index'))
       <li class="{{ request()->routeIs('admin.downloads.index') ? 'active' : '' }}">
         <a href="{{ route('admin.downloads.index') }}"><i class="ri-file-download-line"></i> <span>Downloads</span></a>
       </li>
-
-      <li class="menu-title" style="padding:10px 18px; font-size:var(--font-size-xs); letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.55);">
-        Payments (Oversight)
-      </li>
-      <li class="{{ request()->routeIs('staff.auditor.paynow') ? 'active' : '' }}">
-        <a href="{{ route('staff.auditor.paynow') }}"><i class="ri-shield-check-line"></i> <span>Payment Verification</span></a>
-      </li>
-      <li class="{{ request()->routeIs('staff.auditor.proofs') ? 'active' : '' }}">
-        <a href="{{ route('staff.auditor.proofs') }}"><i class="ri-receipt-line"></i> <span>Receipts (Proofs)</span></a>
-      </li>
-
-      <li class="menu-title" style="padding:10px 18px; font-size:var(--font-size-xs); letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.55);">
-        Reports
-      </li>
-      <li class="{{ request()->routeIs('admin.analytics') ? 'active' : '' }}">
-        <a href="{{ route('admin.analytics') }}"><i class="ri-bar-chart-line"></i> <span>System Analytics</span></a>
-      </li>
-      <li class="{{ request()->routeIs('staff.auditor.reports') ? 'active' : '' }}">
-        <a href="{{ route('staff.auditor.reports') }}"><i class="ri-timer-line"></i> <span>Service Reports</span></a>
-      </li>
+      @endif
 
       <li class="menu-title" style="padding:10px 18px; font-size:var(--font-size-xs); letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.55);">
         Records
       </li>
-      <li class="{{ request()->routeIs('admin.users.public') ? 'active' : '' }}">
-        <a href="{{ route('admin.users.public') }}"><i class="ri-user-3-line"></i> <span>Public Users</span></a>
+      <li class="{{ request()->routeIs('staff.officer.records.journalists') ? 'active' : '' }}">
+        <a href="{{ route('staff.officer.records.journalists') }}"><i class="ri-id-card-line"></i> <span>Accredited Media Practitioners</span></a>
       </li>
-      <li class="{{ request()->routeIs('admin.audit.index') ? 'active' : '' }}">
-        <a href="{{ route('admin.audit.index') }}"><i class="ri-file-search-line"></i> <span>Audit Logs</span></a>
+      <li class="{{ request()->routeIs('staff.officer.records.mediahouses') ? 'active' : '' }}">
+        <a href="{{ route('staff.officer.records.mediahouses') }}"><i class="ri-building-2-line"></i> <span>Registered Media Houses</span></a>
       </li>
 
       <li class="menu-title" style="padding:10px 18px; font-size:var(--font-size-xs); letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.55);">
@@ -413,8 +403,8 @@
       </li>
     @endif
 
-    {{-- Super Admin Section --}}
-    @if($user?->hasRole('super_admin'))
+    {{-- Super Admin / Director / IT Admin Oversight Section --}}
+    @if($user?->hasAnyRole(['super_admin', 'director', 'it_admin']))
       @php
         $c = $admin_sidebar_counts ?? [
           'mediahouse_total' => 0,
@@ -426,7 +416,7 @@
       @endphp
 
       <li class="menu-title" style="padding:10px 18px; font-size:var(--font-size-xs); letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.55);">
-        Super Admin
+        System Oversight & Admin
       </li>
 
       <li class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
@@ -491,52 +481,40 @@
         </a>
       </li>
 
-    @endif
-
-    @if(!$isAdminPanel && ($role === 'it_admin' || $user?->hasRole('it_admin')))
       <li class="menu-title" style="padding:10px 18px; font-size:var(--font-size-xs); letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.55);">
-        IT Admin
+        Staff Performance
       </li>
-
-      <li class="{{ request()->routeIs('staff.it.dashboard') ? 'active' : '' }}">
-        <a href="{{ route('staff.it.dashboard') }}">
-          <i class="ri-dashboard-3-line"></i> <span>Dashboard</span>
-          <span class="badge bg-danger pulse-dot-small ms-auto" style="width:8px; height:8px; border-radius:50%; padding:0;"></span>
-        </a>
+      @if(Route::has('staff.director.reports.staff'))
+      <li class="{{ request()->routeIs('staff.director.reports.staff') ? 'active' : '' }}">
+        <a href="{{ route('staff.director.reports.staff') }}"><i class="ri-team-line"></i> <span>Staff Performance</span></a>
       </li>
-
-      <li class="{{ request()->routeIs('admin.analytics') ? 'active' : '' }}">
-        <a href="{{ route('admin.analytics') }}">
-          <i class="ri-line-chart-line"></i> <span>Analytics</span>
-        </a>
-      </li>
-
-      <li class="{{ request()->routeIs('admin.content.*') ? 'active' : '' }}">
-        <a href="{{ Route::has('admin.content.index') ? route('admin.content.index') : (Route::has('content.index') ? route('content.index') : '#') }}">
-          <i class="ri-megaphone-line"></i> <span>{{ __("Notices & Events") }}</span>
-        </a>
-      </li>
-
-      <li class="{{ request()->routeIs('admin.news.*') ? 'active' : '' }}">
-        <a href="{{ route('admin.news.index') }}">
-          <i class="ri-newspaper-line"></i> <span>{{ __("News") }}</span>
-        </a>
-      </li>
-
-      <li class="{{ request()->routeIs('admin.complaints.*') ? 'active' : '' }}">
-        <a href="{{ route('admin.complaints.index') }}">
-          <i class="ri-chat-1-line"></i> <span>{{ __("Complaints & Appeals") }}</span>
-        </a>
-      </li>
-
-      <li class="{{ request()->routeIs('admin.downloads.*') ? 'active' : '' }}">
-        <a href="{{ route('admin.downloads.index') }}">
-          <i class="ri-download-2-line"></i> <span>{{ __("Downloads") }}</span>
-        </a>
-      </li>
+      @endif
 
       <li class="menu-title" style="padding:10px 18px; font-size:var(--font-size-xs); letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.55);">
         System Oversight
+      </li>
+      <li class="zmc-has-submenu {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+        <a href="javascript:void(0)" class="d-flex align-items-center justify-content-between" onclick="this.nextElementSibling.classList.toggle('d-none')">
+          <span><i class="ri-group-line me-2"></i> User Accounts & Management</span>
+          <i class="ri-arrow-down-s-line"></i>
+        </a>
+        <ul class="list-unstyled ps-4 mt-2 {{ request()->routeIs('admin.users.*') ? '' : 'd-none' }}" style="font-size: 11px;">
+           <li class="mb-2">
+             <a href="{{ route('admin.users.index') }}" class="text-decoration-none {{ request()->routeIs('admin.users.index') ? 'text-warning fw-bold' : 'text-white-50' }}">
+               <i class="ri-list-check me-1"></i> Overview
+             </a>
+           </li>
+           <li class="mb-2">
+             <a href="{{ route('admin.users.staff') }}" class="text-decoration-none {{ request()->routeIs('admin.users.staff') ? 'text-warning fw-bold' : 'text-white-50' }}">
+               <i class="ri-user-star-line me-1"></i> Staff Accounts
+             </a>
+           </li>
+           <li class="mb-2">
+             <a href="{{ route('admin.users.public') }}" class="text-decoration-none {{ request()->routeIs('admin.users.public') ? 'text-warning fw-bold' : 'text-white-50' }}">
+               <i class="ri-user-heart-line me-1"></i> Public Users
+             </a>
+           </li>
+        </ul>
       </li>
       <li class="{{ request()->routeIs('admin.audit.*') ? 'active' : '' }}">
         <a href="{{ route('admin.audit.index') }}">
@@ -546,6 +524,81 @@
       <li class="{{ request()->routeIs('admin.users.login_activity') ? 'active' : '' }}">
         <a href="{{ route('admin.users.login_activity') }}">
           <i class="ri-login-box-line"></i> <span>User Login Trails</span>
+        </a>
+      </li>
+    @endif
+
+    @if(!$isAdminPanel && ($role === 'it_admin' || $user?->hasRole('it_admin')))
+      <li class="menu-title" style="padding:10px 18px; font-size:var(--font-size-xs); letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.55);">
+        IT Administration
+      </li>
+
+      <li class="{{ request()->routeIs('staff.it.dashboard') ? 'active' : '' }}">
+        <a href="{{ route('staff.it.dashboard') }}">
+          <i class="ri-dashboard-3-line"></i> <span>System Dashboard</span>
+          <span class="badge bg-danger pulse-dot-small ms-auto" style="width:8px; height:8px; border-radius:50%; padding:0;"></span>
+        </a>
+      </li>
+
+      <li class="menu-title" style="padding:10px 18px; font-size:var(--font-size-xs); letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.55);">
+        Identity & Access
+      </li>
+      <li class="{{ request()->routeIs('users-mgmt') ? 'active' : '' }}">
+        <a href="{{ route('users-mgmt') }}"><i class="ri-user-settings-line"></i> <span>Internal Users</span></a>
+      </li>
+      <li class="{{ request()->routeIs('roles-mgmt') ? 'active' : '' }}">
+        <a href="{{ route('roles-mgmt') }}"><i class="ri-shield-user-line"></i> <span>Roles & Permissions</span></a>
+      </li>
+      <li class="{{ request()->routeIs('security-mgmt') ? 'active' : '' }}">
+        <a href="{{ route('security-mgmt') }}"><i class="ri-lock-password-line"></i> <span>Access Control</span></a>
+      </li>
+
+      <li class="menu-title" style="padding:10px 18px; font-size:var(--font-size-xs); letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.55);">
+        System Configuration
+      </li>
+      <li class="{{ request()->routeIs('templates-mgmt') ? 'active' : '' }}">
+        <a href="{{ route('templates-mgmt') }}"><i class="ri-layout-masonry-line"></i> <span>Card & Cert Templates</span></a>
+      </li>
+      <li class="{{ request()->routeIs('printers-mgmt') ? 'active' : '' }}">
+        <a href="{{ route('printers-mgmt') }}"><i class="ri-printer-line"></i> <span>Hardware & Printing</span></a>
+      </li>
+      <li class="{{ request()->routeIs('numbering-mgmt') ? 'active' : '' }}">
+        <a href="{{ route('numbering-mgmt') }}"><i class="ri-list-ordered"></i> <span>Automatic Numbering</span></a>
+      </li>
+      <li class="{{ request()->routeIs('categories-mgmt') ? 'active' : '' }}">
+        <a href="{{ route('categories-mgmt') }}"><i class="ri-node-tree"></i> <span>Category Data</span></a>
+      </li>
+      <li class="{{ request()->routeIs('regions-mgmt') ? 'active' : '' }}">
+        <a href="{{ route('regions-mgmt') }}"><i class="ri-map-pin-line"></i> <span>Regional Offices</span></a>
+      </li>
+      <li class="{{ request()->routeIs('document-settings-mgmt') ? 'active' : '' }}">
+        <a href="{{ route('document-settings-mgmt') }}"><i class="ri-folder-settings-line"></i> <span>Document Rules</span></a>
+      </li>
+      <li class="{{ request()->routeIs('qr-security-mgmt') ? 'active' : '' }}">
+        <a href="{{ route('qr-security-mgmt') }}"><i class="ri-qr-code-line"></i> <span>QR & Anti-Fraud</span></a>
+      </li>
+
+      <li class="menu-title" style="padding:10px 18px; font-size:var(--font-size-xs); letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.55);">
+        System Oversight
+      </li>
+      <li class="{{ request()->routeIs('audit-mgmt') ? 'active' : '' }}">
+        <a href="{{ route('audit-mgmt') }}">
+          <i class="ri-list-check-2"></i> <span>Audit Logs</span>
+        </a>
+      </li>
+      <li class="{{ request()->routeIs('reports-mgmt') ? 'active' : '' }}">
+        <a href="{{ route('reports-mgmt') }}">
+          <i class="ri-bar-chart-boxed-line"></i> <span>IT Reports</span>
+        </a>
+      </li>
+      <li class="{{ request()->routeIs('backup-mgmt') ? 'active' : '' }}">
+        <a href="{{ route('backup-mgmt') }}">
+          <i class="ri-database-2-line"></i> <span>Data & Backups</span>
+        </a>
+      </li>
+      <li class="{{ request()->routeIs('system-mgmt') ? 'active' : '' }}">
+        <a href="{{ route('system-mgmt') }}">
+          <i class="ri-settings-3-line"></i> <span>Core Settings</span>
         </a>
       </li>
     @endif
@@ -600,14 +653,40 @@
           <i class="ri-shield-line"></i> <span>Security Oversight</span>
         </a>
       </li>
+
+      @if(Route::has('staff.director.reports.financial'))
+      <li class="menu-title" style="padding:10px 18px; font-size:var(--font-size-xs); letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.55);">
+        Oversight
+      </li>
+      <li class="{{ request()->routeIs('staff.director.reports.financial') ? 'active' : '' }}">
+        <a href="{{ route('staff.director.reports.financial') }}"><i class="ri-money-dollar-box-line"></i> <span>Financial Overview</span></a>
+      </li>
+      <li class="{{ request()->routeIs('staff.director.reports.compliance') ? 'active' : '' }}">
+        <a href="{{ route('staff.director.reports.compliance') }}"><i class="ri-shield-flash-line"></i> <span>Compliance & Risk</span></a>
+      </li>
+      @endif
+
+      <li class="menu-title" style="padding:10px 18px; font-size:var(--font-size-xs); letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.55);">
+        Notices
+      </li>
+      @if(Route::has('admin.content.index'))
+      <li>
+        <a href="{{ route('admin.content.index') }}"><i class="ri-notification-3-line"></i> <span>Notices & Events</span></a>
+      </li>
+      @endif
+      @if(Route::has('admin.news.index'))
+      <li>
+        <a href="{{ route('admin.news.index') }}"><i class="ri-megaphone-line"></i> <span>News / Press Statements</span></a>
+      </li>
+      @endif
     @endif
 
     @if($role === 'director' || $user?->hasRole('director'))
       <li class="menu-title" style="padding:10px 18px; font-size:var(--font-size-sm); letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.55);">
-        CEO Strategic Intelligence
+        Director MDG Strategic Oversight
       </li>
       <li class="{{ request()->routeIs('staff.director.dashboard') ? 'active' : '' }}">
-        <a href="{{ route('staff.director.dashboard') }}"><i class="ri-pulse-line"></i> <span>Executive Overview</span></a>
+        <a href="{{ route('staff.director.dashboard') }}"><i class="ri-pulse-line"></i> <span>Overview</span></a>
       </li>
       <li class="{{ request()->routeIs('staff.director.reports.accreditation') ? 'active' : '' }}">
         <a href="{{ route('staff.director.reports.accreditation') }}"><i class="ri-bar-chart-2-line"></i> <span>Accreditation Performance</span></a>
@@ -621,9 +700,6 @@
       <li class="{{ request()->routeIs('staff.director.reports.mediahouses') ? 'active' : '' }}">
         <a href="{{ route('staff.director.reports.mediahouses') }}"><i class="ri-building-line"></i> <span>Media House Oversight</span></a>
       </li>
-      <li class="{{ request()->routeIs('staff.director.reports.staff') ? 'active' : '' }}">
-        <a href="{{ route('staff.director.reports.staff') }}"><i class="ri-team-line"></i> <span>Staff Performance</span></a>
-      </li>
       <li class="{{ request()->routeIs('staff.director.reports.issuance') ? 'active' : '' }}">
         <a href="{{ route('staff.director.reports.issuance') }}"><i class="ri-printer-cloud-line"></i> <span>Issuance & Printing</span></a>
       </li>
@@ -633,6 +709,132 @@
       <li class="{{ request()->routeIs('staff.director.reports.downloads') ? 'active' : '' }}">
         <a href="{{ route('staff.director.reports.downloads') }}"><i class="ri-download-cloud-2-line"></i> <span>Reports & Downloads</span></a>
       </li>
+    @endif
+
+    {{-- PR Officer Section --}}
+    @if(!$isAdminPanel && ($role === 'pr_officer' || $user?->hasRole('pr_officer')))
+      <li class="menu-title" style="padding:10px 18px; font-size:var(--font-size-xs); letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.55);">
+        Public Relations
+      </li>
+      <li class="{{ request()->routeIs('staff.pr.dashboard') ? 'active' : '' }}">
+        <a href="{{ Route::has('staff.pr.dashboard') ? route('staff.pr.dashboard') : route('staff.officer.dashboard') }}">
+          <i class="ri-dashboard-3-line"></i> <span>Dashboard</span>
+        </a>
+      </li>
+      @if(Route::has('admin.content.index'))
+      <li class="{{ request()->routeIs('admin.content.*') ? 'active' : '' }}">
+        <a href="{{ route('admin.content.index') }}"><i class="ri-megaphone-line"></i> <span>Notices & Events</span></a>
+      </li>
+      @endif
+      @if(Route::has('admin.news.index'))
+      <li class="{{ request()->routeIs('admin.news.*') ? 'active' : '' }}">
+        <a href="{{ route('admin.news.index') }}"><i class="ri-newspaper-line"></i> <span>News / Press Statements</span></a>
+      </li>
+      @endif
+      @if(Route::has('admin.downloads.index'))
+      <li class="{{ request()->routeIs('admin.downloads.*') ? 'active' : '' }}">
+        <a href="{{ route('admin.downloads.index') }}"><i class="ri-download-2-line"></i> <span>Downloads</span></a>
+      </li>
+      @endif
+    @endif
+
+    {{-- Public Information & Compliance Section --}}
+    @if(!$isAdminPanel && ($role === 'public_info_compliance' || $user?->hasRole('public_info_compliance')))
+      <li class="menu-title" style="padding:10px 18px; font-size:var(--font-size-xs); letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.55);">
+        Public Info & Compliance
+      </li>
+      <li class="{{ request()->routeIs('staff.compliance.dashboard') ? 'active' : '' }}">
+        <a href="{{ Route::has('staff.compliance.dashboard') ? route('staff.compliance.dashboard') : route('staff.officer.dashboard') }}">
+          <i class="ri-dashboard-3-line"></i> <span>Dashboard</span>
+        </a>
+      </li>
+      @if(Route::has('admin.complaints.index'))
+      <li class="{{ request()->routeIs('admin.complaints.*') ? 'active' : '' }}">
+        <a href="{{ route('admin.complaints.index') }}"><i class="ri-chat-1-line"></i> <span>Complaints & Appeals</span></a>
+      </li>
+      @endif
+      @if(Route::has('admin.content.index'))
+      <li>
+        <a href="{{ route('admin.content.index') }}"><i class="ri-notification-3-line"></i> <span>Notices & Events</span></a>
+      </li>
+      @endif
+      @if(Route::has('admin.news.index'))
+      <li>
+        <a href="{{ route('admin.news.index') }}"><i class="ri-megaphone-line"></i> <span>News / Press Statements</span></a>
+      </li>
+      @endif
+    @endif
+
+    {{-- Research, Training & Standards Development Section --}}
+    @if(!$isAdminPanel && ($role === 'research_training' || $user?->hasRole('research_training')))
+      <li class="menu-title" style="padding:10px 18px; font-size:var(--font-size-xs); letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.55);">
+        Research & Training
+      </li>
+      <li class="{{ request()->routeIs('staff.research.dashboard') ? 'active' : '' }}">
+        <a href="{{ Route::has('staff.research.dashboard') ? route('staff.research.dashboard') : route('staff.officer.dashboard') }}">
+          <i class="ri-dashboard-3-line"></i> <span>Dashboard</span>
+        </a>
+      </li>
+      @if(Route::has('admin.content.index'))
+      <li>
+        <a href="{{ route('admin.content.index') }}"><i class="ri-notification-3-line"></i> <span>Notices & Events</span></a>
+      </li>
+      @endif
+      @if(Route::has('admin.news.index'))
+      <li>
+        <a href="{{ route('admin.news.index') }}"><i class="ri-megaphone-line"></i> <span>News / Press Statements</span></a>
+      </li>
+      @endif
+      @if(Route::has('admin.downloads.index'))
+      <li>
+        <a href="{{ route('admin.downloads.index') }}"><i class="ri-download-2-line"></i> <span>Downloads</span></a>
+      </li>
+      @endif
+    @endif
+
+    {{-- Chief Accountant Section --}}
+    @if(!$isAdminPanel && ($role === 'chief_accountant' || $user?->hasRole('chief_accountant')))
+      <li class="menu-title" style="padding:10px 18px; font-size:var(--font-size-xs); letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.55);">
+        Chief Accountant
+      </li>
+      <li class="{{ request()->routeIs('staff.accounts.dashboard') ? 'active' : '' }}">
+        <a href="{{ route('staff.accounts.dashboard') }}">
+          <i class="ri-dashboard-3-line"></i> <span>Overview</span>
+        </a>
+      </li>
+      <li class="{{ request()->routeIs('staff.accounts.paynow.transactions') ? 'active' : '' }}">
+        <a href="{{ route('staff.accounts.paynow.transactions') }}"><i class="ri-bank-card-line"></i> <span>Paid via PayNow</span></a>
+      </li>
+      <li class="{{ request()->routeIs('staff.accounts.proofs.pending') ? 'active' : '' }}">
+        <a href="{{ route('staff.accounts.proofs.pending') }}"><i class="ri-time-line"></i> <span>Pending Proofs</span></a>
+      </li>
+      <li class="{{ request()->routeIs('staff.accounts.proofs.approved') ? 'active' : '' }}">
+        <a href="{{ route('staff.accounts.proofs.approved') }}"><i class="ri-checkbox-circle-line"></i> <span>Approved Proofs</span></a>
+      </li>
+      <li class="{{ request()->routeIs('staff.accounts.reports.revenue') ? 'active' : '' }}">
+        <a href="{{ route('staff.accounts.reports.revenue') }}"><i class="ri-funds-line"></i> <span>Revenue Reports</span></a>
+      </li>
+      <li class="{{ request()->routeIs('staff.accounts.reports.audit') ? 'active' : '' }}">
+        <a href="{{ route('staff.accounts.reports.audit') }}"><i class="ri-file-search-line"></i> <span>Audit Reports</span></a>
+      </li>
+      @if(Route::has('staff.director.reports.financial'))
+      <li class="{{ request()->routeIs('staff.director.reports.financial') ? 'active' : '' }}">
+        <a href="{{ route('staff.director.reports.financial') }}"><i class="ri-money-dollar-box-line"></i> <span>Financial Overview</span></a>
+      </li>
+      @endif
+      <li class="menu-title" style="padding:10px 18px; font-size:var(--font-size-xs); letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.55);">
+        Notices
+      </li>
+      @if(Route::has('admin.content.index'))
+      <li>
+        <a href="{{ route('admin.content.index') }}"><i class="ri-notification-3-line"></i> <span>Notices & Events</span></a>
+      </li>
+      @endif
+      @if(Route::has('admin.news.index'))
+      <li>
+        <a href="{{ route('admin.news.index') }}"><i class="ri-megaphone-line"></i> <span>News / Press Statements</span></a>
+      </li>
+      @endif
     @endif
 
     {{-- Switch Role for non-admin users --}}

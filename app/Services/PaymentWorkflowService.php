@@ -232,15 +232,19 @@ class PaymentWorkflowService
         return DB::transaction(function () use ($application, $data) {
             $fromStatus = $application->status;
             
-            // Validate transition
+            $isPreSubmission = ($fromStatus === Application::AWAITING_ACCOUNTS_VERIFICATION &&
+                !$application->approved_at);
+            $targetStatus = $isPreSubmission ? Application::SUBMITTED : Application::PAYMENT_VERIFIED;
+
             StatusTransitionValidator::validateOrFail(
                 $application,
-                Application::PAYMENT_VERIFIED
+                $targetStatus
             );
             
-            // Update payment submission if provided
             if (isset($data['payment_submission_id'])) {
-                $paymentSubmission = PaymentSubmission::find($data['payment_submission_id']);
+                $paymentSubmission = PaymentSubmission::where('id', $data['payment_submission_id'])
+                    ->where('application_id', $application->id)
+                    ->first();
                 if ($paymentSubmission) {
                     $paymentSubmission->update([
                         'status' => 'verified',
@@ -251,14 +255,52 @@ class PaymentWorkflowService
                 }
             }
             
-            // Update application
-            $application->update([
-                'status' => Application::PAYMENT_VERIFIED,
-                'current_stage' => 'payment_verified',
+            $method = $application->payment_submission_method ?? 'general';
+
+            $existingReceipt = \App\Models\Payment::where('application_id', $application->id)
+                ->where('status', 'paid')
+                ->whereNotNull('receipt_number')
+                ->first();
+            $receiptNumber = $existingReceipt->receipt_number
+                ?? \App\Http\Controllers\Staff\AccountsPaymentsController::generateReceiptNumber($method);
+
+            $updateData = [
+                'status' => $targetStatus,
+                'current_stage' => $isPreSubmission ? 'officer_queue' : 'payment_verified',
                 'payment_status' => 'paid',
                 'last_action_at' => now(),
                 'last_action_by' => Auth::id(),
-            ]);
+            ];
+            if (\Illuminate\Support\Facades\Schema::hasColumn('applications', 'receipt_number')) {
+                $updateData['receipt_number'] = $receiptNumber;
+            }
+            $application->update($updateData);
+
+            $fee = (new \App\Http\Controllers\Staff\AccountsPaymentsController())->calculateApplicationFee($application);
+            $existingPayment = \App\Models\Payment::where('application_id', $application->id)
+                ->where('status', 'paid')
+                ->first();
+
+            if (!$existingPayment) {
+                \App\Models\Payment::create([
+                    'application_id' => $application->id,
+                    'payer_user_id' => $application->applicant_user_id,
+                    'method' => $method,
+                    'source' => 'offline',
+                    'amount' => $application->proof_amount_paid ?? $fee,
+                    'currency' => 'USD',
+                    'reference' => $application->paynow_ref_submitted ?? ($application->reference . '-VERIFIED'),
+                    'status' => 'paid',
+                    'confirmed_at' => now(),
+                    'receipt_number' => $receiptNumber,
+                    'applicant_category' => $application->accreditation_category_code ?? $application->media_house_category_code,
+                    'service_type' => $application->application_type,
+                    'residency' => $application->residency_type ?? 'local',
+                    'recorded_by' => Auth::id(),
+                ]);
+            } else {
+                $existingPayment->update(['receipt_number' => $receiptNumber]);
+            }
             
             // Update proof/waiver status if applicable
             if ($application->payment_submission_method === 'proof_upload') {
@@ -289,8 +331,10 @@ class PaymentWorkflowService
                 ], $data)
             );
             
-            // Automatically send to production
-            return ApplicationWorkflowService::sendToProduction($application, $data);
+            if (!$isPreSubmission) {
+                return ApplicationWorkflowService::sendToProduction($application, $data);
+            }
+            return $application;
         });
     }
 

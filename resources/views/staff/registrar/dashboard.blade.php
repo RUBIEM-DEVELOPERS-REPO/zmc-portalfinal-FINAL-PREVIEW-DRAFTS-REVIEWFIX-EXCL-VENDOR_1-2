@@ -40,6 +40,9 @@
     </div>
   @endif
 
+  {{-- Analytics Overview Section --}}
+  @include('staff.partials.analytics-overview')
+
   @php
     $k = $kpis ?? [
       'todays_applications' => 0,
@@ -79,7 +82,12 @@
       <div class="zmc-card h-100 border-success">
         <div class="d-flex justify-content-between align-items-start">
           <div>
-        <div class="mt-2 small text-muted">Total Approved: {{ $k['approved_this_week'] ?? 0 }}</div>
+            <div class="text-muted small fw-bold">Approved Today</div>
+            <div class="h3 fw-black mb-0 text-success">{{ $k['approved_today'] ?? 0 }}</div>
+          </div>
+          <div class="icon-box text-success"><i class="ri-checkbox-circle-line"></i></div>
+        </div>
+        <div class="mt-2 small text-muted">This week: {{ $k['approved_this_week'] ?? 0 }}</div>
       </div>
     </div>
 
@@ -371,7 +379,7 @@
                   class="btn btn-sm zmc-icon-btn btn-outline-danger js-open-modal"
                   data-target="#rejectModal{{ $app->id }}"
                   data-bs-toggle="tooltip" data-bs-placement="top"
-                  title="Reject"
+                  title="Return for Correction"
                 >
                   <i class="fa-solid fa-xmark"></i>
                 </button>
@@ -556,7 +564,7 @@
                     <div>
                       <div class="zmc-modal-title">
                         <i class="fa-solid fa-xmark me-2" style="color:var(--zmc-accent-dark)"></i>
-                        Reject application
+                        Return for Correction
                         <span class="ms-2 text-muted" style="font-weight:800;font-size: var(--font-size-sm);">{{ $ref }}</span>
                       </div>
                       <div class="zmc-modal-sub">Reason will be visible to the applicant.</div>
@@ -566,13 +574,17 @@
 
                   <div class="modal-body">
                     <label class="form-label zmc-lbl">Reason / notes <span class="text-danger">*</span></label>
-                    <textarea name="decision_notes" class="form-control zmc-input" rows="4" required placeholder="Provide a clear reason for rejection"></textarea>
+                    <textarea name="decision_notes" class="form-control zmc-input" rows="4" required placeholder="Provide a clear reason for return"></textarea>
                   </div>
 
                   <div class="modal-footer zmc-modal-footer">
                     <button type="button" class="btn btn-light fw-bold" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-danger fw-bold">
+<<<<<<< HEAD
                       <i class="fa-solid fa-xmark me-1"></i>Reject
+=======
+                      <i class="fa-solid fa-xmark me-1"></i>Return for Correction
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
                     </button>
                   </div>
                 </form>
@@ -595,6 +607,13 @@
   </div>
 
   @stack('zmc_modals')
+
+  {{-- Reports Section --}}
+  <div class="row g-3 mt-4 mb-4">
+    <div class="col-md-4">
+      @include('staff.partials.accreditation-summary-report')
+    </div>
+  </div>
 </div>
 
 {{-- Global Details Modal (View) --}}
@@ -770,6 +789,24 @@
             `<div class="table-responsive"><table class="table table-sm align-middle zmc-table-lite"><thead><tr><th>Reference</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead><tbody>${payRows}</tbody></table></div>`
           );
         }
+<<<<<<< HEAD
+=======
+ 
+        // Past Work Links (New)
+        const links = Array.isArray(app.past_work_links) ? app.past_work_links : [];
+        if (links.length > 0) {
+          let linkRows = links.map(l => `
+            <tr>
+              <td><a href="${zmcFmt(l.url)}" target="_blank" class="text-primary text-decoration-none"><i class="fa-solid fa-link me-1"></i>${zmcFmt(l.url)}</a></td>
+              <td>${zmcFmt(l.description)}</td>
+            </tr>
+          `).join('');
+          html += zmcBlock(
+            `<i class="fa-solid fa-globe"></i> Online Work Links`,
+            `<div class="table-responsive"><table class="table table-sm align-middle zmc-table-lite"><thead><tr><th>URL</th><th>Description</th></tr></thead><tbody>${linkRows}</tbody></table></div>`
+          );
+        }
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
       }
 
       if (formCode === 'AP1') {

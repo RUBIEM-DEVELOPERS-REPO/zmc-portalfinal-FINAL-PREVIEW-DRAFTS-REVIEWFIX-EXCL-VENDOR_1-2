@@ -375,9 +375,10 @@
     }
     .step-number-large{
       background:var(--zmc-yellow);color:#000;
-      width:36px;height:36px;border-radius:50%;
+      width:48px;height:48px;border-radius:50%;
       display:flex;align-items:center;justify-content:center;
-      font-weight:800;font-size:16px;margin-right:15px;flex-shrink:0;
+      font-weight:900;font-size:22px;margin-right:15px;flex-shrink:0;
+      box-shadow:0 4px 12px rgba(250,204,21,0.3);
     }
 
     /* REPEATABLE TABLES */
@@ -521,7 +522,7 @@
     <ul class="sidebar-menu">
       <li class="active" data-page="home"><i class="ri-home-4-line"></i> Home</li>
       <li data-page="new-registration"><i class="ri-file-add-line"></i> New Registration (AP1)</li>
-      <li data-page="renewal"><i class="ri-refresh-line"></i> Renewal / Replacement (AP5)</li>
+      <li data-page="renewal"><i class="ri-refresh-line"></i> Renewal (AP5)</li>
       <li data-page="payment-history"><i class="ri-bank-card-line"></i> Payment History</li>
       <li data-page="notices"><i class="ri-megaphone-line"></i> Notices & Events</li>
       <li data-page="how-to"><i class="ri-information-line"></i> How to Get Registered</li>
@@ -1610,49 +1611,36 @@
             <h5 class="m-0"><i class="ri-guide-line me-2"></i>Registration Process Guide</h5>
           </div>
           <div class="form-steps-container">
-            <div class="guide-step">
-              <div class="step-number-large">1</div>
-              <div>
-                <h5>Prepare Annexures</h5>
-                <p class="text-muted mb-2">
-                  Gather Certificate of Incorporation, Memorandum & Articles, CR6/CR14, certified IDs for directors,
-                  mission statement, in-house code of ethics, code of conduct (if different), style book,
-                  plus Editorial Charter, Market Analysis, 3-year cash flow projection, financial statements & balance sheet,
-                  and a dummy magazine sample.
-                </p>
-              </div>
-            </div>
-
-            <div class="guide-step">
-              <div class="step-number-large">2</div>
-              <div>
-                <h5>Complete AP1 Accurately</h5>
-                <p class="text-muted mb-2">
-                  Fill all fields; do not leave blanks. Use “Not applicable” or “Not known” where necessary.
-                  Add rows for directors and senior managers.
-                </p>
-              </div>
-            </div>
-
-            <div class="guide-step">
-              <div class="step-number-large">3</div>
-              <div>
-                <h5>Submit and Track Status</h5>
-                <p class="text-muted mb-2">
-                  After submission, track your reference number in Home. ZMC may request additional information or a new application if changes are material.
-                </p>
-              </div>
-            </div>
-
-            <div class="guide-step">
-              <div class="step-number-large">4</div>
-              <div>
-                <h5>Renew Using AP5</h5>
-                <p class="text-muted mb-2">
-                  When renewal is due, complete AP5 and include details of any changes since the previous application.
-                </p>
-              </div>
-            </div>
+            <h4 style="color: #111827; font-weight: 700; margin-bottom: 25px; font-size: 18px;">New Registration (AP1)</h4>
+            <ol style="color: #1a1a1a; font-size: 15px; line-height: 1.8; padding-left: 20px; margin: 0 0 40px 0;">
+              <li style="margin-bottom: 18px;"><strong>Prepare Your Company Documents</strong><p style="margin: 8px 0 0 0; color: #1a1a1a;">Gather your Certificate of Incorporation, Memorandum & Articles, CR6/CR14, certified IDs for all directors, and related company documents.</p></li>
+              <li style="margin-bottom: 18px;"><strong>Compile Compliance and Governance Documents</strong><p style="margin: 8px 0 0 0; color: #1a1a1a;">Prepare your mission statement, code of ethics, code of conduct, style guide, and Editorial Charter.</p></li>
+              <li style="margin-bottom: 18px;"><strong>Prepare Business and Technical Documents</strong><p style="margin: 8px 0 0 0; color: #1a1a1a;">Provide Market Analysis, 3-year cash flow projection, financial statements, balance sheet, and publication sample.</p></li>
+              <li style="margin-bottom: 18px;"><strong>Complete the Registration Form (AP1)</strong><p style="margin: 8px 0 0 0; color: #1a1a1a;">Fill all required fields with accurate information about your organization, ownership, and management.</p></li>
+              <li style="margin-bottom: 18px;"><strong>Upload All Required Documents</strong><p style="margin: 8px 0 0 0; color: #1a1a1a;">Upload clear, legible scans of all documents organized by category for easy verification.</p></li>
+              <li style="margin-bottom: 18px;"><strong>Submit Your Application</strong><p style="margin: 8px 0 0 0; color: #1a1a1a;">Review your application and submit through the portal. You will receive a reference number to track your progress.</p></li>
+              <li style="margin-bottom: 18px;"><strong>Pay the Registration Fee</strong><p style="margin: 8px 0 0 0; color: #1a1a1a;">Pay via Paynow (EcoCash, OneMoney) or Bank Transfer with proof of payment.</p></li>
+              <li style="margin-bottom: 18px;"><strong>Await Review and Approval</strong><p style="margin: 8px 0 0 0; color: #1a1a1a;">ZMC officers review your application and materials. You may receive requests for clarifications or additional information.</p></li>
+              <li style="margin-bottom: 18px;"><strong>Receive Your Certificate and Licence</strong><p style="margin: 8px 0 0 0; color: #1a1a1a;">Upon approval, collect your registration certificate and operating licence from ZMC offices or request courier delivery.</p></li>
+            </ol>
+            <h4 style="color: #111827; font-weight: 700; margin-bottom: 25px; font-size: 18px; margin-top: 20px;">Renewal (AP5)</h4>
+            <ol style="color: #1a1a1a; font-size: 15px; line-height: 1.8; padding-left: 20px; margin: 0 0 40px 0;">
+              <li style="margin-bottom: 18px;"><strong>Check Your Renewal Deadline</strong><p style="margin: 8px 0 0 0; color: #1a1a1a;">Log into your portal to view your renewal deadline. You can renew before your registration expires.</p></li>
+              <li style="margin-bottom: 18px;"><strong>Prepare Updated Documents</strong><p style="margin: 8px 0 0 0; color: #1a1a1a;">Gather updated financial statements, editorial charter, market analysis, and recent publication sample.</p></li>
+              <li style="margin-bottom: 18px;"><strong>Complete the Renewal Form (AP5)</strong><p style="margin: 8px 0 0 0; color: #1a1a1a;">Include all changes to your organization, management, ownership, or operations since your last registration.</p></li>
+              <li style="margin-bottom: 18px;"><strong>Upload Updated Documents</strong><p style="margin: 8px 0 0 0; color: #1a1a1a;">Upload updated financial statements, governance documents, and recent publication samples.</p></li>
+              <li style="margin-bottom: 18px;"><strong>Submit and Pay Renewal Fee</strong><p style="margin: 8px 0 0 0; color: #1a1a1a;">Submit your renewal application and pay the fee via Paynow or Bank Transfer.</p></li>
+              <li style="margin-bottom: 18px;"><strong>Await Approval</strong><p style="margin: 8px 0 0 0; color: #1a1a1a;">Your renewal will be reviewed and processed. Collect your renewed certificate and licence after approval.</p></li>
+            </ol>
+            <h4 style="color: #111827; font-weight: 700; margin-bottom: 15px; font-size: 18px; margin-top: 20px;">Important Notes</h4>
+            <ul style="color: #1a1a1a; font-size: 15px; line-height: 1.8; padding-left: 20px; margin: 0; list-style-type: disc;">
+              <li style="margin-bottom: 12px;">Incomplete applications or missing attachments will delay processing. Ensure all documents are uploaded before submitting.</li>
+              <li style="margin-bottom: 12px;">All documents must be clear, legible, and in PDF, JPG, or PNG format.</li>
+              <li style="margin-bottom: 12px;">Payment must be verified before your application proceeds to the review stage.</li>
+              <li style="margin-bottom: 12px;">Material changes to your organization or ownership may require additional review or a new application.</li>
+              <li style="margin-bottom: 12px;">Track your application status using your reference number in your dashboard.</li>
+              <li style="margin-bottom: 12px;">Contact ZMC support through the Help section if you have questions.</li>
+            </ul>
           </div>
         </div>
       </div>
@@ -1742,7 +1730,7 @@
             <div class="form-steps-container">
               <div class="form-field">
                 <label class="form-label required">To</label>
-                <input type="email" class="form-control" id="emailTo" value="info@zmc.co.zw" required>
+                <input type="email" class="form-control" id="emailTo" value="zmcaccreditation@gmail.com" required>
               </div>
               <div class="form-field">
                 <label class="form-label required">Subject</label>

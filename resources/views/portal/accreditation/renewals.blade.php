@@ -1,12 +1,19 @@
 @extends('layouts.portal')
 
-@section('title', 'Renewal / Replacement (AP5)')
-@section('page_title', 'RENEWAL / REPLACEMENT (AP5)')
+@php
+  $presetType = $ap5Type ?? null;
+  $pageTitle = $presetType === 'renewal' ? 'Renewal of Accreditation Card (AP5)'
+    : ($presetType === 'replacement' ? 'Replacement of Accreditation Card (AP5)'
+    : 'Renewal / Replacement of Accreditation Card (AP5)');
+@endphp
+
+@section('title', $presetType ? ucfirst($presetType) . ' (AP5)' : 'Renewal / Replacement (AP5)')
+@section('page_title', strtoupper($pageTitle))
 
 @section('content')
 <div id="renewal-page">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="fw-bold text-dark m-0" style="font-size:18px;">Renewal / Replacement of Accreditation Card (AP5)</h4>
+    <h4 class="fw-bold text-dark m-0" style="font-size:18px;">{{ $pageTitle }}</h4>
     <a class="btn btn-secondary" href="{{ route('accreditation.home') }}">
       <i class="ri-arrow-left-line me-1"></i>Back to Tracker
     </a>
@@ -32,7 +39,7 @@
                   <td class="text-capitalize">{{ $d->request_type }}</td>
                   <td class="text-muted">{{ $d->created_at?->format('Y-m-d H:i') }}</td>
                   <td class="text-end">
-                    <a class="btn btn-sm btn-primary" href="{{ route('accreditation.renewals', ['draft' => $d->reference]) }}">
+                    <a class="btn btn-sm btn-primary" href="{{ route($d->request_type === 'replacement' ? 'accreditation.replacement' : 'accreditation.renewal', ['draft' => $d->reference]) }}">
                       <i class="ri-edit-line me-1"></i>Continue Editing
                     </a>
                   </td>
@@ -50,18 +57,27 @@
 
   <div class="form-container">
     <div class="form-header">
-      <h1>Application for Renewal or Replacement of Accreditation</h1>
-      <p>Zimbabwe Media Commission Act (2020), Statutory Instrument 169C (Registration, Accreditation and Levy) Regulations (2002)</p>
+      <h1>Application for {{ $presetType ? ucfirst($presetType) : 'Renewal or Replacement' }} of Accreditation</h1>
+      <p>Statutory Instrument 169C (Registration, Accreditation and Levy) Regulations (2002)</p>
     </div>
 
     <div class="form-steps-container">
       {{-- STEPS --}}
       <div class="step-progress">
         <div class="step-progress-bar">
+          @if(!$presetType)
           <div class="step active" data-step="1"><div class="step-number">1</div><div class="step-label">Type</div></div>
           <div class="step" data-step="2"><div class="step-number">2</div><div class="step-label">Personal Details</div></div>
           <div class="step" data-step="3"><div class="step-number">3</div><div class="step-label">Documents</div></div>
           <div class="step" data-step="4"><div class="step-number">4</div><div class="step-label">Declaration</div></div>
+<<<<<<< HEAD
+=======
+          @else
+          <div class="step active" data-step="1"><div class="step-number">1</div><div class="step-label">Personal Details</div></div>
+          <div class="step" data-step="2"><div class="step-number">2</div><div class="step-label">Documents</div></div>
+          <div class="step" data-step="3"><div class="step-number">3</div><div class="step-label">Declaration</div></div>
+          @endif
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
         </div>
       </div>
 
@@ -70,8 +86,11 @@
         <input type="hidden" name="draft_reference" value="{{ $draft->reference ?? '' }}">
         <input type="hidden" name="current_step" id="ap5_current_step" value="{{ data_get($draft, 'form_data.current_step', 1) }}">
 
-        {{-- STEP 1: TYPE --}}
-        <div class="step-content active" id="ap5-step-1">
+        <input type="hidden" id="ap5_type" name="request_type" value="{{ $presetType ?? '' }}" required>
+
+        @if(!$presetType)
+        {{-- STEP 1: TYPE (only shown when no preset) --}}
+        <div class="step-content active" id="ap5-step-type">
           <h3 class="step-title">Select Application Type</h3>
           <div class="current-step-info">
             <i class="ri-information-line me-2"></i>
@@ -94,8 +113,6 @@
             </div>
           </div>
 
-          <input type="hidden" id="ap5_type" name="request_type" required>
-
           <div id="ap5-replacement-reason" style="display:none; margin-top:20px;">
             <label class="form-label required">Reason for Replacement</label>
             <div class="checkbox-group">
@@ -114,14 +131,54 @@
             </div>
           </div>
         </div>
+        @endif
 
+<<<<<<< HEAD
         {{-- STEP 2: PERSONAL DETAILS (KEEP) --}}
         <div class="step-content" id="ap5-step-2">
           <h3 class="step-title">Personal Details</h3>
           <div class="current-step-info">
             <i class="ri-information-line me-2"></i>
             Enter your personal details and previous accreditation number.
+=======
+        @if($presetType === 'replacement')
+        {{-- Replacement reason shown at top of step 1 when preset --}}
+        <div class="step-content active" id="ap5-step-replacement-reason" style="display:none;">
+        </div>
+        @endif
+
+        {{-- PERSONAL DETAILS --}}
+        <div class="step-content{{ $presetType ? ' active' : '' }}" id="ap5-step-2">
+          <h3 class="step-title">Personal Details</h3>
+          <div class="current-step-info">
+            <i class="ri-information-line me-2"></i>
+            Enter your personal details and accreditation number.
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
           </div>
+
+          @if($presetType === 'replacement')
+          <div class="alert alert-info mb-3">
+            <i class="ri-exchange-line me-2"></i>
+            <strong>Replacement Application</strong> — Select the reason for replacement below.
+          </div>
+          <div class="mb-3" id="ap5-replacement-reason-inline">
+            <label class="form-label required">Reason for Replacement</label>
+            <div class="checkbox-group">
+              <div class="checkbox-item">
+                <input type="radio" id="ap5-reason-lost" name="replacement_reason" value="lost">
+                <label for="ap5-reason-lost">Lost</label>
+              </div>
+              <div class="checkbox-item">
+                <input type="radio" id="ap5-reason-damaged" name="replacement_reason" value="damaged">
+                <label for="ap5-reason-damaged">Damaged</label>
+              </div>
+              <div class="checkbox-item">
+                <input type="radio" id="ap5-reason-stolen" name="replacement_reason" value="stolen">
+                <label for="ap5-reason-stolen">Stolen</label>
+              </div>
+            </div>
+          </div>
+          @endif
 
           <div class="form-row">
             <div class="form-field">
@@ -174,18 +231,46 @@
             </div>
             <div class="form-field">
               <label class="form-label required">Nationality</label>
+<<<<<<< HEAD
               <input type="text" class="form-control" name="nationality" value="Zimbabwean" required>
+=======
+              <select class="form-control" name="nationality" id="ap5_nationality" required>
+                <option value="Zimbabwean" selected>Zimbabwean (Local)</option>
+                <option value="Foreign">Foreign</option>
+              </select>
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-field">
+<<<<<<< HEAD
               <label class="form-label required">National ID / Passport</label>
               <input type="text" class="form-control" name="id_or_passport" required>
             </div>
             <div class="form-field">
               <label class="form-label required">Previous Accreditation Number</label>
               <input type="text" class="form-control" name="accreditation_number" required>
+=======
+              <label class="form-label required">Accreditation Number</label>
+              <input type="text" class="form-control" name="accreditation_number" placeholder="e.g. ZMC-2025-0001" required>
+            </div>
+          </div>
+
+          <div class="form-row" id="ap5-local-id-row">
+            <div class="form-field">
+              <label class="form-label required">National ID Number</label>
+              <input type="text" class="form-control" name="national_id" placeholder="e.g. 63-123456A78" required>
+              <small class="text-muted">Required for local (Zimbabwean) applicants</small>
+            </div>
+          </div>
+
+          <div class="form-row" id="ap5-foreign-id-row" style="display:none;">
+            <div class="form-field">
+              <label class="form-label required">Passport Number</label>
+              <input type="text" class="form-control" name="passport_number" placeholder="e.g. FN123456" required>
+              <small class="text-muted">Required for foreign applicants</small>
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
             </div>
           </div>
         </div>
@@ -328,16 +413,27 @@
 
 @push('scripts')
 <script>
+  const ap5PresetType = @json($presetType ?? null);
   let ap5Step = 1;
+<<<<<<< HEAD
   let ap5Type = '';
+=======
+  let ap5Type = ap5PresetType || '';
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
 
   const ap5Steps = document.querySelectorAll('#renewal-page .step');
-  const ap5Contents = [
-    document.getElementById('ap5-step-1'),
-    document.getElementById('ap5-step-2'),
-    document.getElementById('ap5-step-3'),
-    document.getElementById('ap5-step-4'),
-  ];
+  const ap5Contents = ap5PresetType
+    ? [
+        document.getElementById('ap5-step-2'),
+        document.getElementById('ap5-step-3'),
+        document.getElementById('ap5-step-4'),
+      ]
+    : [
+        document.getElementById('ap5-step-type'),
+        document.getElementById('ap5-step-2'),
+        document.getElementById('ap5-step-3'),
+        document.getElementById('ap5-step-4'),
+      ];
 
   const ap5PrevBtn = document.getElementById('ap5PrevBtn');
   const ap5NextBtn = document.getElementById('ap5NextBtn');
@@ -415,9 +511,30 @@
     }
   }
 
+  function ap5ToggleIdFields(){
+    const nat = document.getElementById('ap5_nationality');
+    if(!nat) return;
+    const isForeign = nat.value === 'Foreign';
+    const localRow = document.getElementById('ap5-local-id-row');
+    const foreignRow = document.getElementById('ap5-foreign-id-row');
+    if(localRow) localRow.style.display = isForeign ? 'none' : '';
+    if(foreignRow) foreignRow.style.display = isForeign ? '' : 'none';
+
+    const natId = document.querySelector('input[name="national_id"]');
+    const passport = document.querySelector('input[name="passport_number"]');
+    if(natId) natId.required = !isForeign;
+    if(passport) passport.required = isForeign;
+  }
+
+  document.getElementById('ap5_nationality')?.addEventListener('change', ap5ToggleIdFields);
+
   function ap5Validate(step){
+<<<<<<< HEAD
     // step 1 checks selection
     if(step === 1){
+=======
+    if(!ap5PresetType && step === 1){
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
       if(!ap5Type){ alert('Please select Renewal or Replacement'); return false; }
       if(ap5Type === 'replacement'){
         const reason = document.querySelector('input[name="replacement_reason"]:checked');
@@ -427,6 +544,15 @@
     }
 
     const current = ap5Contents[step-1];
+    if(!current) return true;
+
+    if(ap5Type === 'replacement'){
+      const reason = document.querySelector('input[name="replacement_reason"]:checked');
+      if(!reason){
+        alert('Please select a reason for replacement.');
+        return false;
+      }
+    }
     const required = current.querySelectorAll('[required]');
 
     for(const field of required){
@@ -679,6 +805,16 @@
     ap5Show(1);
     setupUploads(document.getElementById('renewal-page'));
     setDefaultDates();
+<<<<<<< HEAD
+=======
+    ap5ToggleIdFields();
+
+    if(ap5PresetType){
+      if(renewalDocs) renewalDocs.style.display = (ap5PresetType === 'renewal') ? 'block' : 'none';
+      if(replacementDocs) replacementDocs.style.display = (ap5PresetType === 'replacement') ? 'block' : 'none';
+      applyAp5DocRequirements();
+    }
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
 
     @if(isset($draft) && $draft)
       const draftData = @json($draft->form_data ?? []);

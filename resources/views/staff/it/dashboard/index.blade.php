@@ -27,11 +27,14 @@
             @php
                 $tabs = [
                     'overview' => ['icon' => 'ri-dashboard-3-line', 'label' => 'Overview'],
+<<<<<<< HEAD
                     'drafts' => ['icon' => 'ri-draft-line', 'label' => 'Drafts'],
                     'files' => ['icon' => 'ri-file-cloud-line', 'label' => 'Files'],
                     'errors' => ['icon' => 'ri-bug-line', 'label' => 'Logs & Errors'],
                     'security' => ['icon' => 'ri-shield-flash-line', 'label' => 'Security'],
                     'backup' => ['icon' => 'ri-database-2-line', 'label' => 'Backup'],
+=======
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
                     'audit' => ['icon' => 'ri-history-line', 'label' => 'Audit'],
                     'system' => ['icon' => 'ri-settings-5-line', 'label' => 'System'],
                 ];
@@ -56,20 +59,44 @@
                 <!-- Status Grid -->
                 <div class="col-xl-9">
                     <div class="row g-3">
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <div class="stats-card p-4 rounded-4 bg-white shadow-sm border border-slate-100">
                                 <div class="d-flex justify-content-between mb-3">
                                     <div class="icon-box bg-primary-subtle text-primary p-2 rounded-3"><i class="ri-user-line fs-4"></i></div>
-                                    <span class="text-success small fw-bold">+12% <i class="ri-arrow-right-up-line"></i></span>
+                                    <span class="text-success small fw-bold">Active</span>
                                 </div>
                                 <h3 class="fw-bold mb-1" style="color: #0f172a;">{{ number_format($stats['total_users']) }}</h3>
-                                <p class="text-slate-600 small m-0 fw-medium">Total Registered Users</p>
+                                <p class="text-slate-600 small m-0 fw-medium">Total System Users</p>
                             </div>
                         </div>
+<<<<<<< HEAD
                         <!-- REMOVED: Active Submissions & Approval Efficiency (Operational) -->
                     </div>
 
                     <!-- REMOVED: Trends Chart (Operational - Redistributed) -->
+=======
+                        <div class="col-md-4">
+                            <div class="stats-card p-4 rounded-4 bg-white shadow-sm border border-slate-100">
+                                <div class="d-flex justify-content-between mb-3">
+                                    <div class="icon-box bg-purple-subtle text-purple p-2 rounded-3"><i class="ri-computer-line fs-4"></i></div>
+                                    <span class="text-primary small fw-bold">Active</span>
+                                </div>
+                                <h3 class="fw-bold mb-1" style="color: #0f172a;">{{ count($activeSessions) }}</h3>
+                                <p class="text-slate-600 small m-0 fw-medium">Active Database Sessions</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stats-card p-4 rounded-4 bg-white shadow-sm border border-slate-100">
+                                <div class="d-flex justify-content-between mb-3">
+                                    <div class="icon-box bg-success-subtle text-success p-2 rounded-3"><i class="ri-hard-drive-2-line fs-4"></i></div>
+                                    <span class="text-slate-500 small fw-bold">Capacity</span>
+                                </div>
+                                <h3 class="fw-bold mb-1" style="color: #0f172a;">{{ $driveSpace }}</h3>
+                                <p class="text-slate-600 small m-0 fw-medium">Available Storage</p>
+                            </div>
+                        </div>
+                    </div>
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
 
                     {{-- Admin Management Section (Unified from Dashboard) --}}
                         <!-- REMOVED: Regions Management (Operational) -->
@@ -132,17 +159,23 @@
                                 </div>
                                 <div class="card-body p-0">
                                     <div class="list-group list-group-flush border-0">
+<<<<<<< HEAD
                                         <!-- REMOVED: Operational Stats -->
+=======
                                         <div class="list-group-item d-flex justify-content-between align-items-center border-0 py-3">
                                             <div class="d-flex align-items-center gap-3">
                                                 <div class="p-2 bg-slate-50 rounded-circle"><i class="ri-server-line text-slate-600"></i></div>
-                                                <span class="fw-bold text-slate-700">System Uptime</span>
+                                                <span class="fw-bold text-slate-700">System Core Version</span>
                                             </div>
-                                            <div class="d-flex gap-1">
-                                                <span class="badge rounded-pill {{ ($health['database'] ?? false) ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }} border">DB</span>
-                                                <span class="badge rounded-pill {{ ($health['storage'] ?? false) ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }} border">Disk</span>
-                                                <span class="badge rounded-pill {{ ($health['queue'] ?? false) ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }} border">Jobs</span>
+                                            <span class="fw-bold text-slate-900">{{ $envData['laravel_version'] }}</span>
+                                        </div>
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
+                                        <div class="list-group-item d-flex justify-content-between align-items-center border-0 py-3">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="p-2 bg-slate-50 rounded-circle"><i class="ri-code-s-slash-line text-slate-600"></i></div>
+                                                <span class="fw-bold text-slate-700">PHP Version</span>
                                             </div>
+                                            <span class="fw-bold text-slate-900">{{ $envData['php_version'] }}</span>
                                         </div>
                                         <!-- REMOVED: Application Status Distribution -->
                                         <div class="list-group-item d-flex justify-content-between align-items-center border-0 py-3">
@@ -161,8 +194,12 @@
                                 </div>
                             </div>
                         </div>
+<<<<<<< HEAD
                         <!-- REMOVED: Payment Reconciliation (Finance Responsibility) -->
                     </div>
+=======
+                        <!-- End Metrics Table -->
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
                 </div>
 
                 <!-- Right Sidebar Widgets -->
@@ -199,6 +236,7 @@
                     <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
                         <h6 class="fw-bold mb-3">Quick Navigation</h6>
                         <div class="d-grid gap-2">
+<<<<<<< HEAD
                             {{-- REMOVED: Applicant Management (Operational Oversight) --}}
                             <a href="{{ route('admin.content.index') }}" class="btn btn-slate-50 text-slate-700 btn-sm fw-bold border text-start px-3 py-2 d-flex align-items-center gap-2">
                                 <i class="ri-article-line text-purple"></i> CMS Management
@@ -207,6 +245,14 @@
                                 <i class="ri-shield-check-line text-danger"></i> System Audit Logs
                             </a>
                             <!-- REMOVED: Performance Analytics (Operational) -->
+=======
+                            <a href="{{ route('admin.audit.index') }}" class="btn btn-slate-50 text-slate-700 btn-sm fw-bold border text-start px-3 py-2 d-flex align-items-center gap-2">
+                                <i class="ri-shield-check-line text-danger"></i> System Audit Logs
+                            </a>
+                            <a href="{{ route('users-mgmt') }}" class="btn btn-slate-50 text-slate-700 btn-sm fw-bold border text-start px-3 py-2 d-flex align-items-center gap-2">
+                                <i class="ri-user-settings-line text-primary"></i> Internal Users
+                            </a>
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
                         </div>
                     </div>
 
@@ -243,6 +289,7 @@
             </div>
         </div>
 
+<<<<<<< HEAD
         <!-- Monitoring Section -->
         <div class="tab-pane fade" id="panel-monitoring" role="tabpanel">
              @include('staff.it.dashboard.partials.monitoring', ['query' => $monitoringQuery])
@@ -279,6 +326,8 @@
              @include('staff.it.dashboard.partials.backup', ['lastBackup' => $lastBackup ?? 'N/A', 'storageStats' => $storageStats])
         </div>
 
+=======
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
         <!-- Audit Section -->
         <div class="tab-pane fade" id="panel-audit" role="tabpanel">
              @include('staff.it.dashboard.partials.audit', ['logs' => $auditLogs])
@@ -290,9 +339,12 @@
         </div>
 
 
+<<<<<<< HEAD
                         {{-- REMOVED: Reports Panel (Operational Responsibility) --}}
 
 
+=======
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
     </div>
 </div>
 
@@ -367,7 +419,12 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script>
+<<<<<<< HEAD
         // mini Sparkline for payment health - REMOVED (Not required for IT)
+=======
+    document.addEventListener('DOMContentLoaded', function() {
+        // No charts currently configured
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
     });
 </script>
 @endpush

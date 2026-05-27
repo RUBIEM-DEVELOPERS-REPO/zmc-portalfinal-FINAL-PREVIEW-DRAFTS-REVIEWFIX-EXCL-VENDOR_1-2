@@ -21,6 +21,11 @@
         <h6 class="fw-bold mb-3"><i class="ri-megaphone-line me-2" style="color:var(--zmc-accent)"></i>Notices</h6>
         @forelse($notices ?? collect() as $n)
           <div class="border-bottom pb-3 mb-3">
+            @if($n->image_path)
+              <div class="mb-2">
+                <img src="{{ asset('storage/' . $n->image_path) }}" alt="{{ $n->title }}" class="rounded" style="max-width:100%;max-height:180px;object-fit:cover;">
+              </div>
+            @endif
             <div class="fw-bold text-dark" style="text-transform: none;">{{ $n->title }}</div>
             <div class="text-muted small">{{ optional($n->published_at)->format('d M Y') }}</div>
             <div class="mt-2" style="white-space:pre-wrap; font-size:13px;">{{ $n->body }}</div>
@@ -36,6 +41,11 @@
         <h6 class="fw-bold mb-3"><i class="ri-calendar-event-line me-2" style="color:var(--zmc-accent)"></i>Events</h6>
         @forelse($events ?? collect() as $e)
           <div class="border-bottom pb-3 mb-3">
+            @if($e->image_path)
+              <div class="mb-2">
+                <img src="{{ asset('storage/' . $e->image_path) }}" alt="{{ $e->title }}" class="rounded" style="max-width:100%;max-height:180px;object-fit:cover;">
+              </div>
+            @endif
             <div class="fw-bold text-dark" style="text-transform: none;">{{ $e->title }}</div>
             <div class="text-muted small">
               @if($e->starts_at)

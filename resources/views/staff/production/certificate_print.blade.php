@@ -95,7 +95,7 @@
     }
 
     .org-name .zimbabwe { color: #000; }
-    .org-name .media { color: #2e7d32; }
+    .org-name .media { color: #f5c518; }
     .org-name .commission { color: #000; }
 
     .ornament {

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>@yield('title', 'Accreditation Portal | ZMC')</title>
+  <title>@yield('title', 'Accreditation Applicant | ZMC')</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -38,7 +38,7 @@
     .navbar-brand-box img{height:38px;}
     .logo-text{color:#fff;font-weight:800;font-size:16px;letter-spacing:0.5px;text-transform:uppercase;text-align: right;}
     .logo-text span.zimbabwe { color: #fff; }
-    .logo-text span.media { color: #4caf50; }
+    .logo-text span.media { color: #f5c518; }
     .logo-text span.commission { color: #fff; }
     .logo-sub{font-size:11px;color:var(--zmc-yellow);font-weight:600;display:block;margin-top:2px;text-align: right;}
 
@@ -146,8 +146,9 @@
 
     .guide-step{display:flex;align-items:flex-start;margin-bottom:25px;padding-bottom:25px;border-bottom:1px solid var(--border-color);}
     .step-number-large{
-      background:var(--zmc-yellow);color:#000;width:36px;height:36px;border-radius:50%;
-      display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;margin-right:15px;flex-shrink:0;
+      background:var(--zmc-yellow);color:#000;width:48px;height:48px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;font-weight:900;font-size:22px;margin-right:15px;flex-shrink:0;
+      box-shadow:0 4px 12px rgba(250,204,21,0.3);
     }
 
     @media (max-width:768px){
@@ -268,7 +269,7 @@
         </a>
       </li>
       <li>
-        <a class="{{ request()->routeIs('accreditation.communication') ? 'active' : '' }}" href="{{ route('accreditation.communication') }}">
+        <a class="{{ request()->routeIs('accreditation.communication') ? 'active' : '' }}" href="{{ Route::has('accreditation.communication') ? route('accreditation.communication') : '#' }}">
           <i class="ri-mail-line"></i> Communication
         </a>
       </li>
@@ -290,10 +291,10 @@
 
   <header class="topbar">
     <div class="topbar-left">
-      <span class="topbar-title">@yield('page_title', 'APPLICATION PORTAL')</span>
+      <span class="topbar-title">@yield('page_title', 'ACCREDITATION APPLICANT')</span>
     </div>
     <div class="topbar-right">
-      <a href="{{ route('accreditation.communication') }}" class="btn btn-secondary btn-sm">
+      <a href="{{ Route::has('accreditation.communication') ? route('accreditation.communication') : '#' }}" class="btn btn-secondary btn-sm">
         <i class="ri-mail-line me-1"></i> Email
       </a>
     </div>

@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 /**
- * Director Dashboard Controller
+ * Director Media Development and Governance Dashboard Controller
  * 
  * Provides executive oversight and analytics for the Director role.
  * 
@@ -54,7 +54,7 @@ class DirectorController extends Controller
         private ReportGenerationService $reportService
     ) {
         // Ensure view-only access - directors can only view data and generate reports
-        $this->middleware(['auth', 'role:director', 'director.view_only']);
+        $this->middleware(['auth', 'role:director|super_admin', 'director.view_only']);
     }
 
     /**
@@ -102,7 +102,9 @@ class DirectorController extends Controller
     public function dashboard(Request $request)
     {
         $activeTab = $request->get('tab', 'perf');
-        $year = now()->year;
+        $year = $request->get('year', now()->year);
+        $availableYears = range(2024, now()->year);
+        rsort($availableYears);
 
         // KPIs and risk indicators for main dashboard
         $kpis = $this->metricsService->getExecutiveKPIs($year);
@@ -163,7 +165,7 @@ class DirectorController extends Controller
         ];
         
         // Debug logging
-        \Log::info('Director Dashboard Financial Data', [
+        \Log::info('Director Media Development and Governance Dashboard Financial Data', [
             'revenue_trend_count' => $revenueTrend->count(),
             'service_breakdown_count' => $breakdown['service']->count(),
             'aging' => $aging,
@@ -192,7 +194,7 @@ class DirectorController extends Controller
         ];
         
         // Debug logging
-        \Log::info('Director Dashboard Compliance Data', [
+        \Log::info('Director Media Development and Governance Dashboard Compliance Data', [
             'audit_snapshot' => $auditSnapshot,
             'print_stats' => $printStatistics,
             'top_staff_count' => $reprints['top_staff']->count(),
@@ -224,7 +226,7 @@ class DirectorController extends Controller
         $regional = collect([]);
         
         // Debug logging
-        \Log::info('Director Dashboard Entity & Issuance Data', [
+        \Log::info('Director Media Development and Governance Dashboard Entity & Issuance Data', [
             'media_houses' => $mediaHouses,
             'avg_staff' => $averageStaffPerHouse,
             'issuance' => $issuance,
@@ -239,7 +241,7 @@ class DirectorController extends Controller
         });
         
         $applicationsProcessed = $staffPerformance; // for backward compatibility if needed
-        $averageReviewTime = $this->staffService->getAverageReviewTimePerRegistrar();
+
         $approvalDistribution = $this->staffService->getApprovalDistributionPerOfficer();
 
         return view('staff.director.dashboard', compact(
@@ -273,7 +275,6 @@ class DirectorController extends Controller
             // Staff performance partial
             'staffPerformance',
             'applicationsProcessed',
-            'averageReviewTime',
             'approvalDistribution'
         ));
     }
@@ -297,8 +298,12 @@ class DirectorController extends Controller
             $months->push(now()->subMonths($i)->format('Y-m'));
         }
         
+        $dateExpr = DB::getDriverName() === 'sqlite' 
+            ? "strftime('%Y-%m', created_at)" 
+            : "TO_CHAR(created_at, 'YYYY-MM')";
+
         // Accreditation trends (excluding registrations)
-        $accreditationData = Application::selectRaw("strftime('%Y-%m', created_at) as month")
+        $accreditationData = Application::selectRaw("$dateExpr as month")
             ->selectRaw('COUNT(*) as total_submitted')
             ->selectRaw("SUM(CASE WHEN status = 'issued' THEN 1 ELSE 0 END) as total_approved")
             ->where('application_type', '!=', 'registration')
@@ -309,7 +314,7 @@ class DirectorController extends Controller
             ->keyBy('month');
         
         // Registration trends
-        $registrationData = Application::selectRaw("strftime('%Y-%m', created_at) as month")
+        $registrationData = Application::selectRaw("$dateExpr as month")
             ->selectRaw('COUNT(*) as total_submitted')
             ->selectRaw("SUM(CASE WHEN status = 'issued' THEN 1 ELSE 0 END) as total_approved")
             ->where('application_type', 'registration')
@@ -338,16 +343,9 @@ class DirectorController extends Controller
             ];
         });
         
-        $processingTimeByStage = $this->accreditationService->getProcessingTimeByStage();
         $approvalRatioByCategory = $this->accreditationService->getApprovalRatioByCategory();
         $categoryDistribution = $this->accreditationService->getCategoryDistribution();
         
-        // Additional detailed data for report page
-        $efficiency = [
-            'officer' => $processingTimeByStage['officer'] ?? 0,
-            'registrar' => $processingTimeByStage['registrar'] ?? 0,
-            'accounts' => $processingTimeByStage['accounts'] ?? 0,
-        ];
         
         $categories = $categoryDistribution;
         
@@ -361,8 +359,7 @@ class DirectorController extends Controller
             'accreditationTrends',
             'registrationTrends',
             'months',
-            'efficiency',
-            'categories',
+            'categoryDistribution',
             'approvalRatioByCategory',
             'mediaHouseRegistrations'
         ));
@@ -376,32 +373,47 @@ class DirectorController extends Controller
      */
     public function financialOverview()
     {
-        $monthlyRevenueTrendData = $this->financialService->getMonthlyRevenueTrend();
-        $monthlyRevenueTrend = $monthlyRevenueTrendData['current_year'] ?? collect([]);
-        $previousYearTrend = $monthlyRevenueTrendData['previous_year'] ?? collect([]);
+        $trendData = $this->financialService->getMonthlyRevenueTrend();
         
-        $revenueByService = $this->financialService->getRevenueByServiceType();
-        $revenueByType = $this->financialService->getRevenueByApplicantType();
-        $revenueByResidency = $this->financialService->getRevenueByResidency();
-        $revenueByPaymentMethod = $this->financialService->getRevenueByPaymentMethod();
-        $waiverStatistics = $this->financialService->getWaiverStatistics();
-        $aging = $this->financialService->getOutstandingPaymentsAging();
-        
-        // Transform waivers data to match view expectations
-        $waivers = (object) [
-            'count' => $waiverStatistics['count'],
-            'waived_amount' => $waiverStatistics['total_value'],
+        $monthlyRevenueTrend = [
+            'months' => $trendData['current_year']->pluck('month')->map(fn($m) => \Carbon\Carbon::parse($m)->format('M Y'))->toArray(),
+            'current_year' => $trendData['current_year']->pluck('total_revenue')->toArray(),
+            'previous_year' => $trendData['previous_year']->pluck('total_revenue')->toArray(),
         ];
+        
+        $revenueByServiceType = $this->financialService->getRevenueByServiceType()->map(function($item) {
+            $item->total = $item->total_revenue;
+            return $item;
+        });
+        
+        $revenueByApplicantType = $this->financialService->getRevenueByApplicantType()->map(function($item) {
+            $item->total = $item->total_revenue;
+            return $item;
+        });
+        
+        $revenueByResidency = $this->financialService->getRevenueByResidency()->map(function($item) {
+            $item->total = $item->total_revenue;
+            $item->residency_type = $item->residency ?? $item->residency_type;
+            return $item;
+        });
+        
+        $revenueByPaymentMethod = $this->financialService->getRevenueByPaymentMethod()->map(function($item) {
+            $item->total = $item->total_revenue;
+            $item->payment_method = $item->method ?? $item->payment_method;
+            return $item;
+        });
+        
+        $waiverStatistics = $this->financialService->getWaiverStatistics();
+        $outstandingPaymentsAging = $this->financialService->getOutstandingPaymentsAging();
         
         return view('staff.director.reports.financial', compact(
             'monthlyRevenueTrend',
-            'previousYearTrend',
-            'revenueByService',
-            'revenueByType',
+            'revenueByServiceType',
+            'revenueByApplicantType',
             'revenueByResidency',
             'revenueByPaymentMethod',
-            'waivers',
-            'aging'
+            'waiverStatistics',
+            'outstandingPaymentsAging'
         ));
     }
 
@@ -421,15 +433,6 @@ class DirectorController extends Controller
         $printStatistics = $this->complianceService->getPrintStatistics();
         $suspiciousActivity = $this->complianceService->getSuspiciousActivityAlerts();
         
-        // Transform data to match view expectations
-        $risks = [
-            'category_reassignments' => $categoryReassignments['total'],
-            'certificate_edits' => $certificateEdits['total'],
-            'reprints_above_threshold' => Application::where('print_count', '>', 1)->count(),
-        ];
-        
-        $suspicious = $suspiciousActivity;
-        
         return view('staff.director.reports.compliance', compact(
             'categoryReassignments',
             'reopenedApplications',
@@ -437,9 +440,7 @@ class DirectorController extends Controller
             'certificateEdits',
             'excessiveReprints',
             'printStatistics',
-            'suspiciousActivity',
-            'risks',
-            'suspicious'
+            'suspiciousActivity'
         ));
     }
 
@@ -482,8 +483,7 @@ class DirectorController extends Controller
     public function staffPerformance()
     {
         $applicationsProcessed = $this->staffService->getApplicationsProcessedPerOfficer();
-        $averageReviewTime = $this->staffService->getAverageReviewTimePerRegistrar();
-        $paymentVerificationTurnaround = $this->staffService->getPaymentVerificationTurnaround();
+        $paymentVerificationVolume = $this->staffService->getPaymentVerificationVolume();
         $approvalDistribution = $this->staffService->getApprovalDistributionPerOfficer();
         $reassignmentFrequency = $this->staffService->getReassignmentFrequencyPerStaff();
         
@@ -493,8 +493,7 @@ class DirectorController extends Controller
         return view('staff.director.reports.staff', compact(
             'applicationsProcessed',
             'performance',
-            'averageReviewTime',
-            'paymentVerificationTurnaround',
+            'paymentVerificationVolume',
             'approvalDistribution',
             'reassignmentFrequency'
         ));
@@ -511,9 +510,45 @@ class DirectorController extends Controller
         $printStatistics = $this->complianceService->getPrintStatistics();
         $printsByStaff = $this->staffService->getPrintActionsByStaff();
         
+        // Fix printRatio variable name mismatch
+        $printRatio = $printStatistics;
+        
+        // Get monthly issuance trend (Applications with status 'issued')
+        $dateExpr = DB::getDriverName() === 'sqlite' 
+            ? "strftime('%Y-%m', issued_at)" 
+            : "TO_CHAR(issued_at, 'YYYY-MM')";
+
+        $monthlyIssuance = Application::select(
+            DB::raw("$dateExpr as month"),
+            DB::raw("COUNT(*) as count")
+        )
+        ->where('status', 'issued')
+        ->whereNotNull('issued_at')
+        ->where('issued_at', '>=', now()->subMonths(12)->startOfMonth())
+        ->groupBy('month')
+        ->orderBy('month', 'desc')
+        ->get();
+        
+        // Get outstanding unprinted approvals
+        $outstandingUnprinted = Application::whereIn('status', [
+            Application::PRODUCTION_QUEUE,
+            Application::PRODUCED_READY,
+            Application::CARD_GENERATED,
+            Application::CERT_GENERATED
+        ])
+        ->with('applicant:id,name,email')
+        ->get()
+        ->map(function($app) {
+            $app->days_pending = $app->updated_at ? now()->diffInDays($app->updated_at) : 0;
+            $app->applicant_name = $app->applicant ? $app->applicant->name : 'N/A';
+            return $app;
+        });
+        
         return view('staff.director.reports.issuance', compact(
-            'printStatistics',
-            'printsByStaff'
+            'printRatio',
+            'printsByStaff',
+            'monthlyIssuance',
+            'outstandingUnprinted'
         ));
     }
 

@@ -45,7 +45,7 @@
   @endif
 
   <div class="zmc-card shadow-sm border-0">
-    <form method="POST" action="{{ route('staff.accounts.cash-payment.store') }}">
+    <form method="POST" action="{{ route('staff.accounts.payments.offline.store') }}">
       @csrf
 
       <div class="row g-3">

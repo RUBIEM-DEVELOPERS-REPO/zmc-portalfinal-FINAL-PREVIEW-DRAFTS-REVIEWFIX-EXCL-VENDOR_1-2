@@ -27,8 +27,7 @@ return new class extends Migration
             }
         });
 
-        // SQLite doesn't support DROP CONSTRAINT IF EXISTS or complex CHECK constraints
-        if (DB::getDriverName() !== 'sqlite') {
+        if (DB::getDriverName() === 'pgsql') {
             DB::statement('ALTER TABLE applications DROP CONSTRAINT IF EXISTS applications_status_check');
             DB::statement("ALTER TABLE applications ADD CONSTRAINT applications_status_check CHECK (status::text = ANY(ARRAY[
                 'draft', 'submitted', 'withdrawn',

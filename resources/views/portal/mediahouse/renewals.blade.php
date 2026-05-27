@@ -717,7 +717,7 @@
     btn.innerHTML = 'Submitting... <i class="ri-loader-4-line"></i>';
 
     try{
-      const res = await fetch("{{ route('mediahouse.ap5.submit') }}", {
+      const res = await fetch("{{ route('mediahouse.renewals.submit-changes') }}", {
         method: "POST",
         headers: {
           "X-CSRF-TOKEN": "{{ csrf_token() }}",

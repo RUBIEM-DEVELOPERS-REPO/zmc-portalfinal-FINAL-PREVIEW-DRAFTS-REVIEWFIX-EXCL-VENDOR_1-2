@@ -31,6 +31,30 @@ class MediaHouseRenewalController extends Controller
     }
 
     /**
+     * Start renewal flow directly with a preset type (renewal or replacement)
+     */
+    public function start(string $type)
+    {
+        abort_unless(in_array($type, ['renewal', 'replacement'], true), 404);
+
+        $renewal = RenewalApplication::create([
+            'applicant_user_id' => Auth::id(),
+            'renewal_type' => 'registration', // Media house type
+            'request_type' => $type, // renewal or replacement
+            'status' => 'renewal_started',
+            'current_stage' => 'type_selection',
+            'last_action_at' => now(),
+            'last_action_by' => Auth::id(),
+        ]);
+
+        ActivityLogger::log('mediahouse_renewal_started', $renewal, null, 'renewal_started', [
+            'request_type' => $type,
+        ]);
+
+        return redirect()->route('mediahouse.renewals.lookup', $renewal);
+    }
+
+    /**
      * Step 1: Select renewal type (renewal or replacement)
      */
     public function selectType()

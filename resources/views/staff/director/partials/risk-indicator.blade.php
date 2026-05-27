@@ -12,25 +12,36 @@
         - drilldown: Optional URL for drill-down navigation
 --}}
 
+@php
+    $level = $level ?? $indicator['level'] ?? 'green';
+    $title = $title ?? $indicator['title'] ?? 'Risk Indicator';
+    $value = $value ?? $indicator['value'] ?? '0';
+    $threshold = $threshold ?? $indicator['threshold'] ?? null;
+    $description = $description ?? $indicator['description'] ?? null;
+    $drilldown = $drilldown ?? $indicator['drilldown'] ?? null;
+    $icon = $icon ?? $indicator['icon'] ?? 'ri-alert-line';
+@endphp
+
 <div class="col-md-6 col-lg-4">
-    <div class="risk-indicator risk-{{ $indicator['level'] }}">
+    <div class="risk-indicator risk-{{ $level }}">
         <div class="risk-header">
-            <span class="risk-badge badge-{{ $indicator['level'] }}">
-                {{ strtoupper($indicator['level']) }}
+            <span class="risk-badge badge-{{ $level }}">
+                {{ strtoupper($level) }}
             </span>
-            <h6>{{ $indicator['title'] }}</h6>
+            <i class="{{ $icon }} fs-5"></i>
+            <h6>{{ $title }}</h6>
         </div>
         <div class="risk-body">
-            <div class="risk-value">{{ $indicator['value'] }}</div>
-            @if(isset($indicator['threshold']))
-                <div class="risk-threshold">Threshold: {{ $indicator['threshold'] }}</div>
+            <div class="risk-value">{{ $value }}</div>
+            @if(isset($threshold))
+                <div class="risk-threshold">Threshold: {{ $threshold }}</div>
             @endif
-            @if(isset($indicator['description']))
-                <div class="risk-description">{{ $indicator['description'] }}</div>
+            @if(isset($description))
+                <div class="risk-description">{{ $description }}</div>
             @endif
         </div>
-        @if(isset($indicator['drilldown']))
-            <a href="{{ $indicator['drilldown'] }}" class="risk-drilldown">
+        @if(isset($drilldown))
+            <a href="{{ $drilldown }}" class="risk-drilldown">
                 View Details <i class="ri-arrow-right-line"></i>
             </a>
         @endif

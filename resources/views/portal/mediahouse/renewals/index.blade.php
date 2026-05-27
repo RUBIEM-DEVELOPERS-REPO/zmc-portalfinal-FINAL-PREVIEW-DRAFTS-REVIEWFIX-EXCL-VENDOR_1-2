@@ -12,8 +12,11 @@
   </div>
 
   <div class="mb-4">
-    <a href="{{ route('mediahouse.renewals.select-type') }}" class="btn btn-primary">
-      <i class="ri-add-line me-1"></i>Start New Renewal / Replacement
+    <a href="{{ route('mediahouse.renewals.start','renewal') }}" class="btn btn-primary">
+      <i class="ri-add-line me-1"></i>Start New Renewal (AP5)
+    </a>
+    <a href="{{ route('mediahouse.renewals.start','replacement') }}" class="btn btn-outline-dark ms-2">
+      <i class="ri-add-line me-1"></i>Start New Replacement (AP5)
     </a>
   </div>
 

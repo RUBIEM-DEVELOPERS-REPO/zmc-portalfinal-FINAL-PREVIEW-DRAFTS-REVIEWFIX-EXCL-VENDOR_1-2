@@ -60,7 +60,7 @@
          </div>
        </div>
        <div class="col-12 col-md-6">
-         <div class="zmc-card h-100 border-0 shadow-lg" style="background: linear-gradient(135deg, #2d5016 0%, #4c7c2b 100%) !important; color: #fff;">
+         <div class="zmc-card h-100 border-0 shadow-lg" style="background: linear-gradient(135deg, #1a1a1a 0%, #333333 100%) !important; color: #fff;">
            <div class="d-flex justify-content-between align-items-center">
              <div>
                <div class="opacity-75 small fw-bold text-uppercase letter-spacing-1">Valid Until</div>
@@ -670,8 +670,8 @@
     <div class="modal-content overflow-hidden border-0 shadow-lg" style="border-radius: 24px;">
       <div class="modal-body p-0">
         <div class="row g-0">
-          <div class="col-md-4 d-none d-md-block position-relative" style="background: url('{{ asset('zmc_building.png') }}') center center / cover no-repeat;">
-            <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, rgba(45, 80, 22, 0.75), rgba(31, 58, 15, 0.80)); z-index: 1;"></div>
+          <div class="col-md-4 d-none d-md-block position-relative" style="background: url('/zmc_building.png') center center / cover no-repeat;">
+            <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, rgba(0, 0, 0, 0.82), rgba(0, 0, 0, 0.88)); z-index: 1;"></div>
             <div class="h-100 d-flex flex-column justify-content-center p-5 text-white position-relative" style="z-index: 2;">
               <i class="ri-building-2-line mb-4" style="font-size: 80px; color: #facc15;"></i>
               <h2 class="fw-black mb-3" style="color: #ffffff;">Welcome, Partner!</h2>
@@ -687,42 +687,42 @@
 
               <div class="row g-4 mb-4">
                 <div class="col-md-6">
-                  <div class="fw-bold mb-3" style="color: #2d5016;"><i class="ri-funds-line me-2"></i>Financial Documents</div>
+                  <div class="fw-bold mb-3" style="color: #1a1a1a;"><i class="ri-funds-line me-2"></i>Financial Documents</div>
                   <ul class="list-unstyled small mb-0">
-                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #2d5016;"></i>Projected Cash Flow Statement (3 Years)</li>
-                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #2d5016;"></i>Projected Balance Sheet (3 Years)</li>
-                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #2d5016;"></i>Market Analysis</li>
+                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #1a1a1a;"></i>Projected Cash Flow Statement (3 Years)</li>
+                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #1a1a1a;"></i>Projected Balance Sheet (3 Years)</li>
+                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #1a1a1a;"></i>Market Analysis</li>
                   </ul>
                 </div>
                 <div class="col-md-6">
-                  <div class="fw-bold mb-3" style="color: #2d5016;"><i class="ri-shield-user-line me-2"></i>Ethics & Conduct</div>
+                  <div class="fw-bold mb-3" style="color: #1a1a1a;"><i class="ri-shield-user-line me-2"></i>Ethics & Conduct</div>
                   <ul class="list-unstyled small mb-0">
-                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #2d5016;"></i>Editorial Charter</li>
-                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #2d5016;"></i>Code of Ethics</li>
-                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #2d5016;"></i>Code of Conduct for Employees</li>
-                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #2d5016;"></i>In-house Style Book</li>
+                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #1a1a1a;"></i>Editorial Charter</li>
+                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #1a1a1a;"></i>Code of Ethics</li>
+                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #1a1a1a;"></i>Code of Conduct for Employees</li>
+                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #1a1a1a;"></i>In-house Style Book</li>
                   </ul>
                 </div>
                 <div class="col-md-6">
-                  <div class="fw-bold mb-3" style="color: #2d5016;"><i class="ri-government-line me-2"></i>Legal & Corporate</div>
+                  <div class="fw-bold mb-3" style="color: #1a1a1a;"><i class="ri-government-line me-2"></i>Legal & Corporate</div>
                   <ul class="list-unstyled small mb-0">
-                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #2d5016;"></i>Certificate of Incorporation</li>
-                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #2d5016;"></i>Memorandum of Association</li>
-                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #2d5016;"></i>CR14 Form (Latest list of directors)</li>
-                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #2d5016;"></i>Certified Copies of Directors' National IDs</li>
+                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #1a1a1a;"></i>Certificate of Incorporation</li>
+                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #1a1a1a;"></i>Memorandum of Association</li>
+                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #1a1a1a;"></i>CR14 Form (Latest list of directors)</li>
+                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #1a1a1a;"></i>Certified Copies of Directors' National IDs</li>
                   </ul>
                 </div>
                 <div class="col-md-6">
-                  <div class="fw-bold mb-3" style="color: #2d5016;"><i class="ri-newspaper-line me-2"></i>Operational & Strategic</div>
+                  <div class="fw-bold mb-3" style="color: #1a1a1a;"><i class="ri-newspaper-line me-2"></i>Operational & Strategic</div>
                   <ul class="list-unstyled small mb-0">
-                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #2d5016;"></i>Mission Statement</li>
-                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #2d5016;"></i>Dummy Copy of Publication (Sample publication if applicable)</li>
+                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #1a1a1a;"></i>Mission Statement</li>
+                    <li class="mb-2" style="color: #334155;"><i class="ri-checkbox-circle-fill me-2" style="color: #1a1a1a;"></i>Dummy Copy of Publication (Sample publication if applicable)</li>
                   </ul>
                 </div>
               </div>
 
               <div class="d-grid">
-                <button type="button" class="btn btn-lg py-3 rounded-pill fw-bold shadow-sm" data-bs-dismiss="modal" style="background: #2d5016; border-color: #facc15; color: #facc15;">
+                <button type="button" class="btn btn-lg py-3 rounded-pill fw-bold shadow-sm" data-bs-dismiss="modal" style="background: #1a1a1a; border-color: #facc15; color: #facc15;">
                   I Understand, Let's Begin <i class="ri-arrow-right-line ms-2"></i>
                 </button>
               </div>

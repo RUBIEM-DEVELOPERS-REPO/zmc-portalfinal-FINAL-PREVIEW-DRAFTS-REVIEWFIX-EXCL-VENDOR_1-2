@@ -9,10 +9,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('national_id_number', 50)->nullable()->after('email');
-            $table->string('passport_number', 50)->nullable()->after('national_id_number');
-            $table->string('phone_number_2', 20)->nullable()->after('phone_number');
-            $table->enum('theme_preference', ['light', 'dark'])->default('light')->after('remember_token');
+            if (!Schema::hasColumn('users', 'national_id_number')) {
+                $table->string('national_id_number', 50)->nullable();
+            }
+            if (!Schema::hasColumn('users', 'passport_number')) {
+                $table->string('passport_number', 50)->nullable();
+            }
+            if (!Schema::hasColumn('users', 'phone_number_2')) {
+                $table->string('phone_number_2', 20)->nullable();
+            }
+            if (!Schema::hasColumn('users', 'theme_preference')) {
+                $table->string('theme_preference', 10)->default('light');
+            }
         });
     }
 

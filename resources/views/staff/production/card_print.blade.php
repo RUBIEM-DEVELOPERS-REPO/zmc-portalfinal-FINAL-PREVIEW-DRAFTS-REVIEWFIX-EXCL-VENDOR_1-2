@@ -7,7 +7,7 @@
   <style>
     @php
         $primaryColor = $template_data['primary_color'] ?? '#1a237e';
-        $secondaryColor = $template_data['secondary_color'] ?? '#2e7d32';
+        $secondaryColor = $template_data['secondary_color'] ?? '#f5c518';
         $bgStyle = $template_data['bg_style'] ?? 'gradient';
     @endphp
 
@@ -86,7 +86,7 @@
     }
 
     .header-title .main .highlight {
-      color: #2e7d32;
+      color: #228B22;
     }
 
     .header-title .sub {

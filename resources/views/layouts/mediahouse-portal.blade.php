@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>@yield('title', 'ZMC Portal')</title>
+  <title>@yield('title', 'ZMC Media House Applicant')</title>
 
   <!-- Fonts: Inter -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -379,9 +379,10 @@
     }
     .step-number-large{
       background:var(--zmc-yellow);color:#000;
-      width:36px;height:36px;border-radius:50%;
+      width:48px;height:48px;border-radius:50%;
       display:flex;align-items:center;justify-content:center;
-      font-weight:800;font-size:16px;margin-right:15px;flex-shrink:0;
+      font-weight:900;font-size:22px;margin-right:15px;flex-shrink:0;
+      box-shadow:0 4px 12px rgba(250,204,21,0.3);
     }
 
     /* REPEATABLE TABLES */
@@ -617,7 +618,7 @@
     const pageTitles = {
       'home': 'HOME - REGISTRATION TRACKER',
       'new-registration': 'NEW REGISTRATION (AP1)',
-      'renewal': 'RENEWAL / REPLACEMENT (AP5)',
+      'renewal': 'RENEWAL (AP5)',
       'payment-history': 'PAYMENT HISTORY',
       'notices': 'NOTICES & EVENTS',
       'how-to': 'HOW TO GET REGISTERED',

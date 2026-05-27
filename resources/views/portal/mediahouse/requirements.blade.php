@@ -279,6 +279,7 @@
 
   <div class="row g-4 mb-4">
     <div class="col-12 col-lg-6">
+<<<<<<< HEAD
       <div class="req-card fade-in">
         <div class="req-card-header">
           <div class="req-icon-box new-reg">
@@ -334,10 +335,43 @@
             <p class="req-desc">Analysis of the target market and media landscape</p>
           </div>
         </div>
+=======
+      <div class="zmc-card h-100">
+        <h6 class="fw-bold mb-3" style="color:#1a1a1a;">
+          <i class="ri-building-2-line me-2" style="color:var(--zmc-accent)"></i>New Registration (AP1) - Documents
+        </h6>
+        <ul class="list-unstyled mb-0">
+          <li class="d-flex align-items-start gap-2 mb-3">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>1. Projected Cash Flow Statement</strong><br><span class="text-muted small">For a minimum of three (3) years</span></div>
+          </li>
+          <li class="d-flex align-items-start gap-2 mb-3">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>2. Projected Balance Sheet</strong><br><span class="text-muted small">For a minimum of three (3) years</span></div>
+          </li>
+          <li class="d-flex align-items-start gap-2 mb-3">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>3. Editorial Charter</strong><br><span class="text-muted small">Outlines editorial policies and principles</span></div>
+          </li>
+          <li class="d-flex align-items-start gap-2 mb-3">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>4. Code of Ethics</strong><br><span class="text-muted small">Ethical guidelines for media operations</span></div>
+          </li>
+          <li class="d-flex align-items-start gap-2 mb-3">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>5. Code of Conduct for Employees</strong><br><span class="text-muted small">Employee conduct and behaviour standards</span></div>
+          </li>
+          <li class="d-flex align-items-start gap-2">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>6. Market Analysis</strong><br><span class="text-muted small">Analysis of the target market and media landscape</span></div>
+          </li>
+        </ul>
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
       </div>
     </div>
 
     <div class="col-12 col-lg-6">
+<<<<<<< HEAD
       <div class="req-card fade-in" style="animation-delay: 0.1s;">
         <div class="req-card-header">
           <div class="req-icon-box additional">
@@ -393,12 +427,45 @@
             <p class="req-desc">Articles and memorandum of the company</p>
           </div>
         </div>
+=======
+      <div class="zmc-card h-100">
+        <h6 class="fw-bold mb-3" style="color:#1a1a1a;">
+          <i class="ri-attachment-2 me-2" style="color:var(--zmc-accent)"></i>Additional Required Attachments
+        </h6>
+        <ul class="list-unstyled mb-0">
+          <li class="d-flex align-items-start gap-2 mb-3">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>7. Certified IDs for Directors</strong><br><span class="text-muted small">Certified copies of identification for all company directors</span></div>
+          </li>
+          <li class="d-flex align-items-start gap-2 mb-3">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>8. In-house Style Book</strong><br><span class="text-muted small">Internal editorial style guide</span></div>
+          </li>
+          <li class="d-flex align-items-start gap-2 mb-3">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>9. Dummy / Sample Publication</strong><br><span class="text-muted small">Copy or mock-up of the publication</span></div>
+          </li>
+          <li class="d-flex align-items-start gap-2 mb-3">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>10. Mission Statement</strong><br><span class="text-muted small">Organisation's mission and objectives</span></div>
+          </li>
+          <li class="d-flex align-items-start gap-2 mb-3">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>11. Certificate of Incorporation</strong><br><span class="text-muted small">Company registration certificate from CIPC</span></div>
+          </li>
+          <li class="d-flex align-items-start gap-2">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>12. Memorandum of Association</strong><br><span class="text-muted small">Articles and memorandum of the company</span></div>
+          </li>
+        </ul>
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
       </div>
     </div>
   </div>
 
   <div class="row g-4 mb-4">
     <div class="col-12 col-lg-6">
+<<<<<<< HEAD
       <div class="req-card fade-in" style="animation-delay: 0.2s;">
         <div class="req-card-header">
           <div class="req-icon-box renewal">
@@ -438,10 +505,35 @@
             <p class="req-desc">Payment receipt or proof of transfer</p>
           </div>
         </div>
+=======
+      <div class="zmc-card h-100">
+        <h6 class="fw-bold mb-3" style="color:#1a1a1a;">
+          <i class="ri-refresh-line me-2" style="color:var(--zmc-accent)"></i>Renewal (AP5)
+        </h6>
+        <ul class="list-unstyled mb-0">
+          <li class="d-flex align-items-start gap-2 mb-3">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>Current Registration Certificate</strong><br><span class="text-muted small">Scan of your existing ZMC registration certificate</span></div>
+          </li>
+          <li class="d-flex align-items-start gap-2 mb-3">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>Previous Reference Number</strong><br><span class="text-muted small">Your existing registration reference</span></div>
+          </li>
+          <li class="d-flex align-items-start gap-2 mb-3">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>Supporting Documents</strong><br><span class="text-muted small">Any changes in directors, operations, or details</span></div>
+          </li>
+          <li class="d-flex align-items-start gap-2">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>Proof of Payment</strong><br><span class="text-muted small">Payment receipt or proof of transfer</span></div>
+          </li>
+        </ul>
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
       </div>
     </div>
 
     <div class="col-12 col-lg-6">
+<<<<<<< HEAD
       <div class="req-card fade-in" style="animation-delay: 0.3s;">
         <div class="req-card-header">
           <div class="req-icon-box replacement">
@@ -476,10 +568,31 @@
             <p class="req-desc">Payment receipt for replacement fee</p>
           </div>
         </div>
+=======
+      <div class="zmc-card h-100">
+        <h6 class="fw-bold mb-3" style="color:#1a1a1a;">
+          <i class="ri-exchange-line me-2" style="color:var(--zmc-accent)"></i>Replacement (AP5)
+        </h6>
+        <ul class="list-unstyled mb-0">
+          <li class="d-flex align-items-start gap-2 mb-3">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>Affidavit</strong><br><span class="text-muted small">Sworn statement explaining the loss or damage</span></div>
+          </li>
+          <li class="d-flex align-items-start gap-2 mb-3">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>Police Report</strong> <span class="badge bg-danger-subtle text-danger">If stolen</span><br><span class="text-muted small">Official police report if the certificate was stolen</span></div>
+          </li>
+          <li class="d-flex align-items-start gap-2">
+            <i class="ri-checkbox-circle-fill text-success mt-1"></i>
+            <div><strong>Proof of Payment</strong><br><span class="text-muted small">Payment receipt for replacement fee</span></div>
+          </li>
+        </ul>
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
       </div>
     </div>
   </div>
 
+<<<<<<< HEAD
   <div class="payment-info-card fade-in" style="animation-delay: 0.4s;">
     <div class="payment-info-header">
       <div class="payment-icon">
@@ -508,6 +621,15 @@
         Fees are also payable in local currency at the prevailing official bank rate on the day of payment.
       </p>
     </div>
+=======
+  <div class="zmc-card" style="background: linear-gradient(135deg, rgba(46, 125, 50,0.05), rgba(46, 125, 50,0.02));">
+    <h6 class="fw-bold mb-3" style="color:#1a1a1a;">
+      <i class="ri-money-dollar-circle-line me-2" style="color:var(--zmc-accent)"></i>Payment Information
+    </h6>
+    <p class="small text-muted mb-2">Application and registration fees are as per <strong>Statutory Instrument 65 of 2022</strong>.</p>
+    <p class="small text-muted mb-2">Media house registration involves a <strong>two-stage payment</strong>: an application fee at submission and a registration fee upon approval.</p>
+    <p class="small mb-0"><i class="ri-error-warning-line me-1 text-warning"></i> Fees are also payable in local currency at the prevailing official bank rate on the day of payment.</p>
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
   </div>
 </div>
 @endsection

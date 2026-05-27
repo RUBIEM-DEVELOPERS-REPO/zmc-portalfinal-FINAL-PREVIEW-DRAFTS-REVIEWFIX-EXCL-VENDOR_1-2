@@ -32,7 +32,7 @@ class ApplicationDetailsController extends Controller
         foreach ([
             'title','first_name','surname','other_names','dob','sex','birth_place','origin','nationality',
             'id_passport_number','employer_name','medium_type','designation','assignment_brief','arrival_date',
-            'departure_date','port_entry','zim_local_address','zim_address'
+            'departure_date','port_entry','zim_local_address','zim_address', 'past_work_links'
         ] as $k) {
             if (array_key_exists($k, $fd) && !array_key_exists($k, $app)) {
                 $app[$k] = $fd[$k];
@@ -67,8 +67,12 @@ class ApplicationDetailsController extends Controller
         if (isset($fd['managers_rows']) && is_array($fd['managers_rows'])) $managers = $fd['managers_rows'];
 
         $documents = $application->documents->map(function ($d) {
+            $type = $d->doc_type ?? $d->document_type ?? 'document';
+            if (str_starts_with($type, 'past_work_sample_')) {
+                $type = 'Past Work Sample (' . str_replace('past_work_sample_', '', $type) . ')';
+            }
             return [
-                'document_type' => $d->doc_type ?? $d->document_type ?? 'document',
+                'document_type' => $type,
                 'original_name' => $d->original_name ?? null,
                 'file_name'     => $d->file_path ?? null,
                 'url'           => !empty($d->file_path) ? $d->url : null,

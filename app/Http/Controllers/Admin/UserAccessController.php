@@ -6,21 +6,55 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
-use App\Notifications\StaffAccountSetupNotification;
 
 class UserAccessController extends Controller
 {
     /**
      * /admin/users
      *
-     * Landing page that routes users to the dedicated lists.
-     * The user request was to have Public Users and Staff Users in their own lists.
+     * Main User & Account Management page showing both Staff and Public users.
      */
     public function index(Request $request)
     {
-        return redirect()->route('admin.users.staff');
+        $q = $request->get('q');
+
+        // Staff users query
+        $staffQuery = User::query()
+            ->when($q, function ($query) use ($q) {
+                $query->where(function ($qq) use ($q) {
+                    $qq->where('name', 'like', "%{$q}%")
+                        ->orWhere('email', 'like', "%{$q}%");
+                });
+            })
+            ->where('account_type', 'staff')
+            ->latest();
+
+        // Public users query
+        $publicQuery = User::query()
+            ->when($q, function ($query) use ($q) {
+                $query->where(function ($qq) use ($q) {
+                    $qq->where('name', 'like', "%{$q}%")
+                        ->orWhere('email', 'like', "%{$q}%");
+                });
+            })
+            ->where('account_type', 'public')
+            ->latest();
+
+        $staffUsers = $staffQuery->paginate(10, ['*'], 'staff_page')
+            ->withQueryString();
+        $publicUsers = $publicQuery->paginate(10, ['*'], 'public_page')
+            ->withQueryString();
+
+        $counts = [
+            'staff'  => User::where('account_type', 'staff')->count(),
+            'public' => User::where('account_type', 'public')->count(),
+        ];
+
+        return view('admin.users.index', compact('staffUsers', 'publicUsers', 'counts', 'q'));
     }
 
     /**
@@ -73,8 +107,7 @@ class UserAccessController extends Controller
     public function create()
     {
         $roles = Role::orderBy('name')->get();
-        $regions = \App\Models\Region::where('is_active', true)->orderBy('name')->get();
-        return view('admin.users.create', compact('roles', 'regions'));
+        return view('admin.users.create', compact('roles'));
     }
 
     public function store(Request $request)
@@ -82,78 +115,53 @@ class UserAccessController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:6'],
             'designation' => ['nullable', 'string', 'max:255'],
-            'phone_country_code' => ['required', 'string', 'exists:countries,code'],
-            'phone_number' => ['required', 'string', 'min:6', 'max:20'],
-            'country_code' => ['nullable', 'string', 'exists:countries,code'],
-            'regions' => ['nullable', 'array'],
-            'regions.*' => ['integer', 'exists:regions,id'],
             'roles' => ['nullable', 'array'],
             'roles.*' => ['string'],
         ]);
 
-        $setupToken = \Illuminate\Support\Str::random(64);
-        $tempPassword = \Illuminate\Support\Str::random(12);
+        $activationToken = Str::random(64);
+
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
-            'password' => Hash::make($tempPassword), // Use temporary password
+            'password' => Hash::make(Str::random(32)),
             'designation' => $data['designation'] ?? null,
-            'phone_country_code' => $data['phone_country_code'],
-            'phone_number' => $data['phone_number'],
-            'country_code' => $data['country_code'] ?? $data['phone_country_code'],
-            'setup_token' => $setupToken,
+            'approved_at' => now(),
+            'approved_by' => auth()->id(),
+            'account_status' => 'pending',
             'account_type' => 'staff',
+            'activation_token' => $activationToken,
         ]);
-
-        // Force account_status to pending_setup (override migration default)
-        $user->account_status = 'pending_setup';
-        $user->save();
 
         $user->syncRoles($data['roles'] ?? []);
 
-        // Assign regions to the user
-        if (!empty($data['regions'])) {
-            $user->assignedRegions()->sync($data['regions']);
+        $roleNames = implode(', ', $data['roles'] ?? []);
+        $activationUrl = route('staff.activate', $activationToken);
+
+        try {
+            Mail::raw(
+                "Hello {$user->name},\n\n"
+                . "Your ZMC Staff account has been created with the role(s): {$roleNames}.\n\n"
+                . "Please activate your account by clicking the link below and setting your password:\n\n"
+                . "{$activationUrl}\n\n"
+                . "This link is valid for one-time use.\n\n"
+                . "Regards,\nZimbabwe Media Commission",
+                function ($message) use ($user) {
+                    $message->to($user->email)
+                        ->subject('ZMC Staff Account - Activate Your Account');
+                }
+            );
+        } catch (\Throwable $e) {
+            \Log::warning('Activation email failed for ' . $user->email . ': ' . $e->getMessage());
+            return redirect()->route('admin.users.staff')
+                ->with('success', "User created but activation email could not be sent. You can resend it from User Management.")
+                ->with('error', 'Email delivery failed: ' . $e->getMessage());
         }
 
-        // Send Setup Notification with temporary password
-        $user->notify(new \App\Notifications\StaffAccountSetupNotification($setupToken, $tempPassword));
+        \App\Support\AuditTrail::log('account_created_by_superadmin', $user, ['roles' => $data['roles'] ?? []]);
 
-        $action = (auth()->user() && auth()->user()->hasRole('super_admin')) ? 'account_created_by_superadmin' : 'account_created_by_it_admin';
-        \App\Support\AuditTrail::log($action, $user, ['roles' => $data['roles'] ?? []]);
-
-        return redirect()->route('admin.users.staff')->with('success', 'User created and invite sent.');
-    }
-
-    public function destroy(User $user)
-    {
-        // Prevent super admin from deleting themselves
-        if (auth()->user()->id === $user->id) {
-            return redirect()->back()->with('error', 'You cannot delete your own account.');
-        }
-
-        // Only super admin can delete users
-        if (!auth()->user()->hasRole('super_admin')) {
-            return redirect()->back()->with('error', 'Only Super Admin can delete users.');
-        }
-
-        // Prevent deletion of super admin users (except by themselves)
-        if ($user->hasRole('super_admin')) {
-            return redirect()->back()->with('error', 'Super Admin users cannot be deleted.');
-        }
-
-        // Log the deletion
-        \App\Support\AuditTrail::log('user_deleted', $user, [
-            'deleted_by' => auth()->user()->id,
-            'deleted_at' => now()
-        ]);
-
-        // Delete the user
-        $user->delete();
-
-        return redirect()->route('admin.users.staff')->with('success', 'User deleted successfully.');
+        return redirect()->route('admin.users.staff')->with('success', "Staff account created. Activation link sent to {$user->email}.");
     }
 
     public function editAccess(User $user)
@@ -197,8 +205,7 @@ class UserAccessController extends Controller
         $user->syncRoles($data['roles'] ?? []);
         $user->syncPermissions($data['permissions'] ?? []);
 
-        $action = auth()->user()->hasRole('super_admin') ? 'user_access_updated_by_superadmin' : 'user_access_updated_by_it_admin';
-        \App\Support\AuditTrail::log($action, $user, [
+        \App\Support\AuditTrail::log('user_access_updated', $user, [
             'roles' => $data['roles'] ?? [],
             'permissions' => $data['permissions'] ?? []
         ]);
@@ -219,5 +226,30 @@ class UserAccessController extends Controller
         \App\Support\AuditTrail::log('account_reset_initiated', $user, ['token' => $token]);
 
         return back()->with('success', 'Account reset initiated. Share the setup link with the user.');
+    }
+
+    public function destroy(User $user)
+    {
+        if ($user->id === auth()->id()) {
+            return back()->with('error', 'You cannot delete your own account.');
+        }
+
+        if ($user->hasRole('super_admin') && User::role('super_admin')->count() <= 1) {
+            return back()->with('error', 'Cannot delete the last super admin account.');
+        }
+
+        $userName = $user->name;
+        $userEmail = $user->email;
+
+        \App\Support\AuditTrail::log('user_deleted', $user, [
+            'deleted_name' => $userName,
+            'deleted_email' => $userEmail,
+        ]);
+
+        $user->roles()->detach();
+        $user->permissions()->detach();
+        $user->delete();
+
+        return back()->with('success', "User \"{$userName}\" ({$userEmail}) has been permanently deleted.");
     }
 }

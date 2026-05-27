@@ -17,6 +17,11 @@
     </div>
 
     <div class="d-flex align-items-center gap-2">
+      @if(Route::has('staff.officer.records.export'))
+      <a href="{{ route('staff.officer.records.export', ['type' => 'mediahouses']) }}?{{ http_build_query(request()->only(['search','collection_status','expiry_status'])) }}" class="btn btn-outline-success border shadow-sm btn-sm px-3">
+        <i class="ri-file-excel-2-line me-1"></i> Export CSV
+      </a>
+      @endif
       <a href="{{ route('staff.officer.dashboard') }}" class="btn btn-white border shadow-sm btn-sm px-3">
         <i class="ri-arrow-left-line me-1"></i> Back to Dashboard
       </a>
@@ -29,6 +34,34 @@
       <div>{{ session('success') }}</div>
     </div>
   @endif
+
+  {{-- Analytics Summary --}}
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="zmc-card text-center p-3">
+        <div class="display-6 fw-bold" style="color:#1a1a1a;">{{ $mhStats['total'] ?? 0 }}</div>
+        <div class="small text-muted">Total Registered</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="zmc-card text-center p-3">
+        <div class="display-6 fw-bold text-success">{{ $mhStats['collected'] ?? 0 }}</div>
+        <div class="small text-muted">Collected</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="zmc-card text-center p-3">
+        <div class="display-6 fw-bold text-warning">{{ $mhStats['uncollected'] ?? 0 }}</div>
+        <div class="small text-muted">Uncollected</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="zmc-card text-center p-3">
+        <div class="display-6 fw-bold text-danger">{{ $mhStats['expired'] ?? 0 }}</div>
+        <div class="small text-muted">Expired</div>
+      </div>
+    </div>
+  </div>
 
   {{-- Filters --}}
   <div class="zmc-card mb-4">

@@ -33,10 +33,13 @@ class ManualPaymentController extends Controller
             'proof_last_name'  => ['required','string','max:100'],
             'proof_payment_date' => ['required','date'],
             'proof_amount_paid'  => ['required','numeric','min:0'],
-            'proof_bank_name'    => ['required','string','max:120'],
+            'proof_bank_name'    => ['nullable','string','max:120'],
             'proof_file'         => ['required','file','mimes:pdf,jpg,jpeg,png','max:5120'],
             'supporting_docs'    => ['nullable','array'],
             'supporting_docs.*'  => ['file','mimes:pdf,jpg,jpeg,png','max:5120'],
+            'payment_method'     => ['nullable','string','in:cash,transfer,proof'],
+            'cash_receipt_ref'   => ['nullable','string','max:100'],
+            'transfer_reference' => ['nullable','string','max:200'],
         ]);
 
         $file = $request->file('proof_file');
@@ -56,14 +59,15 @@ class ManualPaymentController extends Controller
             'payment_proof_path' => $path,
             'payment_proof_uploaded_at' => now(),
             'proof_status' => 'submitted',
-            'payment_submission_method' => 'proof_upload',
+            'payment_submission_method' => $data['payment_method'] ?? 'proof_upload',
             'payment_submitted_at' => now(),
 
             'proof_payer_first_name' => $data['proof_first_name'],
             'proof_payer_last_name'  => $data['proof_last_name'],
             'proof_payment_date'     => $data['proof_payment_date'],
             'proof_amount_paid'      => $data['proof_amount_paid'],
-            'proof_bank_name'        => $data['proof_bank_name'],
+            'proof_bank_name'        => $data['proof_bank_name'] ?? null,
+            'paynow_ref_submitted'   => $data['cash_receipt_ref'] ?? $data['transfer_reference'] ?? $application->paynow_ref_submitted,
             'proof_original_name'    => $file->getClientOriginalName(),
             'proof_mime'             => $file->getMimeType(),
             'proof_file_hash'        => $hash,

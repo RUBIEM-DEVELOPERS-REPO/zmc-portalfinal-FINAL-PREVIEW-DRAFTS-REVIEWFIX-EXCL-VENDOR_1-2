@@ -45,6 +45,10 @@ class MediaHouseOversightService
             ->where('status', 'suspended')
             ->count();
         
+        $newRegistrations = Application::where('application_type', 'registration')
+            ->where('created_at', '>=', now()->subDays(30))
+            ->count();
+            
         $newThisYear = Application::where('application_type', 'registration')
             ->where('created_at', '>=', now()->startOfYear())
             ->count();
@@ -55,6 +59,7 @@ class MediaHouseOversightService
             'active' => $issued,
             'in_progress' => $inProgress,
             'suspended' => $suspended,
+            'new_registrations' => $newRegistrations,
             'new_this_year' => $newThisYear,
             'total' => $total,
         ];

@@ -43,6 +43,9 @@
     </div>
   @endif
 
+  {{-- Analytics Overview Section --}}
+  @include('staff.partials.analytics-overview')
+
   @php
     $items = collect(method_exists($applications, 'items') ? $applications->items() : $applications);
     $summaryTotal = method_exists($applications, 'total') ? $applications->total() : $items->count();
@@ -66,7 +69,7 @@
       <div class="zmc-card h-100">
         <div class="d-flex justify-content-between align-items-start">
           <div>
-            <div class="text-muted small fw-bold">Total queue</div>
+            <div class="text-muted small fw-bold">Total Applications</div>
             <div class="h3 fw-black mb-0">{{ $summaryTotal }}</div>
           </div>
           <div class="icon-box text-primary"><i class="ri-folders-line"></i></div>
@@ -210,7 +213,7 @@
         @forelse($applications as $i => $app)
           @php
             $status = strtolower((string)($app->status ?? ''));
-            $badge = match($status) {
+            $statusBadge = match($status) {
               'returned_to_accounts' => 'warning',
               'paid_confirmed' => 'success',
               default => 'info',
@@ -257,7 +260,7 @@
             <td class="text-capitalize">{{ $app->collection_region ?? '—' }}</td>
             <td class="small">{{ !empty($app->created_at) ? \Carbon\Carbon::parse($app->created_at)->format('d M Y') : '—' }}</td>
             <td>
-              <span class="badge rounded-pill bg-{{ $badge }} px-3">
+              <span class="badge rounded-pill bg-{{ $statusBadge }} px-3">
                 {{ ucwords(str_replace('_',' ', $status ?: '—')) }}
               </span>
               @if($app->status === 'pending_accounts_review_from_registrar')
@@ -354,7 +357,7 @@
                   <div class="modal-header zmc-modal-header">
                     <div>
                       <div class="zmc-modal-title">
-                        <i class="fa-solid fa-check me-2" style="color:var(--zmc-green)"></i>
+                        <i class="fa-solid fa-check me-2" style="color:var(--zmc-yellow)"></i>
                         Confirm payment
                         <span class="ms-2 text-muted" style="font-weight:800;font-size: var(--font-size-sm);">{{ $ref }}</span>
                       </div>
@@ -394,6 +397,13 @@
   </div>
 
   @stack('zmc_modals')
+
+  {{-- Reports Section --}}
+  <div class="row g-3 mt-4 mb-4">
+    <div class="col-md-4">
+      @include('staff.partials.accreditation-summary-report')
+    </div>
+  </div>
 </div>
 
 {{-- Global Details Modal (View) --}}
@@ -533,6 +543,21 @@
           </div>
         `;
         html += zmcBlock(`<i class="fa-regular fa-id-card"></i> Applicant details`, body);
+
+        // Past Work Links (New)
+        const links = Array.isArray(app.past_work_links) ? app.past_work_links : [];
+        if (links.length > 0) {
+          let linkRows = links.map(l => `
+            <tr>
+              <td><a href="${zmcFmt(l.url)}" target="_blank" class="text-primary text-decoration-none"><i class="fa-solid fa-link me-1"></i>${zmcFmt(l.url)}</a></td>
+              <td>${zmcFmt(l.description)}</td>
+            </tr>
+          `).join('');
+          html += zmcBlock(
+            `<i class="fa-solid fa-globe"></i> Online Work Links`,
+            `<div class="table-responsive"><table class="table table-sm align-middle zmc-table-lite"><thead><tr><th>URL</th><th>Description</th></tr></thead><tbody>${linkRows}</tbody></table></div>`
+          );
+        }
       }
 
       // Previous Applications Block

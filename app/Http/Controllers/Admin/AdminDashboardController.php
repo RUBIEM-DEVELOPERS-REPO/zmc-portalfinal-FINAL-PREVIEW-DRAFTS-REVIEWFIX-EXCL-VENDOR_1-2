@@ -10,6 +10,7 @@ use App\Models\AuditLog;
 use App\Models\SystemConfig;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -94,13 +95,6 @@ class AdminDashboardController extends Controller
                 ->when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))->count(),
         ];
 
-        // Average turnaround (Issued) in hours, last 30 days or based on year
-        $avgTurnaroundHours = (float) Application::query()
-            ->where('status', Application::ISSUED)
-            ->when($isCurrentYear, fn($q) => $q->where('updated_at', '>=', Carbon::now()->subDays(30)))
-            ->when(!$isCurrentYear, fn($q) => $q->whereBetween('updated_at', [$yearStart, $yearEnd]))
-            ->selectRaw('AVG((julianday(updated_at) - julianday(created_at)) * 24) as avg_hours')
-            ->value('avg_hours');
 
         // System health quick stats
         $failedJobs = 0;
@@ -125,7 +119,9 @@ class AdminDashboardController extends Controller
             $hours = (int)($slaHours[$key] ?? 0);
             if ($hours <= 0) continue;
             $cut = $now->copy()->subHours($hours);
-            $q = Application::query()->where('status', $status)->where('updated_at', '<', $cut);
+            $q = Application::where(function($q) use ($status, $cut) {
+                $q->where('status', '=', $status)->where('updated_at', '<', $cut);
+            });
             $slaBreaches += $q->count();
             $sample = $q->orderBy('updated_at')->limit(3)->get();
             foreach ($sample as $a) {
@@ -143,11 +139,12 @@ class AdminDashboardController extends Controller
 
 
         // Recent users split into two groups on the Superadmin dashboard:
-        // 1) Public Users: self-registered during Media Practitioner Accreditation
+        // 1) Public Users: self-registered during Journalist Accreditation
         // 2) Staff Users: created by Superadmin or IT Admin
-        $staffCreatedIds = AuditLog::query()
-            ->whereIn('action', ['account_created_by_superadmin', 'account_created_by_it_admin'])
-            ->where('model_type', User::class)
+        $staffCreatedIds = AuditLog::whereIn('action', ['account_created_by_superadmin', 'account_created_by_it_admin'])
+            ->where(function($q) {
+                $q->where('model_type', '=', User::class);
+            })
             ->whereNotNull('model_id')
             ->orderByDesc('created_at')
             ->pluck('model_id')
@@ -168,8 +165,12 @@ class AdminDashboardController extends Controller
             ->get();
 
         $recentPublicUsers = User::with('roles')
-            ->where('account_type', 'public')
-            ->when(!empty($staffCreatedIds), fn ($q) => $q->whereNotIn('id', $staffCreatedIds))
+            ->where(function($q) {
+                $q->where('account_type', '=', 'public');
+            })
+            ->when(!empty($staffCreatedIds), function($q) use ($staffCreatedIds) {
+                return $q->whereNotIn('id', $staffCreatedIds);
+            })
             ->latest()
             ->take(8)
             ->get();
@@ -199,17 +200,10 @@ class AdminDashboardController extends Controller
             ->pluck('count', 'application_type')
             ->toArray();
 
-        $recentApplications = Application::with('applicant')
-            ->when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))
-            ->latest()
-            ->take(10)
-            ->get();
-
         return view('admin.dashboard', compact(
             'year', 'availableYears',
             'stats',
             'applicationsByStage',
-            'avgTurnaroundHours',
             'failedJobs',
             'alerts',
             'activityStream',
@@ -225,9 +219,9 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * JSON endpoint used by the admin dashboard for real-time counters.
+     * Unified JSON endpoint for all live dashboard data (counters + graphs).
      */
-    public function stats(Request $request)
+    public function refresh(Request $request)
     {
         $year = $request->get('year', now()->year);
         $isCurrentYear = ($year == now()->year);
@@ -242,7 +236,8 @@ class AdminDashboardController extends Controller
             Application::PRODUCTION_QUEUE,
         ];
 
-        return response()->json([
+        // 1) Counters
+        $stats = [
             'total_users' => User::count(),
             'staff_users' => User::where('account_type', 'staff')->count(),
             'public_users' => User::where('account_type', 'public')->count(),
@@ -252,6 +247,70 @@ class AdminDashboardController extends Controller
                 ->when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))->count(),
             'pending_applications' => Application::whereIn('status', $pendingStatuses)
                 ->when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))->count(),
+            'applications_today' => $isCurrentYear ? Application::whereDate('created_at', \Carbon\Carbon::today())->count() : 0,
+            'stages' => [
+                'Officer' => Application::whereIn('status', [Application::SUBMITTED, Application::OFFICER_REVIEW, Application::CORRECTION_REQUESTED])
+                    ->when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))->count(),
+                'Accounts' => Application::whereIn('status', [Application::OFFICER_APPROVED, Application::ACCOUNTS_REVIEW])
+                    ->when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))->count(),
+                'Registrar' => Application::whereIn('status', [Application::PAID_CONFIRMED, Application::REGISTRAR_REVIEW])
+                    ->when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))->count(),
+                'Production' => Application::whereIn('status', [Application::REGISTRAR_APPROVED, Application::PRODUCTION_QUEUE, Application::CARD_GENERATED, Application::CERT_GENERATED, Application::PRINTED])
+                    ->when(!$isCurrentYear, fn($q) => $q->whereBetween('created_at', [$yearStart, $yearEnd]))->count(),
+            ]
+        ];
+
+        // 2) Trend Data
+        $from = $isCurrentYear ? now()->subDays(29)->startOfDay() : $yearStart;
+        $to = $isCurrentYear ? now() : $yearEnd;
+
+        $dailyApplications = Application::query()
+            ->selectRaw("date(created_at) as d, application_type, count(*) as c")
+            ->whereIn('application_type', ['accreditation', 'registration'])
+            ->whereBetween('created_at', [$from, $to])
+            ->groupBy('d', 'application_type')
+            ->orderBy('d')
+            ->get();
+
+        $dailyPublicUsers = User::query()
+            ->selectRaw("date(created_at) as d, count(*) as c")
+            ->where(function($q) {
+                $q->where('account_type', '=', 'public');
+            })
+            ->whereBetween('created_at', [$from, $to])
+            ->groupBy('d')
+            ->orderBy('d')
+            ->get();
+
+        $statusBreakdown = Application::selectRaw('status, count(*) as c')
+            ->whereBetween('created_at', [$from, $to])
+            ->groupBy('status')
+            ->get();
+
+        $days = $isCurrentYear ? 30 : $from->diffInDays($to) + 1;
+        $labels = collect(range(0, $days - 1))
+            ->map(fn($i) => $from->copy()->addDays($i)->format('Y-m-d'))
+            ->values();
+
+        $appMap = $dailyApplications->groupBy('d')->map(fn($rows) => $rows->pluck('c', 'application_type')->toArray())->toArray();
+        $publicUsersMap = $dailyPublicUsers->pluck('c', 'd')->toArray();
+
+        $trend = [
+            'labels' => $labels->map(fn($d) => \Carbon\Carbon::parse($d)->format('M d'))->values()->all(),
+            'datasets' => [
+                'accreditation' => $labels->map(fn($d) => (int)($appMap[$d]['accreditation'] ?? 0))->values()->all(),
+                'registration' => $labels->map(fn($d) => (int)($appMap[$d]['registration'] ?? 0))->values()->all(),
+                'public_users' => $labels->map(fn($d) => (int)($publicUsersMap[$d] ?? 0))->values()->all(),
+            ],
+            'status_breakdown' => [
+                'labels' => $statusBreakdown->pluck('status')->map(fn($s) => ucfirst(str_replace('_', ' ', $s ?? 'unknown')))->values()->all(),
+                'counts' => $statusBreakdown->pluck('c')->map(fn($n) => (int) $n)->values()->all(),
+            ]
+        ];
+
+        return response()->json([
+            'stats' => $stats,
+            'trend' => $trend,
         ]);
     }
 }

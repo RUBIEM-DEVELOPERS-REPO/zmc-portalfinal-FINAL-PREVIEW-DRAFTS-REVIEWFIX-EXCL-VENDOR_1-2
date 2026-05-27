@@ -65,6 +65,13 @@
       </div>
     </div>
   </div>
+<<<<<<< HEAD
+
+  {{-- New Application Form --}}
+  <div id="newApplicationForm" class="card shadow-sm mb-4" style="display: none;">
+    <div class="card-header bg-primary text-white">
+      <h6 class="fw-bold m-0"><i class="ri-user-add-line me-2"></i>New Application Details</h6>
+=======
 
   {{-- New Application Form --}}
   <div id="newApplicationForm" class="card shadow-sm mb-4" style="display: none;">
@@ -72,24 +79,294 @@
       <h6 class="fw-bold m-0"><i class="ri-user-add-line me-2"></i>New Application Details</h6>
     </div>
     <div class="card-body">
+      <div id="newAppInfoAlert" class="alert alert-info">
+        <i class="ri-information-line me-2"></i>
+        <strong>New Application:</strong> <span id="newAppInfoText">Complete applicant details for walk-in applications. Accreditation number will be auto-generated after submission.</span>
+      </div>
+
+      <div id="practitionerFields">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">First Name <span class="text-danger">*</span></label>
+            <input type="text" name="first_name" class="form-control" placeholder="First name">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Surname <span class="text-danger">*</span></label>
+            <input type="text" name="surname" class="form-control" placeholder="Surname">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">ID Number <span class="text-danger">*</span></label>
+            <input type="text" name="id_number" class="form-control" placeholder="National ID number">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Category <span class="text-danger">*</span></label>
+            <select name="category" class="form-select">
+              <option value="">-- Select Category --</option>
+              <option value="JE">JE — Local media practitioner employed on full-time basis</option>
+              <option value="JF">JF — Local journalist free-lancing locally</option>
+              <option value="JO">JO — Local journalist running an office for foreign media service</option>
+              <option value="JS">JS — Local journalist stringing for foreign media service</option>
+              <option value="JM">JM — Local journalist reporting both locally and abroad</option>
+              <option value="JP">JP — Local media practitioner in content creation, photography, public relations and all forms of digital media</option>
+              <option value="JD">JD — Local media practitioner in digital social media</option>
+              <option value="JT">JT — Foreign journalist on temporary permit</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Organisation/Media House <span class="text-danger">*</span></label>
+            <input type="text" name="employer_name" class="form-control" placeholder="Organisation or media house name">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Designation/Position</label>
+            <input type="text" name="designation" class="form-control" placeholder="e.g., Reporter, Editor, Cameraman">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Receipt Number <span class="text-danger">*</span></label>
+            <input type="text" name="receipt_number" class="form-control" placeholder="Receipt number">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Email Address <span class="text-danger">*</span></label>
+            <input type="email" name="email" class="form-control" placeholder="Email address">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Phone Number <span class="text-danger">*</span></label>
+            <input type="tel" name="phone" class="form-control" placeholder="Phone number">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Physical Address <span class="text-danger">*</span></label>
+            <input type="text" name="physical_address" class="form-control" placeholder="Full physical address">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Province <span class="text-danger">*</span></label>
+            <select name="province" class="form-select">
+              <option value="">-- Select Province --</option>
+              <option value="harare">Harare</option>
+              <option value="bulawayo">Bulawayo</option>
+              <option value="manicaland">Manicaland</option>
+              <option value="mashonaland_central">Mashonaland Central</option>
+              <option value="mashonaland_east">Mashonaland East</option>
+              <option value="mashonaland_west">Mashonaland West</option>
+              <option value="masvingo">Masvingo</option>
+              <option value="matabeleland_north">Matabeleland North</option>
+              <option value="matabeleland_south">Matabeleland South</option>
+              <option value="midlands">Midlands</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">City <span class="text-danger">*</span></label>
+            <input type="text" name="city" class="form-control" placeholder="City or town">
+          </div>
+          <div class="col-12">
+            <label class="form-label small fw-bold">Applicant Photo <span class="text-danger">*</span></label>
+            <div class="row g-3">
+              <div class="col-md-8">
+                <div class="d-flex gap-3">
+                  <div class="flex-grow-1">
+                    <input type="file" name="applicant_photo" id="applicant_photo" class="form-control" accept="image/*" onchange="previewPhoto(this)">
+                    <div class="form-text">Upload applicant photo (JPG, PNG - Max 5MB)</div>
+                  </div>
+                  <div class="text-center">
+                    <img id="photo_preview" src="{{ asset('images/default-avatar.png') }}" 
+                         alt="Photo Preview" class="rounded" style="width: 100px; height: 100px; object-fit: cover; border: 2px solid #dee2e6;">
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <button type="button" class="btn btn-outline-primary w-100" onclick="openCamera()">
+                  <i class="ri-camera-line me-2"></i>Take Photo
+                </button>
+                <div class="form-text small">Use device camera to capture photo</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="alert alert-warning">
+              <i class="ri-information-line me-2"></i>
+              <strong>Note:</strong> Accreditation number will be automatically generated after submission. You can edit the application later to add more details to match the full application form.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="mediaHouseFields" style="display: none;">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Entity Name <span class="text-danger">*</span></label>
+            <input type="text" name="entity_name" class="form-control" placeholder="Official registered entity name">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Trading Name <span class="text-danger">*</span></label>
+            <input type="text" name="trading_name" class="form-control" placeholder="Trading as name">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Business Registration Number <span class="text-danger">*</span></label>
+            <input type="text" name="business_registration" class="form-control" placeholder="Company registration number">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Tax Number <span class="text-danger">*</span></label>
+            <input type="text" name="tax_number" class="form-control" placeholder="Tax/BVR number">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Business Type <span class="text-danger">*</span></label>
+            <select name="business_type" class="form-select">
+              <option value="">-- Select Business Type --</option>
+              <option value="private_limited">Private Limited</option>
+              <option value="public_limited">Public Limited</option>
+              <option value="partnership">Partnership</option>
+              <option value="sole_proprietor">Sole Proprietor</option>
+              <option value="ngo">NGO</option>
+              <option value="government">Government</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Ownership Type <span class="text-danger">*</span></label>
+            <select name="ownership_type" class="form-select">
+              <option value="">-- Select Ownership --</option>
+              <option value="local">Local Ownership</option>
+              <option value="foreign">Foreign Ownership</option>
+              <option value="mixed">Mixed Ownership</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Local Shareholding (%) <span class="text-danger">*</span></label>
+            <input type="number" name="local_ownership" class="form-control" placeholder="Percentage" min="0" max="100">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Website</label>
+            <input type="url" name="website" class="form-control" placeholder="https://www.example.com">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">ZMC Media Category <span class="text-danger">*</span></label>
+            <select name="media_category" class="form-select">
+              <option value="">-- Select Category --</option>
+              <optgroup label="Mass Media Service Categories">
+                <option value="MC">MC — Community Media</option>
+                <option value="MA">MA — Advertising agency as media service</option>
+                <option value="MF">MF — Local office for foreign media service</option>
+                <option value="MN">MN — National media service publishing newspaper</option>
+                <option value="DG">DG — Internet base media service</option>
+                <option value="MP">MP — Production house as media service</option>
+                <option value="MS">MS — National media service publishing magazine</option>
+                <option value="MT">MT — Broadcasting media service free to air</option>
+                <option value="MB">MB — Satellite broadcast</option>
+                <option value="MV">MV — Video on demand</option>
+              </optgroup>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Publication/Service Name <span class="text-danger">*</span></label>
+            <input type="text" name="publication_name" class="form-control" placeholder="e.g., The Daily News">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Frequency</label>
+            <select name="publication_frequency" class="form-select">
+              <option value="">-- Frequency --</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="quarterly">Quarterly</option>
+              <option value="irregular">Irregular</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Editor/Manager Name <span class="text-danger">*</span></label>
+            <input type="text" name="editor_name" class="form-control" placeholder="Editor or Manager name">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Editor Contact <span class="text-danger">*</span></label>
+            <input type="text" name="editor_contact" class="form-control" placeholder="Phone or email">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Email Address <span class="text-danger">*</span></label>
+            <input type="email" name="mh_email" class="form-control" placeholder="Official email address">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Phone Number <span class="text-danger">*</span></label>
+            <input type="tel" name="mh_phone" class="form-control" placeholder="Office phone number">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Physical Address <span class="text-danger">*</span></label>
+            <input type="text" name="mh_physical_address" class="form-control" placeholder="Full physical address">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Postal Address <span class="text-danger">*</span></label>
+            <input type="text" name="postal_address" class="form-control" placeholder="Postal address">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Province <span class="text-danger">*</span></label>
+            <select name="mh_province" class="form-select">
+              <option value="">-- Select Province --</option>
+              <option value="harare">Harare</option>
+              <option value="bulawayo">Bulawayo</option>
+              <option value="manicaland">Manicaland</option>
+              <option value="mashonaland_central">Mashonaland Central</option>
+              <option value="mashonaland_east">Mashonaland East</option>
+              <option value="mashonaland_west">Mashonaland West</option>
+              <option value="masvingo">Masvingo</option>
+              <option value="matabeleland_north">Matabeleland North</option>
+              <option value="matabeleland_south">Matabeleland South</option>
+              <option value="midlands">Midlands</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">City/Town <span class="text-danger">*</span></label>
+            <input type="text" name="mh_city" class="form-control" placeholder="City or town">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Receipt Number <span class="text-danger">*</span></label>
+            <input type="text" name="mh_receipt_number" class="form-control" placeholder="Receipt number">
+          </div>
+          <div class="col-12">
+            <div class="alert alert-warning">
+              <i class="ri-information-line me-2"></i>
+              <strong>Note:</strong> Registration number will be automatically generated after submission. You can edit the application later to add more details.
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  {{-- Existing Application Form --}}
+  <div id="existingApplicationForm" class="card shadow-sm mb-4" style="display: none;">
+    <div class="card-header bg-success text-white">
+      <h6 class="fw-bold m-0"><i class="ri-refresh-line me-2"></i>Existing Application Details</h6>
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
+    </div>
+    <div class="card-body">
       <div class="alert alert-info">
         <i class="ri-information-line me-2"></i>
+<<<<<<< HEAD
         <strong>New Application:</strong> Complete applicant details for walk-in applications. Accreditation number will be auto-generated after submission.
+=======
+        <strong>Renewal/Replacement:</strong> Enter applicant details to link to existing application record.
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
       </div>
       
       <div class="row g-3">
         <div class="col-md-6">
           <label class="form-label small fw-bold">First Name <span class="text-danger">*</span></label>
+<<<<<<< HEAD
           <input type="text" name="first_name" class="form-control" placeholder="First name">
+=======
+          <input type="text" name="renewal_first_name" class="form-control" placeholder="First name">
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
         </div>
         
         <div class="col-md-6">
           <label class="form-label small fw-bold">Surname <span class="text-danger">*</span></label>
+<<<<<<< HEAD
           <input type="text" name="surname" class="form-control" placeholder="Surname">
+=======
+          <input type="text" name="renewal_surname" class="form-control" placeholder="Surname">
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
         </div>
         
         <div class="col-md-6">
           <label class="form-label small fw-bold">ID Number <span class="text-danger">*</span></label>
+<<<<<<< HEAD
           <input type="text" name="id_number" class="form-control" placeholder="National ID number">
         </div>
         
@@ -105,10 +382,63 @@
             <option value="JP">JP — Local media practitioner in content creation, photography, public relations and all forms of digital media</option>
             <option value="JD">JD — Local media practitioner in digital social media</option>
             <option value="JT">JT — Foreign journalist on temporary permit</option>
+=======
+          <input type="text" name="renewal_id_number" class="form-control" placeholder="National ID number">
+        </div>
+        
+        <div class="col-md-6">
+          <label class="form-label small fw-bold">
+            <span id="lookup_label">Accreditation / Registration Number</span>
+          </label>
+          <input type="text" name="lookup_number" id="lookup_number" class="form-control" 
+                 placeholder="e.g. J12345678E or MC00001234">
+        </div>
+        
+        <div class="col-md-6">
+          <label class="form-label small fw-bold">Receipt Number <span class="text-danger">*</span></label>
+          <input type="text" name="renewal_receipt_number" class="form-control" placeholder="Receipt number">
+        </div>
+        
+        <div class="col-md-6">
+          <label class="form-label small fw-bold">Email Address <span class="text-danger">*</span></label>
+          <input type="email" name="renewal_email" class="form-control" placeholder="Email address">
+        </div>
+        
+        <div class="col-md-6">
+          <label class="form-label small fw-bold">Phone Number <span class="text-danger">*</span></label>
+          <input type="tel" name="renewal_phone" class="form-control" placeholder="Phone number">
+        </div>
+        
+        <div class="col-md-6">
+          <label class="form-label small fw-bold">Physical Address <span class="text-danger">*</span></label>
+          <input type="text" name="renewal_physical_address" class="form-control" placeholder="Full physical address">
+        </div>
+        
+        <div class="col-md-6">
+          <label class="form-label small fw-bold">City/Town <span class="text-danger">*</span></label>
+          <input type="text" name="renewal_city" class="form-control" placeholder="City or town">
+        </div>
+        
+        <div class="col-md-6">
+          <label class="form-label small fw-bold">Province <span class="text-danger">*</span></label>
+          <select name="renewal_province" class="form-select">
+            <option value="">-- Select Province --</option>
+            <option value="harare">Harare</option>
+            <option value="bulawayo">Bulawayo</option>
+            <option value="manicaland">Manicaland</option>
+            <option value="mashonaland_central">Mashonaland Central</option>
+            <option value="mashonaland_east">Mashonaland East</option>
+            <option value="mashonaland_west">Mashonaland West</option>
+            <option value="masvingo">Masvingo</option>
+            <option value="matabeleland_north">Matabeleland North</option>
+            <option value="matabeleland_south">Matabeleland South</option>
+            <option value="midlands">Midlands</option>
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
           </select>
         </div>
         
         <div class="col-md-6">
+<<<<<<< HEAD
           <label class="form-label small fw-bold">Receipt Number <span class="text-danger">*</span></label>
           <input type="text" name="receipt_number" class="form-control" placeholder="Receipt number">
         </div>
@@ -295,11 +625,36 @@
             <i class="ri-information-line me-2"></i>
             <strong>Note:</strong> Accreditation number will be automatically generated after submission. You can edit the application later to add more details to match the full application form.
           </div>
+=======
+          <label class="form-label small fw-bold">Organization/Media House</label>
+          <input type="text" name="renewal_organization" class="form-control" placeholder="Organization or media house name">
+        </div>
+        
+        <div class="col-md-6">
+          <label class="form-label small fw-bold">Position/Designation</label>
+          <input type="text" name="renewal_position" class="form-control" placeholder="Position or designation">
+        </div>
+        
+        <div class="col-md-12" id="existing_applicant_info" style="display: none;">
+          <div class="alert alert-success">
+            <i class="ri-user-check-line me-2"></i>
+            <strong>Applicant Found:</strong> <span id="found_applicant_name">Loading...</span>
+          </div>
+          <input type="hidden" name="existing_applicant_name" id="existing_applicant_name">
+        </div>
+        
+        <div class="col-12">
+          <button type="button" class="btn btn-outline-primary" onclick="lookupApplication()">
+            <i class="ri-search-line me-1"></i> Search Existing Record
+          </button>
+          <div class="form-text small mt-2">Search for existing accreditation/registration record using the details provided.</div>
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
         </div>
       </div>
     </div>
   </div>
 
+<<<<<<< HEAD
   {{-- Existing Application Form --}}
   <div id="existingApplicationForm" class="card shadow-sm mb-4" style="display: none;">
     <div class="card-header bg-success text-white">
@@ -405,6 +760,8 @@
     </div>
   </div>
 
+=======
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
   
   {{-- Submit Section --}}
   <div class="zmc-card shadow-sm">
@@ -448,6 +805,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         console.log('updateFormVisibility called:', { requestValue, appValue });
         
+<<<<<<< HEAD
         // Reset all forms
         newAppForm.style.display = 'none';
         existingAppForm.style.display = 'none';
@@ -502,6 +860,73 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Make lookup fields optional
+=======
+        const practitionerFields = document.getElementById('practitionerFields');
+        const mediaHouseFields = document.getElementById('mediaHouseFields');
+        const newAppHeader = newAppForm.querySelector('.card-header h6');
+        const newAppInfoText = document.getElementById('newAppInfoText');
+        
+        newAppForm.style.display = 'none';
+        existingAppForm.style.display = 'none';
+        existingApplicantInfo.style.display = 'none';
+        practitionerFields.style.display = 'none';
+        mediaHouseFields.style.display = 'none';
+        
+        const allClearFields = [
+            'first_name', 'surname', 'id_number', 'category', 'employer_name',
+            'designation', 'email', 'phone',
+            'physical_address', 'city', 'province', 'applicant_photo', 'receipt_number',
+            'entity_name', 'trading_name', 'business_registration', 'tax_number',
+            'business_type', 'ownership_type', 'local_ownership', 'postal_address',
+            'publication_name', 'media_category', 'publication_frequency',
+            'editor_name', 'editor_contact', 'mh_email', 'mh_phone',
+            'mh_physical_address', 'mh_province', 'mh_city', 'mh_receipt_number'
+        ];
+        allClearFields.forEach(fieldName => {
+            const field = document.querySelector(`[name="${fieldName}"]`);
+            if (field) field.required = false;
+        });
+        
+        if (requestValue === 'new') {
+            newAppForm.style.display = 'block';
+            
+            if (appValue === 'registration') {
+                practitionerFields.style.display = 'none';
+                mediaHouseFields.style.display = 'block';
+                newAppHeader.innerHTML = '<i class="ri-building-line me-2"></i>New Media House Registration';
+                newAppInfoText.textContent = 'Complete media house details for walk-in registration. Registration number will be auto-generated after submission.';
+                
+                const mhRequired = [
+                    'entity_name', 'trading_name', 'business_registration', 'tax_number',
+                    'business_type', 'ownership_type', 'local_ownership',
+                    'publication_name', 'media_category', 'editor_name', 'editor_contact',
+                    'mh_email', 'mh_phone', 'mh_physical_address', 'postal_address',
+                    'mh_province', 'mh_city', 'mh_receipt_number'
+                ];
+                mhRequired.forEach(fieldName => {
+                    const field = document.querySelector(`[name="${fieldName}"]`);
+                    if (field) field.required = true;
+                });
+                console.log('Showing media house fields only for registration');
+            } else {
+                practitionerFields.style.display = 'block';
+                mediaHouseFields.style.display = 'none';
+                newAppHeader.innerHTML = '<i class="ri-user-add-line me-2"></i>New Application Details';
+                newAppInfoText.textContent = 'Complete applicant details for walk-in applications. Accreditation number will be auto-generated after submission.';
+                
+                const practRequired = [
+                    'first_name', 'surname', 'id_number', 'category',
+                    'employer_name', 'physical_address', 'applicant_photo',
+                    'email', 'phone', 'province', 'city', 'receipt_number'
+                ];
+                practRequired.forEach(fieldName => {
+                    const field = document.querySelector(`[name="${fieldName}"]`);
+                    if (field) field.required = true;
+                });
+                console.log('Showing practitioner fields only for accreditation');
+            }
+            
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
             document.querySelector('[name="lookup_number"]').required = false;
         } else if (requestValue === 'renewal' || requestValue === 'replacement') {
             console.log('Showing existing application form');
@@ -523,10 +948,15 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Renewal fields set as required');
         } else {
             console.log('Default case - hiding forms');
+<<<<<<< HEAD
             existingAppForm.style.display = 'block';
             
             // Make lookup field required
             document.querySelector('[name="lookup_number"]').required = true;
+=======
+            newAppForm.style.display = 'none';
+            existingAppForm.style.display = 'none';
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
         }
         
         // Update lookup label based on application type
@@ -542,7 +972,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+<<<<<<< HEAD
     function lookupApplication() {
+=======
+    window.lookupApplication = function() {
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
         const lookupNumber = document.getElementById('lookup_number').value;
         const applicationType = document.getElementById('application_type').value;
         
@@ -597,7 +1031,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+<<<<<<< HEAD
     function reviewApplication() {
+=======
+    window.reviewApplication = function() {
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
         console.log('Reviewing application before submission...');
         
         // Validate all required fields for new applications
@@ -627,7 +1065,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+<<<<<<< HEAD
     function showReviewModal() {
+=======
+    window.showReviewModal = function() {
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
         // Create review modal with application details
         const modal = document.createElement('div');
         modal.className = 'modal fade';
@@ -716,6 +1158,7 @@ document.addEventListener('DOMContentLoaded', function() {
         mainIntakeForm.onsubmit = window.moveAllFieldsToForm;
     }
     
+<<<<<<< HEAD
     function resetForm() {
         // Reset all form fields and hide optional sections
         document.getElementById('intakeForm').reset();
@@ -724,6 +1167,18 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function previewPhoto(input) {
+=======
+    window.resetForm = function() {
+        document.getElementById('intakeForm').reset();
+        existingApplicantInfo.style.display = 'none';
+        newAppForm.style.display = 'none';
+        existingAppForm.style.display = 'none';
+        document.getElementById('practitionerFields').style.display = 'none';
+        document.getElementById('mediaHouseFields').style.display = 'none';
+    };
+    
+    window.previewPhoto = function(input) {
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
         if (input.files && input.files[0]) {
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -731,9 +1186,15 @@ document.addEventListener('DOMContentLoaded', function() {
             };
             reader.readAsDataURL(input.files[0]);
         }
+<<<<<<< HEAD
     }
     
     function openCamera() {
+=======
+    };
+    
+    window.openCamera = function() {
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
         // Check if device has camera support
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
             navigator.mediaDevices.getUserMedia({ video: true })

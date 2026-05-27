@@ -19,6 +19,7 @@
                 </div>
             </div>
         </div>
+<<<<<<< HEAD
         <div class="col-md-4">
             <div class="zmc-card h-100">
                 <h6 class="fw-bold mb-3">Processing Efficiency (Avg. Hours)</h6>
@@ -47,6 +48,8 @@
                 </div>
             </div>
         </div>
+=======
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
 
         <div class="col-md-6">
             <div class="zmc-card">
@@ -90,7 +93,11 @@
                             <tr class="smaller text-muted">
                                 <th>Month</th>
                                 <th>Submitted</th>
+<<<<<<< HEAD
                                 <th>Issued/Reviewed</th>
+=======
+                                <th>Approved</th>
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
                                 <th>Returned for Correction</th>
                             </tr>
                         </thead>

@@ -19,7 +19,6 @@ use App\Http\Controllers\MessagesController;
 use App\Http\Controllers\Portal\PortalApplicationDetailsController;
 
 use App\Http\Controllers\Staff\StaffAuthController;
-use App\Http\Controllers\Staff\RoleSelectController;
 use App\Http\Controllers\Staff\AccreditationOfficerController;
 use App\Http\Controllers\Staff\AccountsPaymentsController;
 use App\Http\Controllers\Staff\RegistrarController;
@@ -73,18 +72,22 @@ Route::post('/choose-portal', function (Request $request) {
 
 /*
 |--------------------------------------------------------------------------
-| STAFF ENTRY (STRICT)
+| STAFF AUTH
 |--------------------------------------------------------------------------
-| /staff is staff landing page (role tiles)
-| staff login is separate from public.
+| /staff goes directly to staff login (no role selection).
+| OTP verification after password. Account activation via token link.
 */
-Route::get('/staff', [RoleSelectController::class, 'index'])->name('staff.entry');
-Route::get('/staff/select-role', [RoleSelectController::class, 'index'])->name('staff.select_role');
-Route::post('/staff/select-role', [RoleSelectController::class, 'choose'])->name('staff.choose_role');
-
+Route::get('/staff', [StaffAuthController::class, 'show'])->name('staff.entry');
 Route::get('/staff/login', [StaffAuthController::class, 'show'])->name('staff.login');
-Route::post('/staff/login', [StaffAuthController::class, 'login'])->middleware('guest')->name('staff.login.store');
+Route::post('/staff/login', [StaffAuthController::class, 'login'])->middleware('throttle:5,1')->name('staff.login.store');
 Route::post('/staff/logout', [StaffAuthController::class, 'logout'])->middleware('auth')->name('staff.logout');
+
+Route::get('/staff/otp', [StaffAuthController::class, 'showOtp'])->name('staff.otp.show');
+Route::post('/staff/otp', [StaffAuthController::class, 'verifyOtp'])->middleware('throttle:10,1')->name('staff.otp.verify');
+Route::post('/staff/otp/resend', [StaffAuthController::class, 'resendOtp'])->middleware('throttle:3,5')->name('staff.otp.resend');
+
+Route::get('/staff/activate/{token}', [StaffAuthController::class, 'showActivation'])->name('staff.activate');
+Route::post('/staff/activate/{token}', [StaffAuthController::class, 'activate'])->name('staff.activate.store');
 
 /*
 |--------------------------------------------------------------------------
@@ -200,7 +203,9 @@ Route::middleware('auth')->group(function () {
             Route::post('/applications/{application}/resubmit', [AccreditationPortalController::class, 'resubmitCorrection'])
                 ->name('applications.resubmit');
 
-            // AP5
+            // AP5 — separate renewal / replacement
+            Route::get('/renewal',           [AccreditationPortalController::class, 'renewalForm'])->name('renewal');
+            Route::get('/replacement',       [AccreditationPortalController::class, 'replacementForm'])->name('replacement');
             Route::get('/renewals',          [AccreditationPortalController::class, 'renewals'])->name('renewals');
             Route::post('/renewals/save-draft', [AccreditationPortalController::class, 'saveDraftAp5'])->name('renewals.saveDraft');
             Route::post('/renewals/submit',  [AccreditationPortalController::class, 'submitAp5'])->name('submitAp5');
@@ -208,6 +213,11 @@ Route::middleware('auth')->group(function () {
             // Lookup by accreditation number for renewals/replacements
             Route::get('/lookup/{accreditationNumber}', [AccreditationPortalController::class, 'lookupAccreditation'])
                 ->name('lookup');
+<<<<<<< HEAD
+=======
+
+            Route::post('/reminders/{reminder}/acknowledge', [AccreditationPortalController::class, 'acknowledgeReminder'])->name('reminders.acknowledge');
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
 
             Route::get('/payments',  [AccreditationPortalController::class, 'payments'])->name('payments');
             Route::get('/notices',   [AccreditationPortalController::class, 'notices'])->name('notices');
@@ -278,6 +288,9 @@ Route::middleware('auth')->group(function () {
             // NEW RENEWAL FLOW (AP5) - Number-Only Lookup
             Route::get('/renewals', [\App\Http\Controllers\Portal\MediaHouseRenewalController::class, 'index'])
                 ->name('renewals.index');
+            Route::get('/renewals/start/{type}', [\App\Http\Controllers\Portal\MediaHouseRenewalController::class, 'start'])
+                ->whereIn('type', ['renewal','replacement'])
+                ->name('renewals.start');
             Route::get('/renewals/select-type', [\App\Http\Controllers\Portal\MediaHouseRenewalController::class, 'selectType'])
                 ->name('renewals.select-type');
             Route::post('/renewals/select-type', [\App\Http\Controllers\Portal\MediaHouseRenewalController::class, 'storeType'])
@@ -356,6 +369,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/portal/notices-events', [\App\Http\Controllers\Portal\NoticesEventsController::class, 'index'])
         ->name('portal.notices-events.index');
 
+    Route::get('/portal/receipt/{payment}/download', [\App\Http\Controllers\Portal\PortalReceiptController::class, 'download'])
+        ->name('portal.receipt.download');
+
     /*
     |--------------------------------------------------------------------------
     | PAYNOW PAYMENTS
@@ -391,8 +407,7 @@ Route::middleware('auth')->group(function () {
         ->group(function () {
 
             Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
-            // Live counters (no demo data)
-            Route::get('/dashboard/stats', [AdminDashboardController::class, 'stats'])->name('dashboard.stats');
+            Route::get('/dashboard/refresh', [AdminDashboardController::class, 'refresh'])->name('dashboard.refresh');
 
             // Analytics
             Route::get('/analytics', [AdminAnalyticsController::class, 'index'])
@@ -470,6 +485,14 @@ Route::middleware('auth')->group(function () {
                 ->middleware('role:super_admin|it_admin|director|registrar')
                 ->name('audit.index');
 
+            Route::get('/audit/role-assignments', [AdminSystemController::class, 'roleAssignmentsAudit'])
+                ->middleware('role:super_admin|auditor')
+                ->name('audit.role-assignments');
+
+            Route::get('/audit/role-assignments/export', [AdminSystemController::class, 'exportRoleAssignments'])
+                ->middleware('role:super_admin|auditor')
+                ->name('audit.role-assignments.export');
+
             Route::get('/regions', [AdminSystemController::class, 'regions'])
                 ->middleware('role:super_admin|it_admin|director|registrar')
                 ->name('regions.index');
@@ -527,23 +550,31 @@ Route::middleware('auth')->group(function () {
 
             // Users + access
             Route::get('/users', [UserAccessController::class, 'index'])
+                ->middleware('role:super_admin|director|it_admin')
                 ->name('users.index');
             // Split users into separate lists (pages)
             Route::get('/users/staff', [UserAccessController::class, 'staffIndex'])
+                ->middleware('role:super_admin|director|it_admin')
                 ->name('users.staff');
             Route::get('/users/public', [UserAccessController::class, 'publicIndex'])
+                ->middleware('role:super_admin|director|it_admin')
                 ->name('users.public');
 
             Route::get('/users/create', [UserAccessController::class, 'create'])
+                ->middleware('role:super_admin|director|it_admin')
                 ->name('users.create');
             Route::post('/users', [UserAccessController::class, 'store'])
+                ->middleware('role:super_admin|director|it_admin')
                 ->name('users.store');
 
             Route::get('/users/{user}/access', [UserAccessController::class, 'editAccess'])
+                ->middleware('role:super_admin|director|it_admin')
                 ->name('users.access.edit');
             Route::post('/users/{user}/access', [UserAccessController::class, 'updateAccess'])
+                ->middleware('role:super_admin|director|it_admin')
                 ->name('users.access.update');
             Route::post('/users/{user}/reset', [UserAccessController::class, 'resetAccount'])
+                ->middleware('role:super_admin|director|it_admin')
                 ->name('users.reset');
 
             // Roles + permissions (Super Admin & Director only)
@@ -576,6 +607,11 @@ Route::middleware('auth')->group(function () {
                 ->name('approvals.index');
             Route::post('/user-approvals/{user}/approve', [UserApprovalController::class, 'approve'])
                 ->name('approvals.approve');
+            Route::post('/user-approvals/{user}/reject', [UserApprovalController::class, 'reject'])
+                ->name('approvals.reject');
+            Route::delete('/users/{user}', [UserAccessController::class, 'destroy'])
+                ->middleware('role:super_admin')
+                ->name('users.destroy');
         });
 
 
@@ -660,10 +696,17 @@ Route::middleware('auth')->group(function () {
             Route::get('/renewals/queue', [AccreditationOfficerController::class, 'renewalsQueue'])->name('renewals.queue');
             Route::post('/renewals/send-reminders', [AccreditationOfficerController::class, 'sendRenewalReminders'])->name('renewals.send-reminders');
 
+            // Physical Intake (walk-in)
+            Route::get('/physical-intake', [AccreditationOfficerController::class, 'physicalIntakeForm'])->name('physical-intake');
+            Route::post('/physical-intake', [AccreditationOfficerController::class, 'physicalIntakeProcess'])->name('physical-intake.process');
+
             // Records management
             Route::get('/records/accredited-journalists', [AccreditationOfficerController::class, 'accreditedJournalists'])->name('records.accredited-journalists');
             Route::get('/records/registered-mediahouses', [AccreditationOfficerController::class, 'registeredMediaHouses'])->name('records.registered-mediahouses');
             Route::post('/records/send-collection-notification', [AccreditationOfficerController::class, 'sendCollectionNotification'])->name('records.send-collection-notification');
+            Route::get('/records/export/{type}', [AccreditationOfficerController::class, 'recordsExport'])
+                ->whereIn('type', ['journalists','mediahouses'])
+                ->name('records.export');
 
             // Compliance
             Route::get('/compliance/monitoring', [AccreditationOfficerController::class, 'complianceMonitoring'])->name('compliance.monitoring');
@@ -739,6 +782,8 @@ Route::middleware('auth')->group(function () {
 
             Route::get('/applications/{application}', [RegistrarController::class, 'show'])->name('applications.show');
             Route::post('/applications/{application}/approve', [RegistrarController::class, 'approve'])->name('applications.approve');
+            Route::post('/applications/{application}/mark-reviewed', [RegistrarController::class, 'markReviewed'])->name('applications.mark-reviewed');
+            Route::post('/applications/batch-mark-reviewed', [RegistrarController::class, 'batchMarkReviewed'])->name('applications.batch-mark-reviewed');
             Route::post('/applications/{application}/reject', [RegistrarController::class, 'reject'])->name('applications.reject');
             Route::post('/applications/{application}/return', [RegistrarController::class, 'returnToAccounts'])->name('applications.return');
             Route::post('/renewals/send-reminders', [RegistrarController::class, 'sendRenewalReminders'])->name('renewals.send-reminders');
@@ -753,6 +798,10 @@ Route::middleware('auth')->group(function () {
             // Media House Two-Stage Payment: Official Letter Upload
             Route::post('/applications/{application}/approve-with-letter', [RegistrarController::class, 'approveWithOfficialLetter'])->name('applications.approve-with-letter');
             
+            // Reminders
+            Route::get('/reminders', [RegistrarController::class, 'remindersIndex'])->name('reminders.index');
+            Route::post('/reminders', [RegistrarController::class, 'storeReminder'])->name('reminders.store');
+
             // Payment Oversight (Read-Only)
             Route::get('/payment-oversight', [RegistrarController::class, 'paymentOversight'])->name('payment-oversight');
             Route::get('/payment-oversight/{paymentSubmission}', [RegistrarController::class, 'paymentDetail'])->name('payment-detail');
@@ -882,6 +931,59 @@ Route::middleware('auth')->group(function () {
             Route::post('/batch/print', [ProductionController::class, 'printBatch'])->name('batch.print');
             Route::post('/applications/{application}/issue', [ProductionController::class, 'markIssued'])->name('applications.issue');
             Route::post('/applications/{application}/unlock', [ProductionController::class, 'unlock'])->name('applications.unlock');
+<<<<<<< HEAD
+=======
+
+            Route::get('/templates', [ProductionController::class, 'templates'])->name('templates');
+            Route::get('/designer', [ProductionController::class, 'designer'])->name('designer');
+            Route::post('/templates', [ProductionController::class, 'storeTemplate'])->name('templates.store');
+            Route::put('/templates/{template}', [ProductionController::class, 'updateTemplate'])->name('templates.update');
+            Route::post('/templates/{template}/activate', [ProductionController::class, 'activateTemplate'])->name('templates.activate');
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
+        });
+
+    /*
+    |--------------------------------------------------------------------------
+    | STAFF - PR OFFICER (Notices & Events Management)
+    |--------------------------------------------------------------------------
+    */
+    Route::middleware(['staff.portal','role:pr_officer|super_admin'])
+        ->prefix('staff/pr')
+        ->name('staff.pr.')
+        ->group(function () {
+            Route::get('/', [\App\Http\Controllers\Staff\PrOfficerController::class, 'dashboard'])->name('dashboard');
+
+            // Notices Management
+            Route::post('/notices', [\App\Http\Controllers\Staff\PrOfficerController::class, 'storeNotice'])->name('notices.store');
+            Route::put('/notices/{notice}', [\App\Http\Controllers\Staff\PrOfficerController::class, 'updateNotice'])->name('notices.update');
+            Route::delete('/notices/{notice}', [\App\Http\Controllers\Staff\PrOfficerController::class, 'destroyNotice'])->name('notices.destroy');
+
+            // Events Management
+            Route::post('/events', [\App\Http\Controllers\Staff\PrOfficerController::class, 'storeEvent'])->name('events.store');
+            Route::put('/events/{event}', [\App\Http\Controllers\Staff\PrOfficerController::class, 'updateEvent'])->name('events.update');
+            Route::delete('/events/{event}', [\App\Http\Controllers\Staff\PrOfficerController::class, 'destroyEvent'])->name('events.destroy');
+
+            // News Management
+            Route::post('/news', [\App\Http\Controllers\Staff\PrOfficerController::class, 'storeNews'])->name('news.store');
+            Route::put('/news/{news}', [\App\Http\Controllers\Staff\PrOfficerController::class, 'updateNews'])->name('news.update');
+            Route::delete('/news/{news}', [\App\Http\Controllers\Staff\PrOfficerController::class, 'destroyNews'])->name('news.destroy');
+        });
+
+    /*
+    |--------------------------------------------------------------------------
+    | STAFF - PUBLIC INFORMATION COMPLIANCE MANAGER (Complaints & Appeals)
+    |--------------------------------------------------------------------------
+    */
+    Route::middleware(['staff.portal','role:public_info_compliance|super_admin|director|auditor'])
+        ->prefix('staff/compliance')
+        ->name('staff.public_info_compliance.')
+        ->group(function () {
+            Route::get('/', [\App\Http\Controllers\Staff\PublicInfoComplianceController::class, 'dashboard'])->name('dashboard');
+
+            // Complaints & Appeals Management
+            Route::post('/complaints', [\App\Http\Controllers\Staff\PublicInfoComplianceController::class, 'store'])->name('complaints.store');
+            Route::put('/complaints/{complaint}', [\App\Http\Controllers\Staff\PublicInfoComplianceController::class, 'update'])->name('complaints.update');
+            Route::delete('/complaints/{complaint}', [\App\Http\Controllers\Staff\PublicInfoComplianceController::class, 'destroy'])->name('complaints.destroy');
         });
 
     /*
@@ -918,42 +1020,32 @@ Route::middleware('auth')->group(function () {
             Route::post('/tenders/{tender}', [ContentController::class, 'updateTender'])->name('tenders.update');
             Route::delete('/tenders/{tender}', [ContentController::class, 'destroyTender'])->name('tenders.destroy');
 
-            // Applicant resets
-            Route::get('/applicants', [ItAdminController::class, 'listApplicants'])->name('applicants.list');
-            Route::post('/applicants/{user}/reset', [ItAdminController::class, 'resetApplicant'])->name('applicants.reset');
-
-            // Unified Dashboard Routes
-            Route::get('/monitoring', [ItDashboardController::class, 'monitoring'])->name('monitoring');
-            Route::get('/drafts', [ItDashboardController::class, 'drafts'])->name('drafts');
-            Route::get('/files', [ItDashboardController::class, 'files'])->name('files');
-            Route::get('/errors', [ItDashboardController::class, 'errors'])->name('errors');
+            // System Users Management
             Route::get('/users-mgmt', [ItDashboardController::class, 'users'])->name('users-mgmt');
-            Route::get('/workflow-mgmt', [ItDashboardController::class, 'workflow'])->name('workflow-mgmt');
-            Route::get('/accreditation-mgmt', [ItDashboardController::class, 'accreditation'])->name('accreditation-mgmt');
-            Route::get('/notifications-mgmt', [ItDashboardController::class, 'notifications'])->name('notifications-mgmt');
-            Route::get('/payments-mgmt', [ItDashboardController::class, 'payments'])->name('payments-mgmt');
-            Route::get('/security-mgmt', [ItDashboardController::class, 'security'])->name('security-mgmt');
-            Route::get('/backup-mgmt', [ItDashboardController::class, 'backup'])->name('backup-mgmt');
-            Route::get('/audit-mgmt', [ItDashboardController::class, 'audit'])->name('audit-mgmt');
-            Route::get('/system-mgmt', [ItDashboardController::class, 'system'])->name('system-mgmt');
-            Route::get('/performance-mgmt', [ItDashboardController::class, 'performance'])->name('performance-mgmt');
-            Route::get('/reports-mgmt', [ItDashboardController::class, 'reports'])->name('reports-mgmt');
-            Route::get('/mediahouses-mgmt', [ItDashboardController::class, 'mediahouses'])->name('mediahouses-mgmt');
-
-            // Read-only application detail + timeline
-            Route::get('/application-overview/{application}', [ItDashboardController::class, 'showApplication'])->name('application.overview');
-            Route::get('/application-overview/{application}/download-batch', [ItDashboardController::class, 'downloadBatch'])->name('application.download_batch');
-
-            // Actions
-            Route::post('/application/{application}/unlock', [ItDashboardController::class, 'unlockApplication'])->name('application.unlock');
-            Route::post('/application/{application}/reset', [ItDashboardController::class, 'resetApplication'])->name('application.reset');
+            Route::post('/user/{user}/role', [ItDashboardController::class, 'editUserRole'])->name('user.role');
+            Route::post('/user/{user}/activate', [ItDashboardController::class, 'activateUser'])->name('user.activate');
+            Route::post('/user/{user}/delete', [ItDashboardController::class, 'deleteUser'])->name('user.delete');
+            Route::post('/user/{user}/resend-activation', [ItDashboardController::class, 'resendActivation'])->name('user.resend_activation');
             Route::post('/user/{user}/suspend', [ItDashboardController::class, 'suspendUser'])->name('user.suspend');
             Route::post('/user/{user}/reset-password', [ItDashboardController::class, 'forcePasswordReset'])->name('user.reset_password');
+
+            // Technical Administrative Routes
+            Route::get('/roles-mgmt', [ItDashboardController::class, 'roles'])->name('roles-mgmt');
+            Route::get('/security-mgmt', [ItDashboardController::class, 'security'])->name('security-mgmt');
+            Route::get('/templates-mgmt', [ItDashboardController::class, 'templates'])->name('templates-mgmt');
+            Route::get('/printers-mgmt', [ItDashboardController::class, 'printers'])->name('printers-mgmt');
+            Route::get('/numbering-mgmt', [ItDashboardController::class, 'numbering'])->name('numbering-mgmt');
+            Route::get('/categories-mgmt', [ItDashboardController::class, 'categories'])->name('categories-mgmt');
+            Route::get('/regions-mgmt', [ItDashboardController::class, 'regions'])->name('regions-mgmt');
+            Route::get('/document-settings-mgmt', [ItDashboardController::class, 'documentSettings'])->name('document-settings-mgmt');
+            Route::get('/qr-security-mgmt', [ItDashboardController::class, 'qrSecurity'])->name('qr-security-mgmt');
+            Route::get('/audit-mgmt', [ItDashboardController::class, 'audit'])->name('audit-mgmt');
+            Route::get('/reports-mgmt', [ItDashboardController::class, 'reports'])->name('reports-mgmt');
+            Route::get('/backup-mgmt', [ItDashboardController::class, 'backup'])->name('backup-mgmt');
+            Route::get('/system-mgmt', [ItDashboardController::class, 'system'])->name('system-mgmt');
+
+            // Global configurations actions
             Route::post('/config/save', [ItDashboardController::class, 'saveConfig'])->name('config.save');
-            Route::post('/fees/sync', [ItDashboardController::class, 'syncFees'])->name('fees.sync');
-            Route::post('/fees/save', [ItDashboardController::class, 'saveFee'])->name('fees.save');
-            Route::post('/notifications/template/save', [ItDashboardController::class, 'saveNotificationTemplate'])->name('notifications.template.save');
-            Route::post('/payments/process-queue', [ItDashboardController::class, 'processPaymentQueue'])->name('payments.process_queue');
             Route::post('/system/backup', [ItDashboardController::class, 'triggerBackup'])->name('system.backup');
             Route::post('/system/clear-cache', [ItDashboardController::class, 'clearCache'])->name('system.clear_cache');
             Route::post('/system/cleanup', [ItDashboardController::class, 'runCleanup'])->name('system.cleanup');
@@ -997,10 +1089,12 @@ Route::middleware('auth')->group(function () {
             Route::get('/payments/waivers', [AuditorController::class, 'waivers'])->name('waivers');
             Route::get('/payments/waivers.csv', [AuditorController::class, 'waiversCsv'])->name('waivers.csv');
 
+            // 3) Complaints & Appeals oversight
+            Route::get('/complaints', [AuditorController::class, 'complaints'])->name('complaints');
+
             // 4) Activity logs
             Route::get('/logs', [AuditorController::class, 'logs'])->name('logs');
             Route::get('/logs.csv', [AuditorController::class, 'logsCsv'])->name('logs.csv');
-
 
             // 5) Reporting
             Route::get('/reports', [AuditorController::class, 'reports'])->name('reports');
@@ -1022,7 +1116,7 @@ Route::middleware('auth')->group(function () {
     | STAFF - DIRECTOR (Executive Dashboard)
     |--------------------------------------------------------------------------
     */
-    Route::middleware(['staff.portal','role:director','director.view_only'])
+    Route::middleware(['staff.portal','role:director|super_admin|registrar','director.view_only'])
         ->prefix('staff/director')
         ->name('staff.director.')
         ->group(function () {
@@ -1044,6 +1138,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/generate/operational-performance', [DirectorController::class, 'generateOperationalPerformanceReport'])->name('generate.operational-performance');
         });
 
+<<<<<<< HEAD
     /*
     |--------------------------------------------------------------------------
     | USER APPROVALS (Director / Super Admin)
@@ -1057,6 +1152,8 @@ Route::middleware('auth')->group(function () {
             Route::post('/{user}/approve', [UserApprovalController::class, 'approve'])->name('approve');
             Route::post('/{user}/reject', [UserApprovalController::class, 'reject'])->name('reject');
         });
+=======
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
 
     /*
     |--------------------------------------------------------------------------
@@ -1064,6 +1161,12 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::post('/chatbot/message', [ChatbotController::class, 'message'])->name('chatbot.message');
+});
+
+// Password change route for staff with temporary passwords
+Route::middleware(['auth'])->group(function () {
+    Route::get('/staff/change-password', [\App\Http\Controllers\Staff\StaffAuthController::class, 'showPasswordChange'])->name('staff.password.change');
+    Route::post('/staff/change-password', [\App\Http\Controllers\Staff\StaffAuthController::class, 'processPasswordChange'])->name('staff.password.change.update');
 });
 
 // Public Verification

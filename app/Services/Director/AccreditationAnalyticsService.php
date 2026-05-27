@@ -47,67 +47,6 @@ class AccreditationAnalyticsService
         });
     }
 
-    /**
-     * Get average processing time by stage.
-     * 
-     * Calculates average hours spent in each processing stage (officer review,
-     * registrar review, accounts verification) for applications from the last 3 months.
-     * 
-     * @return array Associative array with keys 'officer', 'registrar', 'accounts',
-     *               each containing average hours as float (rounded to 1 decimal)
-     */
-    public function getProcessingTimeByStage(): array
-    {
-        // Get applications that went through each stage
-        $officerApps = Application::whereNotNull('submitted_at')
-            ->whereNotNull('assigned_at')
-            ->where('created_at', '>=', now()->subMonths(3))
-            ->select('submitted_at', 'assigned_at')
-            ->get();
-        
-        $registrarApps = Application::whereNotNull('assigned_at')
-            ->whereNotNull('registrar_approved_at')
-            ->where('created_at', '>=', now()->subMonths(3))
-            ->select('assigned_at', 'registrar_approved_at')
-            ->get();
-        
-        $accountsApps = Application::whereNotNull('registrar_approved_at')
-            ->whereNotNull('issued_at')
-            ->where('created_at', '>=', now()->subMonths(3))
-            ->select('registrar_approved_at', 'issued_at')
-            ->get();
-        
-        return [
-            'officer' => $this->calculateAverageHours($officerApps, 'submitted_at', 'assigned_at'),
-            'registrar' => $this->calculateAverageHours($registrarApps, 'assigned_at', 'registrar_approved_at'),
-            'accounts' => $this->calculateAverageHours($accountsApps, 'registrar_approved_at', 'issued_at'),
-        ];
-    }
-
-    /**
-     * Calculate average hours between two timestamps.
-     * 
-     * Helper method to compute average time difference across a collection of items.
-     * 
-     * @param Collection $items Collection of objects with timestamp fields
-     * @param string $startField Name of the start timestamp field
-     * @param string $endField Name of the end timestamp field
-     * @return float Average hours between timestamps (rounded to 1 decimal, 0.0 if empty)
-     */
-    private function calculateAverageHours(Collection $items, string $startField, string $endField): float
-    {
-        if ($items->isEmpty()) {
-            return 0.0;
-        }
-        
-        $totalHours = 0;
-        foreach ($items as $item) {
-            $totalHours += Carbon::parse($item->$startField)
-                ->diffInHours(Carbon::parse($item->$endField));
-        }
-        
-        return round($totalHours / $items->count(), 1);
-    }
 
     /**
      * Get approval-to-rejection ratio by category.

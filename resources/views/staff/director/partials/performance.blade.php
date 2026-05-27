@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 name: 'Approved',
                 data: {!! json_encode($monthlyTrends->pluck('approved')->toArray()) !!}
             }, {
-                name: 'Rejected',
+                name: 'Returned for Correction',
                 data: {!! json_encode($monthlyTrends->pluck('rejected')->toArray()) !!}
             }],
             chart: {

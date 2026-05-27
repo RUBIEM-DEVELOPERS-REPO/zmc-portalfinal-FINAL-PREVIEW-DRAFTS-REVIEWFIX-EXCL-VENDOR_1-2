@@ -50,12 +50,12 @@ class DashboardMetricsService
      *               - applications_in_pipeline: Applications currently in review
      *               - avg_processing_time: Average processing time in days
      *               - approval_rate: Overall approval rate as percentage
-     *               - compliance_flags_active: Count of active compliance flags
+     *               - active_compliance_flags: Count of active compliance flags
      *               - total_media_houses: Total registered media houses
      */
     public function getExecutiveKPIs(?int $year = null): array
     {
-        $cacheKey = 'director.kpis.executive_overview' . ($year ? '_' . $year : '');
+        $cacheKey = 'director.kpis.executive_summary' . ($year ? '_' . $year : '');
         return Cache::remember($cacheKey, 3600, function() use ($year) {
             return [
                 'total_active_accreditations' => $this->getTotalActiveAccreditations($year),
@@ -65,9 +65,8 @@ class DashboardMetricsService
                 'revenue_ytd' => $this->getRevenueYTD($year),
                 'outstanding_revenue' => $this->getOutstandingRevenue(), // Usually always current
                 'applications_in_pipeline' => $this->getApplicationsInPipeline(), // Usually always current
-                'avg_processing_time' => $this->getAverageProcessingTime(),
                 'approval_rate' => $this->getApprovalRate($year),
-                'compliance_flags_active' => $this->getActiveComplianceFlags($year),
+                'active_compliance_flags' => $this->getActiveComplianceFlags($year),
                 'total_media_houses' => $this->getTotalMediaHouses($year),
             ];
         });
@@ -206,19 +205,6 @@ class DashboardMetricsService
         ])->count();
     }
 
-    /**
-     * Get average processing time in days.
-     * 
-     * Calculates the average time from submission to issuance across
-     * all completed applications. Converts hours to days for readability.
-     * 
-     * @return float Average processing time in days (rounded to 1 decimal)
-     */
-    public function getAverageProcessingTime(): float
-    {
-        $avgHours = $this->applicationRepo->getAverageProcessingTime();
-        return round($avgHours / 24, 1); // Convert hours to days
-    }
 
     /**
      * Get approval rate as percentage.

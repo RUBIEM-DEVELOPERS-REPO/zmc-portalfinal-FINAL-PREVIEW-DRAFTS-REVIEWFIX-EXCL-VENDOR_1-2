@@ -50,6 +50,12 @@
 
   @hasanyrole('super_admin|it_admin')
   <div class="nav-section">Users & Roles</div>
+  @hasanyrole('super_admin|it_admin')
+  <a class="nav-link {{ $is('admin.users.index') ? 'active' : '' }}" href="{{ Route::has('admin.users.index') ? route('admin.users.index') : '#' }}">
+    <span class="nav-icon"><i class="ri-group-line"></i></span>
+    <span>User Account Management</span>
+  </a>
+  @endhasanyrole
   <a class="nav-link {{ $is('admin.roles') ? 'active' : '' }}" href="{{ Route::has('admin.roles.index') ? route('admin.roles.index') : '#' }}">
     <span class="nav-icon"><i class="ri-shield-keyhole-line"></i></span>
     <span>Roles</span>
@@ -171,14 +177,14 @@
     <span>Master Settings</span>
   </a>
 
-  @hasanyrole('super_admin|it_admin|director')
+  @hasanyrole('super_admin|director')
   <a class="nav-link {{ $is('admin.news') ? 'active' : '' }}" href="{{ Route::has('admin.news.index') ? route('admin.news.index') : '#' }}">
     <span class="nav-icon"><i class="ri-newspaper-line"></i></span>
     <span>News</span>
   </a>
   @endhasanyrole
 
-  @hasanyrole('super_admin|it_admin|director')
+  @hasanyrole('super_admin|director|public_info_compliance')
   <a class="nav-link {{ $is('admin.complaints') ? 'active' : '' }}" href="{{ Route::has('admin.complaints.index') ? route('admin.complaints.index') : '#' }}">
     <span class="nav-icon"><i class="ri-chat-1-line"></i></span>
     <span>Complaints & Appeals</span>

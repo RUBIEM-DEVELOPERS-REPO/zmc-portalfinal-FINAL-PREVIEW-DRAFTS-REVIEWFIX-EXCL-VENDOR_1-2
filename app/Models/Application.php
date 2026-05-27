@@ -21,62 +21,122 @@ class Application extends Model
 {
     use HasFactory;
 
-    // --- Workflow statuses (use these everywhere) ---
+    // --- Draft & Submission ---
     public const DRAFT                = 'draft';
     public const SUBMITTED            = 'submitted';
     public const WITHDRAWN            = 'withdrawn';
 
-    // Accreditation Officer
-    public const OFFICER_REVIEW       = 'officer_review';
-    public const OFFICER_APPROVED     = 'officer_approved';
-    public const OFFICER_REJECTED     = 'officer_rejected';
-    public const CORRECTION_REQUESTED = 'correction_requested';
+    // --- Accreditation Officer ---
+    public const OFFICER_REVIEW                  = 'officer_review';
+    public const OFFICER_APPROVED                = 'officer_approved';
+    public const OFFICER_REJECTED                = 'officer_rejected';
+    public const CORRECTION_REQUESTED            = 'correction_requested';
+    public const RETURNED_TO_APPLICANT           = 'returned_to_applicant';
+    public const APPROVED_AWAITING_PAYMENT       = 'approved_awaiting_payment';
+    public const FORWARDED_TO_REGISTRAR          = 'forwarded_to_registrar';
+    public const REGISTRAR_FIX_REQUEST           = 'registrar_fix_request';
 
-    // Registrar
-    public const REGISTRAR_REVIEW     = 'registrar_review';
-    public const REGISTRAR_APPROVED   = 'registrar_approved';
-    public const REGISTRAR_REJECTED   = 'registrar_rejected';
-    public const RETURNED_TO_OFFICER  = 'returned_to_officer';
-
-    // Accounts / Payments
-    public const ACCOUNTS_REVIEW        = 'accounts_review';
-    public const PAID_CONFIRMED         = 'paid_confirmed';
-    public const RETURNED_TO_ACCOUNTS   = 'returned_to_accounts';
-
-    // Production
-    public const PRODUCTION_QUEUE     = 'production_queue';
-    public const CARD_GENERATED       = 'card_generated';
-    public const CERT_GENERATED       = 'certificate_generated';
-    public const PRINTED              = 'printed';
-    public const ISSUED               = 'issued';
-
-    // Waiver/Special Path (ZMC Flow Extensions)
-    public const FORWARDED_TO_REGISTRAR_NO_APPROVAL = 'forwarded_to_registrar_no_approval';
-    public const PENDING_ACCOUNTS_REVIEW_FROM_REGISTRAR = 'pending_accounts_review_from_registrar';
-
-    // Media House Two-Stage Payment Path (ZMC Flow Extensions)
-    public const SUBMITTED_WITH_APP_FEE = 'submitted_with_app_fee';
-    public const VERIFIED_BY_OFFICER_PENDING_REGISTRAR = 'verified_by_officer_pending_registrar';
+    // --- Registrar ---
+    public const REGISTRAR_REVIEW                = 'registrar_review';
+    public const REGISTRAR_APPROVED              = 'registrar_approved';
+    public const REGISTRAR_REJECTED              = 'registrar_rejected';
+    public const RETURNED_TO_OFFICER             = 'returned_to_officer';
+    public const PENDING_ACCOUNTS_FROM_REGISTRAR = 'pending_accounts_from_registrar';
     public const REGISTRAR_APPROVED_PENDING_REG_FEE = 'registrar_approved_pending_reg_fee';
-    public const REG_FEE_SUBMITTED_AWAITING_VERIFICATION = 'reg_fee_submitted_awaiting_verification';
 
-    // Journalist Parallel Review Path (AO Approved -> Registrar & Accounts)
-    public const APPROVED_BY_OFFICER_AWAITING_PAYMENT_AND_REGISTRAR = 'approved_by_ao_awaiting_payment_and_registrar';
+    // --- Accounts / Payments ---
+    public const ACCOUNTS_REVIEW                 = 'accounts_review';
+    public const AWAITING_ACCOUNTS_VERIFICATION  = 'awaiting_accounts_verification';
+    public const PAYMENT_VERIFIED                = 'payment_verified';
+    public const PAYMENT_REJECTED                = 'payment_rejected';
+    public const PAID_CONFIRMED                  = 'paid_confirmed';
+    public const RETURNED_TO_ACCOUNTS            = 'returned_to_accounts';
 
-    // Common statuses (reused)
-    public const PAYMENT_VERIFIED = 'payment_verified';
-    public const PAYMENT_REJECTED = 'payment_rejected';
+    // --- Media House Specific ---
+    public const SUBMITTED_WITH_APP_FEE          = 'submitted_with_app_fee';
+    public const VERIFIED_BY_OFFICER             = 'verified_by_officer';
 
-    // NEW: Strict Workflow Enforcement Statuses (Master Enforcement)
-    public const SUBMITTED_TO_ACCREDITATION_OFFICER = 'submitted_to_accreditation_officer';
-    public const APPROVED_BY_ACCREDITATION_OFFICER_AWAITING_PAYMENT = 'approved_by_accreditation_officer_awaiting_payment';
-    public const APPROVED_BY_OFFICER_AWAITING_PAYMENT_AND_REGISTRAR_MASTER = 'approved_by_officer_awaiting_payment_and_registrar_master';
-    public const AWAITING_ACCOUNTS_VERIFICATION = 'awaiting_accounts_verification';
-    public const REGISTRAR_RAISED_FIX_REQUEST = 'registrar_raised_fix_request';
-    public const PENDING_ACCOUNTS_REVIEW_FROM_REGISTRAR_SPECIAL = 'pending_accounts_review_from_registrar_special';
-    public const REGISTRAR_APPROVED_PENDING_REGISTRATION_FEE_PAYMENT = 'registrar_approved_pending_registration_fee_payment';
-    public const REGISTRATION_FEE_AWAITING_VERIFICATION = 'registration_fee_awaiting_verification';
-    public const PRODUCED_READY_FOR_COLLECTION = 'produced_ready_for_collection';
+    // --- Production ---
+    public const PRODUCTION_QUEUE                = 'production_queue';
+    public const PRODUCED_READY                  = 'produced_ready';
+    public const CARD_GENERATED                  = 'card_generated';
+    public const CERT_GENERATED                  = 'certificate_generated';
+    public const PRINTED                         = 'printed';
+    public const ISSUED                          = 'issued';
+
+    // Legacy aliases for backward compatibility
+    public const FORWARDED_TO_REGISTRAR_NO_APPROVAL = 'forwarded_to_registrar';
+    public const PENDING_ACCOUNTS_REVIEW_FROM_REGISTRAR = 'pending_accounts_from_registrar';
+    public const VERIFIED_BY_OFFICER_PENDING_REGISTRAR = 'verified_by_officer';
+    public const REG_FEE_SUBMITTED_AWAITING_VERIFICATION = 'awaiting_accounts_verification';
+    public const APPROVED_BY_OFFICER_AWAITING_PAYMENT_AND_REGISTRAR = 'approved_awaiting_payment';
+    public const SUBMITTED_TO_ACCREDITATION_OFFICER = 'submitted';
+    public const APPROVED_BY_ACCREDITATION_OFFICER_AWAITING_PAYMENT = 'approved_awaiting_payment';
+    public const APPROVED_BY_OFFICER_AWAITING_PAYMENT_AND_REGISTRAR_MASTER = 'approved_awaiting_payment';
+    public const REGISTRAR_RAISED_FIX_REQUEST = 'registrar_fix_request';
+    public const PENDING_ACCOUNTS_REVIEW_FROM_REGISTRAR_SPECIAL = 'pending_accounts_from_registrar';
+    public const REGISTRAR_APPROVED_PENDING_REGISTRATION_FEE_PAYMENT = 'registrar_approved_pending_reg_fee';
+    public const REGISTRATION_FEE_AWAITING_VERIFICATION = 'awaiting_accounts_verification';
+    public const PRODUCED_READY_FOR_COLLECTION = 'produced_ready';
+
+    public static function allStatuses(): array
+    {
+        return [
+            self::DRAFT, self::SUBMITTED, self::WITHDRAWN,
+            self::OFFICER_REVIEW, self::OFFICER_APPROVED, self::OFFICER_REJECTED,
+            self::CORRECTION_REQUESTED, self::RETURNED_TO_APPLICANT,
+            self::APPROVED_AWAITING_PAYMENT, self::FORWARDED_TO_REGISTRAR,
+            self::REGISTRAR_FIX_REQUEST,
+            self::REGISTRAR_REVIEW, self::REGISTRAR_APPROVED, self::REGISTRAR_REJECTED,
+            self::RETURNED_TO_OFFICER, self::PENDING_ACCOUNTS_FROM_REGISTRAR,
+            self::REGISTRAR_APPROVED_PENDING_REG_FEE,
+            self::ACCOUNTS_REVIEW, self::AWAITING_ACCOUNTS_VERIFICATION,
+            self::PAYMENT_VERIFIED, self::PAYMENT_REJECTED,
+            self::PAID_CONFIRMED, self::RETURNED_TO_ACCOUNTS,
+            self::SUBMITTED_WITH_APP_FEE, self::VERIFIED_BY_OFFICER,
+            self::PRODUCTION_QUEUE, self::PRODUCED_READY,
+            self::CARD_GENERATED, self::CERT_GENERATED,
+            self::PRINTED, self::ISSUED,
+        ];
+    }
+
+    public static function statusLabel(string $status): string
+    {
+        return match($status) {
+            self::DRAFT => 'Draft',
+            self::SUBMITTED => 'Submitted',
+            self::WITHDRAWN => 'Withdrawn',
+            self::OFFICER_REVIEW => 'Under Officer Review',
+            self::OFFICER_APPROVED => 'Officer Approved',
+            self::OFFICER_REJECTED => 'Returned for Correction (Officer)',
+            self::CORRECTION_REQUESTED => 'Returned for Correction',
+            self::RETURNED_TO_APPLICANT => 'Returned to Applicant',
+            self::APPROVED_AWAITING_PAYMENT => 'Approved - Awaiting Payment',
+            self::FORWARDED_TO_REGISTRAR => 'Forwarded to Registrar',
+            self::REGISTRAR_FIX_REQUEST => 'Fix Request from Registrar',
+            self::REGISTRAR_REVIEW => 'Under Registrar Review',
+            self::REGISTRAR_APPROVED => 'Registrar Approved',
+            self::REGISTRAR_REJECTED => 'Returned for Correction (Registrar)',
+            self::RETURNED_TO_OFFICER => 'Returned to Officer',
+            self::PENDING_ACCOUNTS_FROM_REGISTRAR => 'Pending Accounts (from Registrar)',
+            self::REGISTRAR_APPROVED_PENDING_REG_FEE => 'Approved - Pending Registration Fee',
+            self::ACCOUNTS_REVIEW => 'Under Accounts Review',
+            self::AWAITING_ACCOUNTS_VERIFICATION => 'Awaiting Accounts Verification',
+            self::PAYMENT_VERIFIED => 'Payment Verified',
+            self::PAYMENT_REJECTED => 'Payment Returned',
+            self::PAID_CONFIRMED => 'Approved (Paid)',
+            self::RETURNED_TO_ACCOUNTS => 'Returned to Accounts',
+            self::SUBMITTED_WITH_APP_FEE => 'Submitted with Application Fee',
+            self::VERIFIED_BY_OFFICER => 'Verified by Officer',
+            self::PRODUCTION_QUEUE => 'In Production Queue',
+            self::PRODUCED_READY => 'Produced - Ready for Collection',
+            self::CARD_GENERATED => 'Card Generated',
+            self::CERT_GENERATED => 'Certificate Generated',
+            self::PRINTED => 'Printed',
+            self::ISSUED => 'Issued',
+            default => ucwords(str_replace('_', ' ', $status)),
+        };
+    }
 
     protected $fillable = [
         'reference',
@@ -157,6 +217,10 @@ class Application extends Model
         'issued_at',
         'payment_submission_method',
         'payment_submitted_at',
+        'payment_stage',
+        'forward_reason',
+        'receipt_number',
+        'paynow_ref_submitted',
     ];
 
     protected $casts = [
@@ -406,35 +470,38 @@ class Application extends Model
             ->exists();
     }
 
-    // Optional: map status -> which staff stage "owns" it
     public static function stageForStatus(string $status): ?string
     {
-        // Workflow: Officer → Accounts → Registrar → Production
         return match ($status) {
             self::SUBMITTED,
             self::OFFICER_REVIEW,
             self::OFFICER_APPROVED,
             self::OFFICER_REJECTED,
             self::CORRECTION_REQUESTED,
+            self::RETURNED_TO_APPLICANT,
             self::RETURNED_TO_OFFICER,
+            self::REGISTRAR_FIX_REQUEST,
             self::SUBMITTED_WITH_APP_FEE,
-            self::VERIFIED_BY_OFFICER_PENDING_REGISTRAR => 'accreditation_officer',
+            self::VERIFIED_BY_OFFICER => 'accreditation_officer',
 
-            self::ACCOUNTS_REVIEW,
-            self::PAID_CONFIRMED,
-            self::RETURNED_TO_ACCOUNTS,
-            self::PENDING_ACCOUNTS_REVIEW_FROM_REGISTRAR,
-            self::REG_FEE_SUBMITTED_AWAITING_VERIFICATION,
-            self::PAYMENT_VERIFIED,
-            self::PAYMENT_REJECTED => 'accounts_payments',
+            self::APPROVED_AWAITING_PAYMENT => 'applicant_payment',
 
+            self::FORWARDED_TO_REGISTRAR,
             self::REGISTRAR_REVIEW,
             self::REGISTRAR_APPROVED,
             self::REGISTRAR_REJECTED,
-            self::FORWARDED_TO_REGISTRAR_NO_APPROVAL,
             self::REGISTRAR_APPROVED_PENDING_REG_FEE => 'registrar',
 
+            self::ACCOUNTS_REVIEW,
+            self::AWAITING_ACCOUNTS_VERIFICATION,
+            self::PAYMENT_VERIFIED,
+            self::PAYMENT_REJECTED,
+            self::PAID_CONFIRMED,
+            self::RETURNED_TO_ACCOUNTS,
+            self::PENDING_ACCOUNTS_FROM_REGISTRAR => 'accounts_payments',
+
             self::PRODUCTION_QUEUE,
+            self::PRODUCED_READY,
             self::CARD_GENERATED,
             self::CERT_GENERATED,
             self::PRINTED,

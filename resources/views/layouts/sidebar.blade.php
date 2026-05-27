@@ -14,7 +14,7 @@
       <img src="{{ asset('zmc_logo.png') }}" alt="ZMC Logo">
     </a>
     <div class="logo-portal-name">
-      {{ $isAccred ? 'Media Practitioner Accreditation Portal' : 'Mass Media Service Registration Portal' }}
+      {{ $isAccred ? 'Media Practitioner Accreditation' : 'Mass Media Service Registration' }}
     </div>
   </div>
 
@@ -33,9 +33,15 @@
         </a>
       </li>
 
-      <li class="{{ request()->routeIs('accreditation.renewals*') ? 'active' : '' }}">
-        <a href="{{ route('accreditation.renewals.index') }}">
-          <i class="ri-refresh-line"></i><span>Renewal / Replacement (AP5)</span>
+      <li class="{{ request()->routeIs('accreditation.renewal') ? 'active' : '' }}">
+        <a href="{{ route('accreditation.renewal') }}">
+          <i class="ri-refresh-line"></i><span>Renewal (AP5)</span>
+        </a>
+      </li>
+
+      <li class="{{ request()->routeIs('accreditation.replacement') ? 'active' : '' }}">
+        <a href="{{ route('accreditation.replacement') }}">
+          <i class="ri-exchange-line"></i><span>Replacement (AP5)</span>
         </a>
       </li>
 
@@ -83,6 +89,11 @@
 
     @elseif($isMedia)
 
+      @php
+        $currentRenewal = request()->route('renewal');
+        $ap5Type = is_object($currentRenewal) ? ($currentRenewal->request_type ?? null) : null;
+      @endphp
+
       <li class="{{ request()->routeIs('mediahouse.portal') ? 'active' : '' }}">
         <a href="{{ route('mediahouse.portal') }}">
           <i class="ri-home-4-line"></i><span>Dashboard</span>
@@ -95,9 +106,15 @@
         </a>
       </li>
 
-      <li class="{{ request()->routeIs('mediahouse.renewals*') ? 'active' : '' }}">
-        <a href="{{ route('mediahouse.renewals.index') }}">
-          <i class="ri-refresh-line"></i><span>Renewal / Replacement (AP5)</span>
+      <li class="{{ request()->fullUrlIs(route('mediahouse.renewals.start','renewal')) || (request()->routeIs('mediahouse.renewals.*') && $ap5Type === 'renewal') ? 'active' : '' }}">
+        <a href="{{ route('mediahouse.renewals.start','renewal') }}">
+          <i class="ri-refresh-line"></i><span>Renewal (AP5)</span>
+        </a>
+      </li>
+
+      <li class="{{ request()->fullUrlIs(route('mediahouse.renewals.start','replacement')) || (request()->routeIs('mediahouse.renewals.*') && $ap5Type === 'replacement') ? 'active' : '' }}">
+        <a href="{{ route('mediahouse.renewals.start','replacement') }}">
+          <i class="ri-file-copy-line"></i><span>Replacement (AP5)</span>
         </a>
       </li>
 
@@ -153,7 +170,7 @@
       <div style="font-weight:700;font-size:11px;color:#fff;">
         {{ Auth::user()->name ?? 'User' }}
       </div>
-      <div style="font-size:10px;color:rgba(255,255,255,0.7);">Applicant Portal</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.7);">Applicant</div>
     </div>
   </div>
 </div>

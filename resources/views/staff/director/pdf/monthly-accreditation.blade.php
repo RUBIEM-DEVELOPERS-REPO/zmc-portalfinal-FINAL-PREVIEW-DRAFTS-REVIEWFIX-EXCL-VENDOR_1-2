@@ -26,7 +26,11 @@
             <tr>
                 <th>Month</th>
                 <th>Submitted</th>
+<<<<<<< HEAD
                 <th>Issued/Reviewed</th>
+=======
+                <th>Approved</th>
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
                 <th>Returned for Correction</th>
             </tr>
         </thead>

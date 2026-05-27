@@ -233,7 +233,7 @@
      <div class="contact-item">
        <i class="ri-mail-send-fill text-primary ri-xl d-block mb-2"></i>
        <strong>Email Support</strong>
-       <div class="mt-1">info@zmc.org.zw</div>
+       <div class="mt-1">zmcaccreditation@gmail.com</div>
      </div>
      <div class="contact-item">
        <i class="ri-phone-fill text-secondary ri-xl d-block mb-2"></i>

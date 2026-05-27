@@ -18,9 +18,7 @@ class User extends Authenticatable
         'password',
         'region',
         'account_type',
-        'account_status',
         'designation',
-        'setup_token',
         'locale',
         'phone_country_code',
         'phone_number',
@@ -30,7 +28,13 @@ class User extends Authenticatable
         'social_media',
         'theme',
         'profile_data',
-        'country_code',
+        'account_status',
+        'approved_at',
+        'approved_by',
+        'otp_code',
+        'otp_expires_at',
+        'activation_token',
+        'activated_at',
     ];
 
     protected $hidden = [
@@ -42,6 +46,8 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'otp_expires_at' => 'datetime',
+            'activated_at' => 'datetime',
             'password' => 'hashed',
             'profile_data' => 'array',
             'social_media' => 'array',

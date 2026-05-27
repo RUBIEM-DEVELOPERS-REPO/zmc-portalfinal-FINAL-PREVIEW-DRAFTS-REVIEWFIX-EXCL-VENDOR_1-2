@@ -1,193 +1,55 @@
 # ZMC Portal - Zimbabwe Media Commission
 
 ## Overview
-This is a Laravel 12 PHP application for the Zimbabwe Media Commission portal. It provides:
-- Media practitioner accreditation management
-- Media house registration
-- Staff dashboards for various roles (admin, registrar, accounts, production, etc.)
-- Role-based access control using Spatie Laravel Permission
-- Comprehensive workflow enforcement with granular status tracking
+This Laravel 12 PHP application serves as the Zimbabwe Media Commission portal, managing media practitioner accreditation and media house registration. It features comprehensive workflow enforcement, role-based access for various staff roles, and aims to streamline the accreditation process.
 
-## Project Architecture
+## User Preferences
+No explicit user preferences were provided in the original document.
+
+## System Architecture
 
 ### Tech Stack
-- **Backend**: Laravel 12 (PHP 8.4)
-- **Frontend**: Blade templates with AdminLTE theme, Vite, Tailwind CSS, Bootstrap 5
-- **Database**: PostgreSQL (Replit built-in Neon-backed)
-- **Authentication**: Laravel UI with token-based auth for iframe environments
-
-### Directory Structure
-- `app/` - Application code (Controllers, Models, Services, Middleware)
-- `config/` - Configuration files including AdminLTE and permissions
-- `database/` - Migrations, seeders, and SQLite database
-- `public/` - Public assets and entry point
-- `resources/views/` - Blade templates organized by feature
-- `routes/web.php` - All route definitions
+-   **Backend**: Laravel 12 (PHP 8.4)
+-   **Frontend**: Blade templates, AdminLTE theme, Vite, Tailwind CSS, Bootstrap 5
+-   **Database**: PostgreSQL (Replit Neon-backed)
+-   **Authentication**: Laravel UI with token-based auth for iframes, OTP verification for staff login, activation-link-based onboarding for new staff
 
 ### Key Features
-- **Portal Views**: Accreditation and Media House portals for public users
-- **Staff Dashboards**: Role-specific dashboards for admin, registrar, accounts, production
-- **Application Workflow**: Processing applications through various stages with enforced state machine
-- **Activity Logging**: Tracking user actions with immutable audit trail
-- **Payment Processing**: PayNow integration, manual proof uploads, cash payments
-- **Card/Certificate Designer**: Production template designer with drag-and-drop field placement
+-   **Portal Views**: Dedicated portals for public users (accreditation and media house applications).
+-   **Staff Dashboards**: Role-specific interfaces for administrators, registrars, accounts, and production staff.
+-   **Application Workflow**: Robust state machine with over 30 granular statuses for managing applications from draft to completion, including specific flows for new applications, renewals, and media houses.
+-   **Activity Logging**: Immutable audit trail for all user actions via `ActivityLogger` service.
+-   **Payment Processing**: Integration with PayNow, manual proof uploads, cash, bank transfer, and waiver options, with auto-generated receipt numbers (format: `{PREFIX}-{YEAR}-{NNNNN}`).
+-   **Card/Certificate Designer**: A production template designer supporting drag-and-drop field placement for generating credentials.
+-   **Records Management**: CSV export and analytics summaries for journalists and media houses.
+-   **Physical Intake**: System for processing walk-in applications via AccreditationOfficerController.
+-   **Reminders System**: Registrar can send reminders to applicants; portal displays unacknowledged reminders as banners with acknowledge buttons.
+-   **Renewal/Replacement Flow**: Separate sidebar links and routes for renewals vs replacements; accreditation number lookup API for pre-filling data.
 
-## Application Workflow
+### Core Architectural Decisions
+-   **Role-Based Access Control**: Implemented using Spatie Laravel Permission.
+-   **Token-based Authentication**: A custom solution to bypass iframe cookie limitations in Replit, involving a `TokenAuth` middleware, client-side JavaScript for token propagation, and a CSRF bypass mechanism.
+-   **Staff Auth Flow**: `/staff` goes directly to login (no role selection). After password verification, a 6-digit OTP is emailed. The system auto-detects the user's role from Spatie. New staff are created by IT admin with an activation link emailed to set their password.
+-   **Workflow Enforcement**: Centralized `ApplicationWorkflow` service and `StatusTransitionValidator` ensure strict adherence to application lifecycle rules.
+-   **Database Structure**: `Application` model uses JSON fields for `form_data` to store draft content, and `CardTemplate` uses `layout_config` for design configurations. User profile fields include `id_number`, `passport_number`, `phone2`, `social_media` as dedicated DB columns.
+-   **UI/UX Design**: Uses an AdminLTE theme with a professional black (#1a1a1a), yellow (#f5c518), and white color scheme, Montserrat/Source Sans Pro typography, and reduced font sizes for a clean aesthetic. Dark mode persists via both server-side theme setting and localStorage fallback.
+-   **Reminder Model**: Uses `Reminder` + `ReminderRead` models with `active()` and `forUser()` scopes; acknowledged via separate `ReminderRead` records.
 
-### Status Constants (Application Model)
-**Draft & Submission:**
-- `draft` - Application saved but not submitted
-- `submitted` - Submitted to accreditation officer queue
-- `withdrawn` - Withdrawn by applicant
+### Key Routes & Controllers
+-   **Portal**: `AccreditationPortalController` handles dashboard, new/renewal/replacement forms, payments, profile, reminders acknowledgment, accreditation lookup
+-   **Staff**: `AccreditationOfficerController`, `RegistrarController`, `AccountsPaymentsController`, `ProductionController`
+-   **IT Admin**: `ItDashboardController` — comprehensive IT admin dashboard with user management (CRUD, role change, suspend/activate, resend activation, force password reset, delete), system monitoring, config management
+-   **User Account Management**: `/staff/it/users-mgmt` — full user CRUD with search/filter by name, type, status, role; stat cards; role change modal; accessible from both IT admin and super admin sidebar
+-   **Renewal**: Separate `/renewal` and `/replacement` routes with preset `$ap5Type`
+-   **Lookup API**: `GET /portal/accreditation/lookup/{accreditationNumber}` returns JSON
+-   **Reminders**: `POST /portal/accreditation/reminders/{id}/acknowledge`
 
-**Accreditation Officer:**
-- `officer_review` - Under officer review
-- `officer_approved` - Approved by officer (legacy)
-- `officer_rejected` - Rejected by officer
-- `correction_requested` - Correction requested (legacy)
-- `returned_to_applicant` - Returned for applicant corrections
-- `approved_awaiting_payment` - Officer approved, awaiting payment
-- `forwarded_to_registrar` - Forwarded to registrar (waiver/special cases)
-- `registrar_fix_request` - Registrar raised fix request to officer
+### Test Accounts
+-   **Staff**: `officer@zmc.org.zw`, `registrar@zmc.org.zw`, `accounts@zmc.org.zw`, `production@zmc.org.zw`, `itadmin@zmc.org.zw` (password: `Staff@12345`)
+-   **Applicants**: `john.moyo@example.com`, `mary.ndlovu@example.com`, `tatenda.chirwa@example.com` (password: `Test@12345`)
+-   **Media House**: `admin@dailyherald.co.zw` (password: `Test@12345`)
 
-**Registrar:**
-- `registrar_review` - Under registrar review
-- `registrar_approved` - Approved by registrar
-- `registrar_rejected` - Rejected by registrar
-- `returned_to_officer` - Returned to accreditation officer
-- `pending_accounts_from_registrar` - Pushed to accounts from registrar
-- `registrar_approved_pending_reg_fee` - Registrar approved, pending registration fee
-
-**Accounts/Payments:**
-- `accounts_review` - Under accounts review
-- `awaiting_accounts_verification` - PayNow ref submitted, awaiting verification
-- `payment_verified` - Payment verified by accounts
-- `payment_rejected` - Payment rejected
-- `paid_confirmed` - Payment confirmed (legacy)
-- `returned_to_accounts` - Returned to accounts
-
-**Media House Specific:**
-- `submitted_with_app_fee` - Submitted with application fee paid
-- `verified_by_officer` - Verified by accreditation officer
-
-**Production:**
-- `production_queue` - In production queue
-- `produced_ready` - Produced and ready for collection
-- `card_generated` - Card generated
-- `certificate_generated` - Certificate generated
-- `printed` - Printed
-
-### Workflow Routes
-**New Application (Journalist):**
-Applicant → Submit → Officer Review → Approve (awaiting payment) → Payment → Accounts Verify → Production → Print
-
-**New Application (Media House, two-stage payment):**
-Applicant → Pay App Fee → Submit → Officer Verify → Registrar Review → Approve (pending reg fee) → Payment → Accounts Verify → Production → Print
-
-**Renewal:**
-Applicant → Submit → Accounts → Production (bypasses Officer/Registrar review)
-
-**Physical Intake (walk-in):**
-Officer enters details + receipt → Auto-creates application → Production queue
-
-### Key Services
-- `ApplicationWorkflow` - State machine with transition validation
-- `ActivityLogger` - Immutable audit trail logging
-- `ManualPaymentController` - PayNow reference and proof upload handling
-
-## Development
-
-### Running the Application
-```bash
-npm run start
-```
-This runs Laravel's development server (port 5000).
-
-### Build for Production
-```bash
-npm run build
-```
-
-### Database Migrations
-```bash
-php artisan migrate
-```
-
-### Seeding Data
-```bash
-php artisan db:seed
-```
-Seeds: staff users (officer@zmc.org.zw, registrar@zmc.org.zw, accounts@zmc.org.zw, production@zmc.org.zw, itadmin@zmc.org.zw, auditor@zmc.org.zw, director@zmc.org.zw), test applicants, regions, notices, events, news, system configs, card templates. Staff password: `Staff@12345`, Test users: `Test@12345`.
-
-### Authentication Architecture (Iframe Token Auth)
-Since Replit runs apps inside an iframe proxy, browser cookies often don't persist (blocked as third-party cookies). The portal uses a token-based auth workaround:
-- **Login**: StaffAuthController generates a random token, stores user data in Laravel Cache (8hr TTL), and redirects with `?_auth_token=TOKEN`
-- **TokenAuth Middleware**: Registered in web group with priority before Laravel's auth, reads token from URL query or X-Auth-Token header, authenticates user via `Auth::loginUsingId()`
-- **Client-side forwarding**: JavaScript in portal.blade.php and staff.blade.php stores token in localStorage and automatically appends it to all same-origin links, form submissions, fetch(), and XHR requests
-- **Logout**: Clears both server-side cache token and client-side localStorage
-- **Key files**: `app/Http/Middleware/TokenAuth.php`, `bootstrap/app.php` (middleware priority), layout Blade files
-- **CSRF bypass**: `VerifyCsrfWithTokenBypass` middleware bypasses CSRF for token-authenticated requests and specific routes
-
-## Models
-
-### Application
-- `form_data` (JSON): Stores all form fields as JSON for draft saving
-- `is_draft` (boolean): True if application is a draft, false if submitted
-- `submitted_at` (timestamp): When the application was formally submitted
-- `collection_region`: Regional office where user will collect press card/certificate
-- `payment_stage`: 'application_fee' or 'registration_fee' (media house two-stage)
-- `forward_reason`: Reason for forwarding to registrar
-- `receipt_number`: Physical intake receipt number
-- `paynow_ref_submitted`: PayNow reference number submitted by applicant
-
-### CardTemplate
-- `name`, `type` (card/certificate), `year`, `background_path`
-- `layout_config` (JSON): Field positions/sizes for template designer
-- `is_active` (boolean): Active template for production
-
-### Reminder
-- `target_type`, `target_id`, `message`, `type`, `acknowledged_at`, `created_by`
-- Used by Registrar to send notifications to portal users
-
-## Recent Changes
-- February 26, 2026: Reduced green opacity system-wide
-  - Lightened primary green from #1a3a1a to #2e7d32 (medium green)
-  - Lightened dark green from #0d2810 to #1b5e20
-  - Reduced overlay opacity on sidebar, topbar, and landing page (0.94→0.82, 0.97→0.85)
-  - Updated all inline color references across howto, requirements, auth, and layout templates
-
-- February 26, 2026: Comprehensive workflow enforcement & new features
-  - 15+ new application status constants for granular state tracking
-  - ApplicationWorkflow state machine with enforced transitions
-  - Accreditation Officer: approve → awaiting payment, return to applicant, forward to registrar, physical intake with receipt
-  - Registrar: fix requests to officer, read-only accounts oversight, reminders to portal users, media house letter requirement
-  - Accounts: PayNow reference verification, proof/waiver approve/reject, cash payment recording with audit trail
-  - Portal payment flow: PayNow → reference submission → awaiting accounts verification
-  - Media house two-stage payment: application fee before submission, registration fee after registrar approval
-  - Renewal simplification: number lookup, confirm/change, direct to accounts (bypass officer/registrar)
-  - Production card/certificate designer: drag-and-drop template builder, background upload, field positioning
-  - Previous applications panel in officer/registrar/accounts views
-  - Previous payments panel in accounts/auditor views
-  - Request type badges (New/Renewal/Replacement) across all staff views
-  - CSRF bypass expanded for all new staff action routes
-  - Test data seeder with sample applications at various workflow stages
-  - Default card and certificate templates seeded
-
-- February 23, 2026: Fixed production deployment migration failure
-  - Created SafeMigrate command (db:safe-migrate) to handle existing database tables
-  - Updated build.sh to use db:safe-migrate instead of plain migrate
-  - Deployment target: autoscale with build: bash build.sh, run: php public/router.php
-
-- February 23, 2026: Production deployment preparation
-  - Token-based auth for iframe environments
-  - Database-backed sessions and cache for autoscale compatibility
-  - Health check router.php for non-browser requests
-
-- January 05, 2026: Green theme implementation
-  - Dark green (#1a3a1a) theme with golden/olive accent buttons (#c9a227)
-
-- January 04, 2026: Paynow payment integration
-  - Fee calculation: Local journalist $50 new/$30 renewal, Foreign $150/$100, Media house $500/$300
-
-- December 29, 2025: Initial setup and core features
-  - Document upload pipeline, staff portal, chatbot, draft saving, Replit configuration
+## External Dependencies
+-   **PayNow**: Payment gateway integration for processing application fees.
+-   **PostgreSQL**: Primary database for application data.
+-   **Spatie Laravel Permission**: Role-based access control.

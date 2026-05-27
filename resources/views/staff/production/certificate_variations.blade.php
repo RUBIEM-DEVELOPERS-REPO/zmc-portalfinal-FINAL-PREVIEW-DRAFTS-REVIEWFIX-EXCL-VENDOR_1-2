@@ -119,7 +119,7 @@
     }
 
     .org-header .zimbabwe { color: #000; }
-    .org-header .media { color: #2e7d32; }
+    .org-header .media { color: #f5c518; }
     .org-header .commission { color: #000; }
 
     .zmc-logo {

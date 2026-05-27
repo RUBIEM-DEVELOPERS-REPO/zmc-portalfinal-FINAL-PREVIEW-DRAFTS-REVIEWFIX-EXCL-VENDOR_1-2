@@ -229,7 +229,7 @@ document.addEventListener('DOMContentLoaded', function() {
       addMessage(data.response);
     } catch (error) {
       hideTyping();
-      addMessage("I'm having trouble connecting right now. Please try again or email info@zmc.org.zw for assistance.");
+      addMessage("I'm having trouble connecting right now. Please try again or email zmcaccreditation@gmail.com for assistance.");
     }
   }
 

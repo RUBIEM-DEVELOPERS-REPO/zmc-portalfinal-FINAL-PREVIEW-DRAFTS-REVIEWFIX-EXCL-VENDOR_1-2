@@ -167,14 +167,14 @@
       if(data && data.response){
         addMsg(data.response, 'bot');
         if(data.matched === false){
-          addMsg('If I missed it, you can email <b>info@zmc.org.zw</b>.', 'bot');
+          addMsg('If I missed it, you can email <b>zmcaccreditation@gmail.com</b>.', 'bot');
         }
       } else {
-        addMsg('Sorry — I could not process that. Email <b>info@zmc.org.zw</b>.', 'bot');
+        addMsg('Sorry — I could not process that. Email <b>zmcaccreditation@gmail.com</b>.', 'bot');
       }
 
     }catch(e){
-      addMsg('Network error. Please email <b>info@zmc.org.zw</b>.', 'bot');
+      addMsg('Network error. Please email <b>zmcaccreditation@gmail.com</b>.', 'bot');
     }
   }
 

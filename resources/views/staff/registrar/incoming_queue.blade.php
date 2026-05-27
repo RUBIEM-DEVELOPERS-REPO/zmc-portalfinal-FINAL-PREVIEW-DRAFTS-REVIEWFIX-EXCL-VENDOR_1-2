@@ -22,14 +22,23 @@
             </form>
         </div>
 
+        <form method="POST" action="{{ route('staff.registrar.applications.batch-mark-reviewed') }}" id="batchReviewForm">
+            @csrf
+            <div class="p-2 border-bottom d-flex align-items-center gap-2" id="batchReviewBar" style="display:none !important;">
+                <button type="submit" class="btn btn-sm btn-success px-3 fw-bold" id="batchReviewBtn" style="display:none;">
+                    <i class="ri-checkbox-circle-line me-1"></i> Mark Selected as Reviewed
+                </button>
+                <span class="small text-muted" id="batchReviewCount"></span>
+            </div>
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="bg-light">
                     <tr class="small text-muted text-uppercase">
+                        <th style="width:40px;"><input type="checkbox" id="selectAllReview" class="form-check-input"></th>
                         <th>ID</th>
                         <th>Applicant</th>
                         <th>Type</th>
-                        <th>Officer</th>
+                        <th>Reviewed</th>
                         <th>Payment</th>
                         <th>Cleared At</th>
                         <th class="text-end">Action</th>
@@ -38,13 +47,26 @@
                 <tbody>
                     @forelse($applications as $app)
                         <tr>
+                            <td>
+                                @if(!$app->registrar_reviewed_at)
+                                    <input type="checkbox" name="application_ids[]" value="{{ $app->id }}" class="form-check-input review-checkbox">
+                                @else
+                                    <i class="ri-checkbox-circle-fill text-success"></i>
+                                @endif
+                            </td>
                             <td class="fw-bold">{{ $app->reference }}</td>
                             <td>
                                 <div>{{ $app->applicant?->name }}</div>
                                 <div class="small text-muted">{{ $app->journalist_scope }} | {{ $app->residency_type }}</div>
                             </td>
                             <td><span class="badge bg-light text-dark border">{{ strtoupper($app->application_type) }}</span></td>
-                            <td class="small">{{ $app->assignedOfficer?->name ?? 'System' }}</td>
+                            <td>
+                                @if($app->registrar_reviewed_at)
+                                    <span class="badge bg-success-subtle text-success border-success"><i class="ri-check-line me-1"></i>Reviewed {{ $app->registrar_reviewed_at->format('d M') }}</span>
+                                @else
+                                    <span class="badge bg-warning-subtle text-warning border-warning">Pending</span>
+                                @endif
+                            </td>
                             <td>
                                 @php
                                     $p = $app->payments->last();
@@ -127,7 +149,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center py-5 text-muted">No applications awaiting review.</td>
+                            <td colspan="8" class="text-center py-5 text-muted">No applications awaiting review.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -139,6 +161,7 @@
             {{ $applications->links() }}
         </div>
         @endif
+        </form>
     </div>
 
     {{-- Action Modals for each application --}}
@@ -640,6 +663,37 @@
       zmcOpenModal('#appDetailsModal');
       loadApplicationDetails(appId);
     });
+  });
+
+  // Batch review checkbox logic
+  const selectAll = document.getElementById('selectAllReview');
+  const batchBtn = document.getElementById('batchReviewBtn');
+  const batchBar = document.getElementById('batchReviewBar');
+  const batchCount = document.getElementById('batchReviewCount');
+
+  function updateBatchUI() {
+    const checked = document.querySelectorAll('.review-checkbox:checked');
+    if (checked.length > 0) {
+      batchBtn.style.display = '';
+      batchBar.style.display = '';
+      batchBar.style.cssText = '';
+      batchCount.textContent = checked.length + ' selected';
+    } else {
+      batchBtn.style.display = 'none';
+      batchBar.style.display = 'none';
+      batchBar.style.cssText = 'display:none !important;';
+    }
+  }
+
+  if (selectAll) {
+    selectAll.addEventListener('change', function() {
+      document.querySelectorAll('.review-checkbox').forEach(cb => cb.checked = this.checked);
+      updateBatchUI();
+    });
+  }
+
+  document.querySelectorAll('.review-checkbox').forEach(cb => {
+    cb.addEventListener('change', updateBatchUI);
   });
 </script>
 @endpush

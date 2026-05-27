@@ -1,7 +1,7 @@
 /**
- * Director Dashboard Charts - Chart.js Initialization Functions
+ * Director Media Development and Governance Dashboard Charts - Chart.js Initialization Functions
  * 
- * This file provides reusable chart initialization functions for the Director Dashboard.
+ * This file provides reusable chart initialization functions for the Director Media Development and Governance Dashboard.
  * All charts use a consistent color scheme and responsive configuration.
  * 
  * Color Scheme:

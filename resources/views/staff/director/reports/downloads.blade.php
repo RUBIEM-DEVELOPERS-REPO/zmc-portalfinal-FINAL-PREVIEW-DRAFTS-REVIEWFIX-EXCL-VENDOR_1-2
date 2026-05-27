@@ -1,6 +1,6 @@
 @extends('layouts.portal')
 
-@section('title', 'Reports & Downloads - Director Dashboard')
+@section('title', 'Reports & Downloads - Director Media Development and Governance Dashboard')
 
 @section('content')
 <div class="container-fluid">

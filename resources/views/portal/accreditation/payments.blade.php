@@ -23,6 +23,7 @@
     </div>
 
     <div class="form-steps-container">
+<<<<<<< HEAD
       @if(isset($applications) && $applications->count())
         <div class="table-responsive">
           <table class="table table-hover align-middle">
@@ -100,6 +101,83 @@
           <i class="ri-bank-card-line" style="font-size:48px;color:#d1d5db;"></i>
           <p class="text-muted mt-3">No payment records yet. Payments will appear here once you submit an application.</p>
         </div>
+=======
+      @if(isset($payments) && $payments->count() > 0)
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th>Receipt #</th>
+              <th>Date</th>
+              <th>Description</th>
+              <th>Method</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Receipt</th>
+            </tr>
+          </thead>
+          <tbody>
+            @foreach($payments as $payment)
+            <tr>
+              <td>
+                <span class="fw-bold" style="font-size:12px;">{{ $payment->receipt_number ?? '—' }}</span>
+              </td>
+              <td>{{ $payment->confirmed_at ? $payment->confirmed_at->format('d M Y') : $payment->created_at->format('d M Y') }}</td>
+              <td>
+                {{ ucfirst($payment->service_type ?? 'Application') }} Fee
+                @if($payment->application)
+                  <div class="text-muted small">{{ $payment->application->reference ?? '' }}</div>
+                @endif
+              </td>
+              <td>
+                @php
+                  $methodLabels = [
+                    'paynow_reference' => 'PayNow',
+                    'paynow' => 'PayNow',
+                    'proof' => 'Proof of Payment',
+                    'proof_upload' => 'Proof of Payment',
+                    'waiver' => 'Waiver',
+                    'cash' => 'Cash',
+                    'transfer' => 'Bank Transfer',
+                    'general' => 'Other',
+                  ];
+                @endphp
+                <span class="badge bg-light text-dark border">{{ $methodLabels[$payment->method] ?? ucfirst($payment->method ?? 'N/A') }}</span>
+              </td>
+              <td class="fw-bold">{{ $payment->currency ?? 'USD' }} {{ number_format($payment->amount, 2) }}</td>
+              <td>
+                @if($payment->status === 'paid')
+                  <span class="badge bg-success">Confirmed</span>
+                @elseif($payment->status === 'pending')
+                  <span class="badge bg-warning text-dark">Pending</span>
+                @elseif($payment->status === 'rejected')
+                  <span class="badge bg-danger">Rejected</span>
+                @else
+                  <span class="badge bg-secondary">{{ ucfirst($payment->status) }}</span>
+                @endif
+              </td>
+              <td>
+                @if($payment->status === 'paid' && $payment->receipt_number)
+                  <a href="{{ route('portal.receipt.download', $payment->id) }}"
+                     class="btn btn-sm btn-primary portal-link" target="_blank">
+                    <i class="ri-download-line me-1"></i>Download
+                  </a>
+                @else
+                  <button class="btn btn-sm btn-primary" disabled>Download</button>
+                @endif
+              </td>
+            </tr>
+            @endforeach
+          </tbody>
+        </table>
+      </div>
+      @else
+      <div class="text-center py-5">
+        <i class="ri-bank-card-line" style="font-size:48px; color:#d1d5db;"></i>
+        <div class="text-muted mt-3">No payment records found.</div>
+        <div class="text-muted small">Payment records will appear here once you make a payment for your application.</div>
+      </div>
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
       @endif
     </div>
   </div>

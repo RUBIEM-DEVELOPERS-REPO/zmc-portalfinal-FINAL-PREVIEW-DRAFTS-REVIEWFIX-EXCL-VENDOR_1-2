@@ -15,8 +15,13 @@
       --border: #e2e8f0;
       --muted: #64748b;
       --text: #0f172a;
+<<<<<<< HEAD
       --primary: #2d5016;
       --primary-hover: #1f3a0f;
+=======
+      --primary: #1a1a1a;
+      --primary-hover: #111111;
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
       --accent: #facc15;
       --accent-dark: #eab308;
       --shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
@@ -30,7 +35,7 @@
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
-      background: #000 url('{{ asset("zmc_building.png") }}') no-repeat center center fixed;
+      background: #000 url('/zmc_building.png') no-repeat center center;
       background-size: cover;
       color: var(--text);
       display:flex;
@@ -44,7 +49,7 @@
       content: "";
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(45, 80, 22, 0.45);
+      background: rgba(0, 0, 0, 0.55);
       pointer-events: none;
     }
     .wrap{ width:100%; max-width:480px; position: relative; z-index: 1; }
@@ -52,9 +57,10 @@
       display:flex; justify-content:center; align-items:center; gap:12px;
       margin-bottom:25px; text-decoration:none;
     }
-    .brand img{ height:50px; width:auto; }
+    .brand img{ height:70px; width:70px; background:white; padding:6px; border-radius:50%; object-fit:contain; box-shadow:0 2px 12px rgba(0,0,0,0.2); }
     .brand span{
-      font-weight:900; font-size:20px; color:var(--text);
+      font-family:'Montserrat','Inter',sans-serif;
+      font-weight:800; font-size:17px; color:var(--text);
       letter-spacing:-0.5px; text-transform:uppercase;
     }
     .card{
@@ -67,7 +73,11 @@
     .header{text-align:center; margin-bottom:28px;}
     .eyebrow{
       display:inline-flex; align-items:center; gap:6px;
+<<<<<<< HEAD
       background: rgba(45, 80, 22, 0.08);
+=======
+      background: rgba(245, 197, 24, 0.08);
+>>>>>>> fcc1ae98e3f498fbea6f4be4c875cef714a0817b
       color: var(--primary);
       padding:6px 14px;
       border-radius:99px;
@@ -77,7 +87,7 @@
       letter-spacing:.5px;
       margin-bottom:15px;
     }
-    .title{ margin:0 0 8px; font-size:26px; font-weight:900; color:#111827;}
+    .title{ margin:0 0 8px; font-size:22px; font-weight:700; color:#111827; font-family:'Montserrat','Inter',sans-serif; }
     .subtitle{ margin:0; font-size:14px; color:var(--muted); }
     .field{ margin-bottom: 20px; }
     label{ display:block; font-size: var(--font-size-base); font-weight:900; margin-bottom:8px; color:#111827; }
@@ -132,7 +142,7 @@
     }
     .btn:active{ transform: translateY(1px); }
     .btn:disabled{ 
-      background: rgba(45, 80, 22, 0.4);
+      background: rgba(0, 0, 0, 0.5);
       color: rgba(250, 204, 21, 0.5);
       border-color: rgba(250, 204, 21, 0.5);
       cursor:not-allowed; 
@@ -155,7 +165,7 @@
     .back-link:hover{ text-decoration:underline; }
   </style>
 </head>
-<body>
+<body class="landing-page">
 <div class="wrap">
   <a href="{{ url('/') }}" class="brand">
     <img src="{{ asset('zimbabwe_media_commission_transparent_edges.png') }}" alt="ZMC Logo">
