@@ -77,6 +77,21 @@
       </div>
     </div>
 
+    {{-- Draft Retention Disclaimer --}}
+    @if(($stats['drafts'] ?? 0) > 0)
+    <div class="col-12">
+      <div class="alert alert-warning border-0 mb-0" style="background: rgba(245, 158, 11, 0.1); border-left: 4px solid #f59e0b !important;">
+        <div class="d-flex align-items-start gap-2">
+          <i class="ri-time-line" style="color: #f59e0b; font-size: 1.2rem; margin-top: 2px;"></i>
+          <div class="small" style="color: #92400e;">
+            <strong>Important:</strong> Draft applications are automatically deleted after <strong>14 days (2 weeks)</strong> of inactivity. 
+            Please complete and submit your application within this timeframe to avoid losing your progress.
+          </div>
+        </div>
+      </div>
+    </div>
+    @endif
+
     <div class="col-12 col-md-3">
       <div class="zmc-card h-100">
         <div class="d-flex justify-content-between align-items-start">

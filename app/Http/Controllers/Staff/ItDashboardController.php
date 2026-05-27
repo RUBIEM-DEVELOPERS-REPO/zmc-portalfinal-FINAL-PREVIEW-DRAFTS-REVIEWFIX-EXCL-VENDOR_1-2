@@ -131,7 +131,49 @@ class ItDashboardController extends Controller
      */
     public function printers()
     {
+<<<<<<< Updated upstream
         return view('staff.it.dashboard.printers');
+=======
+        $drafts = Application::where('status', Application::DRAFT)
+            ->with('applicant')
+            ->latest()
+            ->paginate(20);
+
+        return view('staff.shared.drafts', [
+            'drafts' => $drafts,
+            'role' => 'it',
+        ]);
+    }
+
+    /**
+     * Review a specific draft application (read-only)
+     */
+    public function reviewDraft(Application $draft)
+    {
+        // Ensure it's actually a draft
+        if ($draft->status !== Application::DRAFT) {
+            return redirect()->route('staff.it.drafts')
+                ->with('error', 'This application is not a draft.');
+        }
+
+        $daysSinceUpdate = $draft->updated_at->diffInDays(now());
+        $daysRemaining = max(0, 14 - $daysSinceUpdate);
+
+        // Parse form data if available
+        $formData = [];
+        if (!empty($draft->form_data)) {
+            $formData = is_string($draft->form_data) 
+                ? json_decode($draft->form_data, true) 
+                : $draft->form_data;
+        }
+
+        return view('staff.shared.draft-review', [
+            'draft' => $draft,
+            'role' => 'it',
+            'daysRemaining' => $daysRemaining,
+            'formData' => $formData,
+        ]);
+>>>>>>> Stashed changes
     }
 
     /**

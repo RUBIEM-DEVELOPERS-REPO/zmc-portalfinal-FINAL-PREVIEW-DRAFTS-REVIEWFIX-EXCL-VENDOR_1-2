@@ -735,7 +735,9 @@ Route::middleware('auth')->group(function () {
             // Profile & tools
             Route::get('/tools/profile', [AccreditationOfficerController::class, 'toolsProfile'])->name('tools.profile');
             Route::get('/tools/tasks', [AccreditationOfficerController::class, 'toolsTasks'])->name('tools.tasks');
-            Route::get('/tools/drafts', [AccreditationOfficerController::class, 'toolsDrafts'])->name('tools.drafts');
+            // Drafts - viewable by officer (read-only review)
+            Route::get('/drafts', [AccreditationOfficerController::class, 'drafts'])->name('drafts');
+            Route::get('/drafts/{draft}/review', [AccreditationOfficerController::class, 'reviewDraft'])->name('drafts.review');
             Route::get('/tools/sops', [AccreditationOfficerController::class, 'toolsSops'])->name('tools.sops');
             
             // Fix Requests
@@ -811,6 +813,10 @@ Route::middleware('auth')->group(function () {
             
             // News / Press Statements (Read-only access)
             Route::get('/news', [RegistrarController::class, 'news'])->name('news');
+            
+            // Drafts - viewable by registrar (read-only review)
+            Route::get('/drafts', [RegistrarController::class, 'drafts'])->name('drafts');
+            Route::get('/drafts/{draft}/review', [RegistrarController::class, 'reviewDraft'])->name('drafts.review');
         });
 
     /*
@@ -893,6 +899,10 @@ Route::middleware('auth')->group(function () {
             Route::get('/renewals', [AccountsPaymentsController::class, 'renewalsQueue'])->name('renewals.queue');
             Route::get('/renewals/{renewal}', [AccountsPaymentsController::class, 'showRenewal'])->name('renewals.show');
             Route::post('/renewals/{renewal}/verify', [AccountsPaymentsController::class, 'verifyRenewalPayment'])->name('renewals.verify');
+            
+            // Drafts - viewable by accounts (read-only view only, no review)
+            Route::get('/drafts', [AccountsPaymentsController::class, 'drafts'])->name('drafts');
+            Route::get('/drafts/{draft}/view', [AccountsPaymentsController::class, 'viewDraft'])->name('drafts.view');
         });
 
     /*
@@ -1020,7 +1030,20 @@ Route::middleware('auth')->group(function () {
             Route::post('/tenders/{tender}', [ContentController::class, 'updateTender'])->name('tenders.update');
             Route::delete('/tenders/{tender}', [ContentController::class, 'destroyTender'])->name('tenders.destroy');
 
+<<<<<<< Updated upstream
             // System Users Management
+=======
+            // Applicant resets
+            Route::get('/applicants', [ItAdminController::class, 'listApplicants'])->name('applicants.list');
+            Route::post('/applicants/{user}/reset', [ItAdminController::class, 'resetApplicant'])->name('applicants.reset');
+
+            // Unified Dashboard Routes
+            Route::get('/monitoring', [ItDashboardController::class, 'monitoring'])->name('monitoring');
+            Route::get('/drafts', [ItDashboardController::class, 'drafts'])->name('drafts');
+            Route::get('/drafts/{draft}/review', [ItDashboardController::class, 'reviewDraft'])->name('drafts.review');
+            Route::get('/files', [ItDashboardController::class, 'files'])->name('files');
+            Route::get('/errors', [ItDashboardController::class, 'errors'])->name('errors');
+>>>>>>> Stashed changes
             Route::get('/users-mgmt', [ItDashboardController::class, 'users'])->name('users-mgmt');
             Route::post('/user/{user}/role', [ItDashboardController::class, 'editUserRole'])->name('user.role');
             Route::post('/user/{user}/activate', [ItDashboardController::class, 'activateUser'])->name('user.activate');
